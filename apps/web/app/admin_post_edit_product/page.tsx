@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const navItems = [
   { icon: "dashboard", label: "Overview" },
@@ -27,7 +29,52 @@ const variantRows = [
 ];
 
 export default function AdminPostEditProductPage() {
+  const router = useRouter();
+  const [allowed, setAllowed] = useState(false);
   const [actionMessage, setActionMessage] = useState("Ready to edit product draft.");
+
+  useEffect(() => {
+    const verifyAdmin = async () => {
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        if (!response.ok) {
+          router.replace("/auth");
+          return;
+        }
+
+        const payload = (await response.json()) as {
+          user?: {
+            roles?: string[];
+          } | null;
+        };
+
+        if (!payload.user) {
+          router.replace("/auth");
+          return;
+        }
+
+        const roles = Array.isArray(payload.user.roles) ? payload.user.roles : [];
+        if (!roles.includes("ADMIN")) {
+          router.replace("/profile");
+          return;
+        }
+
+        setAllowed(true);
+      } catch {
+        router.replace("/auth");
+      }
+    };
+
+    void verifyAdmin();
+  }, [router]);
+
+  if (!allowed) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f4f4f5] text-sm font-medium text-zinc-500">
+        Verifying admin access...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f4f4f5] text-zinc-900">

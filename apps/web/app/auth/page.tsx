@@ -46,11 +46,13 @@ export default function AuthPage() {
         const data = (await response.json()) as {
           user?: {
             id: string;
+            roles?: string[];
           } | null;
         };
 
         if (data.user?.id) {
-          router.replace("/profile");
+          const roles = Array.isArray(data.user.roles) ? data.user.roles : [];
+          router.replace(roles.includes("ADMIN") ? "/admin_overview_dashboard" : "/profile");
         }
       } catch {
         // Ignore transient session check issues on initial load.
@@ -122,6 +124,9 @@ export default function AuthPage() {
 
       const payload = (await response.json()) as {
         error?: string;
+        user?: {
+          roles?: string[];
+        };
       };
 
       if (!response.ok) {
@@ -130,7 +135,8 @@ export default function AuthPage() {
       }
 
       setMessage(mode === "login" ? "Login successful. Redirecting..." : "Account created. Redirecting...");
-      router.push("/profile");
+      const roles = Array.isArray(payload.user?.roles) ? payload.user?.roles : [];
+      router.push(roles.includes("ADMIN") ? "/admin_overview_dashboard" : "/profile");
     } catch {
       setError("Network issue while signing in. Please retry.");
     } finally {

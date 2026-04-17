@@ -1,4 +1,9 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+
 import { listAdminProducts } from "../../src/lib/admin-products";
+import { getSessionFromRequest } from "../../src/lib/auth-session";
+import { isAdminSessionUser } from "../../src/lib/admin-auth";
 
 const orders = [
   { id: "#ORD-2841", customer: "Sarah Miller", initials: "SM", date: "Oct 12, 2023", status: "Delivered", amount: "$450.00", tone: "bg-emerald-50 text-emerald-700" },
@@ -28,7 +33,35 @@ const getAdminNavHref = (label: string) => {
 
 const barHeights = [40, 60, 75, 55, 85, 45, 30, 65, 95, 50, 40, 70];
 
+const managementModules = [
+  { title: "Products Management", items: ["Add/Edit/Delete products", "Multi-image support (next)", "Category and SKU controls"] },
+  { title: "Inventory Management", items: ["Track stock levels", "Low stock alerts", "Bulk stock updates (next)"] },
+  { title: "Orders Management", items: ["View all orders", "Update order statuses", "Returns/refunds (next)"] },
+  { title: "Customers Management", items: ["Customer listing", "Customer profile details", "Purchase history"] },
+  { title: "Sales Analytics", items: ["Revenue snapshot", "Best sellers", "Monthly trend cards"] },
+  { title: "Payments & Refunds", items: ["Payment status", "Failed transactions", "Refund queue (next)"] },
+  { title: "Marketing", items: ["Coupons/discounts", "Campaign placeholders", "Newsletter tools (next)"] },
+  { title: "Settings", items: ["Store info", "Tax/shipping settings", "Admin user controls"] },
+];
+
 export default async function AdminOverviewDashboardPage() {
+  const cookieStore = await cookies();
+  const session = await getSessionFromRequest(
+    new Request("http://localhost", {
+      headers: {
+        cookie: cookieStore.toString(),
+      },
+    }),
+  );
+
+  if (!session) {
+    redirect("/auth");
+  }
+
+  if (!isAdminSessionUser(session)) {
+    redirect("/profile");
+  }
+
   const products = await listAdminProducts();
 
   const publishedCount = products.filter((product) => product.status === "published").length;
@@ -261,6 +294,28 @@ export default async function AdminOverviewDashboardPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </section>
+
+          <section className="mt-8 rounded-2xl bg-white p-6 shadow-sm sm:p-8">
+            <div className="mb-6 flex items-center justify-between">
+              <h4 className="text-xl font-bold">Admin Modules (Basic Setup)</h4>
+              <span className="rounded-full bg-zinc-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-600">Phase 1</span>
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {managementModules.map((module) => (
+                <article key={module.title} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                  <h5 className="text-sm font-black uppercase tracking-[0.04em]">{module.title}</h5>
+                  <ul className="mt-3 space-y-2 text-xs text-zinc-600">
+                    {module.items.map((item) => (
+                      <li key={item} className="flex items-start gap-2">
+                        <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-zinc-400" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
             </div>
           </section>
         </div>

@@ -6,6 +6,8 @@ import {
   getAdminProductById,
   updateAdminProduct,
 } from "../../../../../src/lib/admin-products";
+import { requireAdminSession } from "../../../../../src/lib/admin-auth";
+import { AuthError } from "../../../../../src/lib/auth-session";
 
 type RequestPayload = {
   title?: string;
@@ -24,6 +26,17 @@ type RouteContext = {
 };
 
 export async function GET(_: Request, context: RouteContext) {
+  try {
+    await requireAdminSession(_);
+  } catch (error) {
+    if (error instanceof AuthError) {
+      const status = error.message === "Forbidden" ? 403 : 401;
+      return NextResponse.json({ error: error.message }, { status });
+    }
+
+    return NextResponse.json({ error: "Failed to authorize request." }, { status: 500 });
+  }
+
   const { id } = await context.params;
   const product = await getAdminProductById(id);
 
@@ -35,6 +48,17 @@ export async function GET(_: Request, context: RouteContext) {
 }
 
 export async function PUT(request: Request, context: RouteContext) {
+  try {
+    await requireAdminSession(request);
+  } catch (error) {
+    if (error instanceof AuthError) {
+      const status = error.message === "Forbidden" ? 403 : 401;
+      return NextResponse.json({ error: error.message }, { status });
+    }
+
+    return NextResponse.json({ error: "Failed to authorize request." }, { status: 500 });
+  }
+
   const { id } = await context.params;
   let payload: RequestPayload;
 
@@ -96,6 +120,17 @@ export async function PUT(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(_: Request, context: RouteContext) {
+  try {
+    await requireAdminSession(_);
+  } catch (error) {
+    if (error instanceof AuthError) {
+      const status = error.message === "Forbidden" ? 403 : 401;
+      return NextResponse.json({ error: error.message }, { status });
+    }
+
+    return NextResponse.json({ error: "Failed to authorize request." }, { status: 500 });
+  }
+
   const { id } = await context.params;
   const deleted = await deleteAdminProduct(id);
 

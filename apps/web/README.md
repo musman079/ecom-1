@@ -34,3 +34,31 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Basic Admin Setup
+
+Admin access is now protected at API and page level.
+
+### 1) Configure admin emails
+
+Create `apps/web/.env` and add:
+
+```env
+JWT_SECRET=replace-with-a-strong-secret
+ADMIN_EMAILS=admin@example.com,owner@example.com
+```
+
+Any account created with an email listed in `ADMIN_EMAILS` gets `ADMIN` role automatically.
+
+### 2) Access admin dashboard
+
+- Login at `/auth`
+- If your account has admin access, you are redirected to `/admin_overview_dashboard`
+- Non-admin users are redirected to `/profile`
+
+### 3) Promote existing user to admin (if account already exists)
+
+If user was created before this setup, either:
+
+- Add their email to `ADMIN_EMAILS` and login again, or
+- Update `users.roles` in MongoDB to include `ADMIN`

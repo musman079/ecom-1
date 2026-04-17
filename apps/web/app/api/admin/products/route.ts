@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { ProductValidationError, createAdminProduct, listAdminProducts } from "../../../../src/lib/admin-products";
+import { AuthError } from "../../../../src/lib/auth-session";
+import { requireAdminSession } from "../../../../src/lib/admin-auth";
 
 type RequestPayload = {
   title?: string;
@@ -14,12 +16,33 @@ type RequestPayload = {
   status?: "draft" | "published";
 };
 
-export async function GET() {
-  const products = await listAdminProducts();
-  return NextResponse.json({ products });
+export async function GET(request: Request) {
+  try {
+    await requireAdminSession(request);
+    const products = await listAdminProducts();
+    return NextResponse.json({ products });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      const status = error.message === "Forbidden" ? 403 : 401;
+      return NextResponse.json({ error: error.message }, { status });
+    }
+
+    return NextResponse.json({ error: "Failed to load products." }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
+  try {
+    await requireAdminSession(request);
+  } catch (error) {
+    if (error instanceof AuthError) {
+      const status = error.message === "Forbidden" ? 403 : 401;
+      return NextResponse.json({ error: error.message }, { status });
+    }
+
+    return NextResponse.json({ error: "Failed to authorize request." }, { status: 500 });
+  }
+
   let payload: RequestPayload;
 
   try {

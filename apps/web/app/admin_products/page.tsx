@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type ProductStatus = "draft" | "published";
 
@@ -36,6 +37,8 @@ const initialFormState = {
 };
 
 export default function AdminProductsPage() {
+  const router = useRouter();
+  const [allowed, setAllowed] = useState(false);
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,6 +49,45 @@ export default function AdminProductsPage() {
   const [form, setForm] = useState(initialFormState);
 
   useEffect(() => {
+    const verifyAdmin = async () => {
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        if (!response.ok) {
+          router.replace("/auth");
+          return;
+        }
+
+        const payload = (await response.json()) as {
+          user?: {
+            roles?: string[];
+          } | null;
+        };
+
+        if (!payload.user) {
+          router.replace("/auth");
+          return;
+        }
+
+        const roles = Array.isArray(payload.user.roles) ? payload.user.roles : [];
+        if (!roles.includes("ADMIN")) {
+          router.replace("/profile");
+          return;
+        }
+
+        setAllowed(true);
+      } catch {
+        router.replace("/auth");
+      }
+    };
+
+    void verifyAdmin();
+  }, [router]);
+
+  useEffect(() => {
+    if (!allowed) {
+      return;
+    }
+
     const loadProducts = async () => {
       try {
         const response = await fetch("/api/admin/products", { cache: "no-store" });
@@ -63,7 +105,15 @@ export default function AdminProductsPage() {
     };
 
     void loadProducts();
-  }, []);
+  }, [allowed]);
+
+  if (!allowed) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f4f4f5] text-sm font-medium text-zinc-500">
+        Verifying admin access...
+      </div>
+    );
+  }
 
   const submitProduct = async (status: ProductStatus) => {
     setSaving(true);

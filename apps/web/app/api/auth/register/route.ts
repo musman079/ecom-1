@@ -1,6 +1,7 @@
 import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
 
+import { mapUserRoles } from "../../../../src/lib/admin-auth";
 import { applySessionCookie } from "../../../../src/lib/auth-session";
 import { createUser } from "../../../../src/lib/ecommerce-db";
 
@@ -40,13 +41,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
   }
 
+  const roles = mapUserRoles(user.email, user.roles);
+
   const response = NextResponse.json(
     {
       user: {
         id: user._id.toHexString(),
         email: user.email,
         fullName: user.fullName,
-        roles: user.roles,
+        roles,
       },
     },
     { status: 201 },
@@ -56,7 +59,7 @@ export async function POST(request: Request) {
     userId: user._id.toHexString(),
     email: user.email,
     fullName: user.fullName,
-    roles: user.roles,
+    roles,
   });
 
   return response;

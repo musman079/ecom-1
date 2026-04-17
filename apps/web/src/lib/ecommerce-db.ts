@@ -1,5 +1,6 @@
 import { ObjectId } from "mongodb";
 
+import { mapUserRoles } from "./admin-auth";
 import { getMongoDb } from "./mongodb";
 
 export type UserDocument = {
@@ -141,7 +142,7 @@ export async function createUser(input: {
     passwordHash: input.passwordHash,
     fullName: input.fullName.trim(),
     phone: input.phone?.trim() || undefined,
-    roles: ["CUSTOMER"],
+    roles: mapUserRoles(normalizedEmail, ["CUSTOMER"]),
     isActive: true,
     createdAt: now,
     updatedAt: now,
