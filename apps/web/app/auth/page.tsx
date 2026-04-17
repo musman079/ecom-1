@@ -5,12 +5,6 @@ import { useRouter } from "next/navigation";
 
 export default function AuthPage() {
   const [showSplash, setShowSplash] = useState(true);
-  const [isRegisterMode, setIsRegisterMode] = useState(false);
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -20,37 +14,6 @@ export default function AuthPage() {
 
     return () => window.clearTimeout(timer);
   }, []);
-
-  const submitAuth = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      const endpoint = isRegisterMode ? "/api/auth/register" : "/api/auth/login";
-      const body = isRegisterMode ? { fullName, email, password } : { email, password };
-
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        const payload = (await response.json()) as { error?: string };
-        throw new Error(payload.error ?? "Authentication failed.");
-      }
-
-      router.push("/profile");
-      router.refresh();
-    } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Authentication failed.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#f9f9f9] text-[#1a1c1c]">
@@ -64,34 +27,18 @@ export default function AuthPage() {
           <header className="mb-12 text-center">
             <h1 className="mb-2 text-5xl font-black uppercase tracking-[-0.06em]">KINETIC</h1>
             <p className="text-sm text-neutral-500">
-              {isRegisterMode ? "Create your account to start shopping." : "Enter your credentials to access the editorial gallery."}
+              Enter your credentials to access the editorial gallery.
             </p>
           </header>
 
           <form
             className="space-y-6"
-            onSubmit={submitAuth}
+            onSubmit={(e) => {
+              e.preventDefault();
+              router.push("/profile");
+            }}
           >
             <div className="space-y-4">
-              {isRegisterMode ? (
-                <div>
-                  <label
-                    htmlFor="fullName"
-                    className="mb-1 ml-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-neutral-500"
-                  >
-                    Full Name
-                  </label>
-                  <input
-                    id="fullName"
-                    type="text"
-                    value={fullName}
-                    onChange={(event) => setFullName(event.target.value)}
-                    placeholder="Marcus Sterling"
-                    className="w-full border-0 border-b border-neutral-300 bg-transparent px-0 py-4 text-sm text-[#1a1c1c] placeholder:text-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-0"
-                  />
-                </div>
-              ) : null}
-
               <div>
                 <label
                   htmlFor="email"
@@ -102,8 +49,6 @@ export default function AuthPage() {
                 <input
                   id="email"
                   type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
                   placeholder="name@kinetic.com"
                   className="w-full border-0 border-b border-neutral-300 bg-transparent px-0 py-4 text-sm text-[#1a1c1c] placeholder:text-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-0"
                 />
@@ -119,44 +64,33 @@ export default function AuthPage() {
                 <input
                   id="password"
                   type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
                   placeholder="••••••••"
                   className="w-full border-0 border-b border-neutral-300 bg-transparent px-0 py-4 text-sm text-[#1a1c1c] placeholder:text-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-0"
                 />
               </div>
             </div>
 
-            {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
-
             <button
               type="submit"
-              disabled={loading}
               className="w-full rounded-full bg-black py-5 text-xs font-bold uppercase tracking-[0.2em] text-white transition hover:bg-neutral-800 active:scale-[0.98]"
             >
-              {loading ? "Please wait" : isRegisterMode ? "Create Account" : "Login"}
+              Login
             </button>
 
             <div className="flex items-center justify-between pt-2">
               <button
                 type="button"
-                onClick={() => {
-                  setIsRegisterMode(false);
-                  setError(null);
-                }}
+                onClick={() => router.push("/auth")}
                 className="text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500 transition hover:text-black"
               >
                 Forgot Password?
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setIsRegisterMode((current) => !current);
-                  setError(null);
-                }}
+                onClick={() => router.push("/auth")}
                 className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-600 transition hover:underline"
               >
-                {isRegisterMode ? "Back to Login" : "Create Account"}
+                Create Account
               </button>
             </div>
           </form>

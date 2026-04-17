@@ -1,7 +1,5 @@
 'use client';
 
-import { useEffect, useState } from "react";
-
 type Order = {
   id: string;
   name: string;
@@ -50,40 +48,6 @@ const orders: Order[] = [
 ];
 
 export default function ProfilePage() {
-  const [profileName, setProfileName] = useState("Marcus Sterling");
-  const [profileEmail, setProfileEmail] = useState("m.sterling@editorial.co");
-
-  useEffect(() => {
-    const loadCurrentUser = async () => {
-      try {
-        const response = await fetch("/api/auth/me", { cache: "no-store" });
-        if (!response.ok) {
-          return;
-        }
-
-        const payload = (await response.json()) as {
-          user?: { fullName?: string; email?: string };
-        };
-
-        if (payload.user?.fullName) {
-          setProfileName(payload.user.fullName);
-        }
-        if (payload.user?.email) {
-          setProfileEmail(payload.user.email);
-        }
-      } catch {
-        // Keep fallback profile values if session lookup fails.
-      }
-    };
-
-    void loadCurrentUser();
-  }, []);
-
-  const logout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/auth";
-  };
-
   return (
     <div className="min-h-[100dvh] bg-neutral-100 text-neutral-900">
       <header className="fixed top-0 z-50 w-full bg-white/85 backdrop-blur-xl">
@@ -120,8 +84,8 @@ export default function ProfilePage() {
           </div>
 
           <div className="flex-1 text-center md:text-left">
-            <h2 className="mb-1 text-6xl font-bold leading-none tracking-tight">{profileName}</h2>
-            <p className="text-3xl text-neutral-700">{profileEmail}</p>
+            <h2 className="mb-1 text-6xl font-bold leading-none tracking-tight">Marcus Sterling</h2>
+            <p className="text-3xl text-neutral-700">m.sterling@editorial.co</p>
             <div className="mt-5 flex flex-wrap justify-center gap-3 md:justify-start">
               <span className="rounded-full border border-neutral-200 bg-white px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em]">
                 Member Since 2023
@@ -159,10 +123,10 @@ export default function ProfilePage() {
                 <span className="material-symbols-outlined text-sm text-neutral-400 group-hover:text-black">chevron_right</span>
               </a>
               <div className="mt-4 border-t border-neutral-300 pt-4">
-                <button type="button" onClick={() => void logout()} className="flex w-full items-center gap-4 rounded-xl px-4 py-4 text-red-600 transition-all hover:bg-red-50">
+                <a href="/auth" className="flex items-center gap-4 rounded-xl px-4 py-4 text-red-600 transition-all hover:bg-red-50">
                   <span className="material-symbols-outlined">logout</span>
                   <span className="text-base font-bold tracking-tight">Log Out</span>
-                </button>
+                </a>
               </div>
             </nav>
           </aside>

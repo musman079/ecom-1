@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { getAuthenticatedUser, isAdminRole } from "../../../../../src/lib/auth";
 import {
   ProductValidationError,
   deleteAdminProduct,
@@ -25,11 +24,6 @@ type RouteContext = {
 };
 
 export async function GET(_: Request, context: RouteContext) {
-  const user = await getAuthenticatedUser();
-  if (!user || !isAdminRole(user.roles)) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
-
   const { id } = await context.params;
   const product = await getAdminProductById(id);
 
@@ -41,11 +35,6 @@ export async function GET(_: Request, context: RouteContext) {
 }
 
 export async function PUT(request: Request, context: RouteContext) {
-  const user = await getAuthenticatedUser();
-  if (!user || !isAdminRole(user.roles)) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
-
   const { id } = await context.params;
   let payload: RequestPayload;
 
@@ -107,11 +96,6 @@ export async function PUT(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(_: Request, context: RouteContext) {
-  const user = await getAuthenticatedUser();
-  if (!user || !isAdminRole(user.roles)) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
-
   const { id } = await context.params;
   const deleted = await deleteAdminProduct(id);
 

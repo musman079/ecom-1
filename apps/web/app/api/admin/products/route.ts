@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { getAuthenticatedUser, isAdminRole } from "../../../../src/lib/auth";
 import { ProductValidationError, createAdminProduct, listAdminProducts } from "../../../../src/lib/admin-products";
 
 type RequestPayload = {
@@ -16,21 +15,11 @@ type RequestPayload = {
 };
 
 export async function GET() {
-  const user = await getAuthenticatedUser();
-  if (!user || !isAdminRole(user.roles)) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
-
   const products = await listAdminProducts();
   return NextResponse.json({ products });
 }
 
 export async function POST(request: Request) {
-  const user = await getAuthenticatedUser();
-  if (!user || !isAdminRole(user.roles)) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
-
   let payload: RequestPayload;
 
   try {
