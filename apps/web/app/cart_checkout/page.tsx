@@ -1,68 +1,218 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
-type CartItem = {
-  tag: string;
-  name: string;
-  details: string;
-  price: string;
-  image: string;
+type ApiCartItem = {
+  productId: string;
+  title: string;
+  sku: string;
+  price: number;
+  quantity: number;
+  stockQuantity: number;
+  lineTotal: number;
 };
 
-const cartItems: CartItem[] = [
-  {
-    tag: 'Limited Edition',
-    name: 'KINETIC FLUX 01',
-    details: 'Size: 42 • Obsidian Black',
-    price: '$185.00',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuD0tz5COjD8NSKOARrOnPjVAyc5ucG3fW7pzLeCNlX9HbqLb8zHBUL7BdfAMZqrMNPz_XCcgsAF_EyABl8l8tS4Yk_U9Q8eDKcGybrdru3W_hjU9A7gt9V05yS7YMemZ3WMMVT8Z1PoCSQt-XYMbwmo0kUnNHGGahES5i8RYMoCmXcgpxM2pPNF__Y5iPY3A7gqfsQ0oB4kTaHG95MPHadL2tnXtOAef6oAfDmSEQaj8pGNYq0DP6VkDOfj8UmL_WD9YiC7GlkGTczG',
-  },
-  {
-    tag: 'Essential',
-    name: 'CORE SERIES CHRONO',
-    details: 'Color: Pure Frost',
-    price: '$240.00',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuA1bVm_aH1W9hcY_D-cOeJ8cEt825W7_0mBkP1sHNNcOD7RhDvMNNGRRaCMeYP6ZYJEgMQsk2lRfWtrJ1_5N6NsAL_Sy_1b1fjrXXLqDoSX2jWfka0ZWXXOLuhpVIOTV_HE35fXdhfFk59TK9QrF1KKqcmgDezQHN5TO5ThospJ3rQu6koAVQMpQaMZRVhompT18LiKwI0rr9KchxL2CHIv9uaqB4vNHVg1xP6Jo7puzKGl9kX2SvW5W5uZbFXVvB4gRbvfaFjEdHmL',
-  },
-];
+type ApiCart = {
+  items: ApiCartItem[];
+  subtotal: number;
+  totalItems: number;
+};
+
+type ShippingForm = {
+  fullName: string;
+  phone: string;
+  line1: string;
+  city: string;
+  postalCode: string;
+  country: string;
+};
 
 export default function CartCheckoutPage() {
-  const [quantities, setQuantities] = useState<number[]>(() => cartItems.map(() => 1));
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [placingOrder, setPlacingOrder] = useState(false);
+  const [activeProductId, setActiveProductId] = useState<string | null>(null);
+  const [needsAuth, setNeedsAuth] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "cod">("card");
+  const [cart, setCart] = useState<ApiCart>({
+    items: [],
+    subtotal: 0,
+    totalItems: 0,
+  });
+  const [shippingForm, setShippingForm] = useState<ShippingForm>({
+    fullName: "",
+    phone: "",
+    line1: "",
+    city: "",
+    postalCode: "",
+    country: "",
+  });
 
-  const parsePrice = (value: string) => Number(value.replace(/[^0-9.]/g, "")) || 0;
+  const loadCart = async () => {
+    try {
+      const response = await fetch("/api/cart", { cache: "no-store" });
 
-  const totalItems = useMemo(
-    () => quantities.reduce((sum, qty) => sum + qty, 0),
-    [quantities],
-  );
+      if (response.status === 401) {
+        setNeedsAuth(true);
+        setCart({ items: [], subtotal: 0, totalItems: 0 });
+        return;
+      }
 
-  const subtotal = useMemo(
-    () => cartItems.reduce((sum, item, index) => sum + parsePrice(item.price) * (quantities[index] ?? 0), 0),
-    [quantities],
-  );
+      const payload = (await response.json()) as {
+        cart?: ApiCart;
+        error?: string;
+      };
 
-  const shipping = totalItems > 0 ? 12 : 0;
-  const taxes = Number((subtotal * 0.08).toFixed(2));
-  const total = subtotal + shipping + taxes;
+      if (!response.ok || !payload.cart) {
+        setError(payload.error ?? "Unable to load cart.");
+        return;
+      }
 
-  const increment = (index: number) => {
-    setQuantities((previous) => previous.map((qty, idx) => (idx === index ? qty + 1 : qty)));
+      setNeedsAuth(false);
+      setCart(payload.cart);
+    } catch {
+      setError("Unable to load cart due to network issue.");
+    }
   };
 
-  const decrement = (index: number) => {
-    setQuantities((previous) => previous.map((qty, idx) => {
-      if (idx !== index) {
-        return qty;
+  useEffect(() => {
+    const init = async () => {
+      setLoading(true);
+      setError(null);
+      await loadCart();
+      setLoading(false);
+    };
+
+    void init();
+  }, []);
+
+  const shipping = cart.totalItems > 0 ? 12 : 0;
+  const taxes = useMemo(() => Number((cart.subtotal * 0.08).toFixed(2)), [cart.subtotal]);
+  const total = cart.subtotal + shipping + taxes;
+
+  const updateQuantity = async (productId: string, quantity: number) => {
+    setActiveProductId(productId);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const response = await fetch("/api/cart", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ productId, quantity }),
+      });
+
+      const payload = (await response.json()) as {
+        cart?: ApiCart;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.cart) {
+        setError(payload.error ?? "Unable to update cart item.");
+        return;
       }
-      return Math.max(0, qty - 1);
+
+      setCart(payload.cart);
+    } catch {
+      setError("Unable to update quantity right now.");
+    } finally {
+      setActiveProductId(null);
+    }
+  };
+
+  const removeItem = async (productId: string) => {
+    setActiveProductId(productId);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const response = await fetch(`/api/cart?productId=${encodeURIComponent(productId)}`, {
+        method: "DELETE",
+      });
+
+      const payload = (await response.json()) as {
+        cart?: ApiCart;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.cart) {
+        setError(payload.error ?? "Unable to remove product.");
+        return;
+      }
+
+      setCart(payload.cart);
+    } catch {
+      setError("Unable to remove product right now.");
+    } finally {
+      setActiveProductId(null);
+    }
+  };
+
+  const onShippingChange = (field: keyof ShippingForm, value: string) => {
+    setShippingForm((current) => ({
+      ...current,
+      [field]: value,
     }));
   };
 
-  const removeItem = (index: number) => {
-    setQuantities((previous) => previous.map((qty, idx) => (idx === index ? 0 : qty)));
+  const placeOrder = async () => {
+    setError(null);
+    setMessage(null);
+
+    if (needsAuth) {
+      router.push("/auth");
+      return;
+    }
+
+    if (cart.items.length === 0) {
+      setError("Your cart is empty.");
+      return;
+    }
+
+    const missing = Object.entries(shippingForm).some(([, value]) => !value.trim());
+    if (missing) {
+      setError("Please complete shipping details before checkout.");
+      return;
+    }
+
+    setPlacingOrder(true);
+
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          shippingAddress: shippingForm,
+          paymentMethod,
+        }),
+      });
+
+      const payload = (await response.json()) as {
+        error?: string;
+        order?: {
+          orderNumber: string;
+        };
+      };
+
+      if (!response.ok || !payload.order) {
+        setError(payload.error ?? "Checkout failed.");
+        return;
+      }
+
+      setMessage(`Order placed successfully (${payload.order.orderNumber}).`);
+      await loadCart();
+    } catch {
+      setError("Unable to place order right now.");
+    } finally {
+      setPlacingOrder(false);
+    }
   };
 
   return (
@@ -84,7 +234,7 @@ export default function CartCheckoutPage() {
             <a href="/cart_checkout" className="relative active:scale-95 transition" aria-label="Cart">
               <span className="material-symbols-outlined">shopping_bag</span>
               <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#497cff] text-[8px] font-bold text-white">
-                {totalItems}
+                {cart.totalItems}
               </span>
             </a>
           </div>
@@ -95,58 +245,121 @@ export default function CartCheckoutPage() {
         <section className="lg:col-span-7">
           <div className="mb-12">
             <h1 className="mb-2 text-5xl font-black uppercase tracking-[-0.05em] md:text-6xl">My Cart</h1>
-            <p className="text-sm font-medium uppercase tracking-wide text-neutral-600">{totalItems} Items Selected</p>
+            <p className="text-sm font-medium uppercase tracking-wide text-neutral-600">{cart.totalItems} Items Selected</p>
           </div>
 
-          <div className="space-y-12">
-            {cartItems.map((item, index) => {
-              const quantity = quantities[index];
-              if (quantity === 0) {
-                return null;
-              }
+          {error ? <p className="mb-4 text-sm font-semibold text-red-600">{error}</p> : null}
+          {message ? <p className="mb-4 text-sm font-semibold text-emerald-700">{message}</p> : null}
 
-              return (
-              <article key={item.name} className="group flex items-start gap-6">
+          <div className="space-y-12">
+            {loading ? (
+              <div className="rounded-xl bg-white p-8 text-sm text-neutral-500">Loading cart...</div>
+            ) : needsAuth ? (
+              <div className="rounded-xl bg-white p-8 text-sm text-neutral-600">
+                <p className="mb-4">Please sign in to access your cart.</p>
+                <a href="/auth" className="inline-flex rounded-full bg-black px-6 py-3 text-xs font-bold uppercase tracking-[0.16em] text-white">
+                  Go to Login
+                </a>
+              </div>
+            ) : cart.items.length === 0 ? (
+              <div className="rounded-xl bg-white p-8 text-sm text-neutral-500">No items in cart yet.</div>
+            ) : (
+              cart.items.map((item) => (
+              <article key={item.productId} className="group flex items-start gap-6">
                 <div className="h-40 w-32 shrink-0 overflow-hidden rounded-xl bg-[#f3f3f4]">
-                  <img src={item.image} alt={item.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                  <img
+                    src={`https://picsum.photos/seed/${encodeURIComponent(item.productId)}/320/400`}
+                    alt={item.title}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
                 </div>
 
                 <div className="flex h-40 flex-grow flex-col py-2">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.15em] text-[#497cff]">{item.tag}</span>
-                      <h3 className="text-4xl font-bold tracking-tight leading-[1.05] sm:text-3xl">{item.name}</h3>
-                      <p className="text-sm text-neutral-600">{item.details}</p>
+                      <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.15em] text-[#497cff]">In Cart</span>
+                      <h3 className="text-4xl font-bold tracking-tight leading-[1.05] sm:text-3xl">{item.title}</h3>
+                      <p className="text-sm text-neutral-600">SKU: {item.sku}</p>
                     </div>
-                    <span className="text-3xl font-bold sm:text-lg">{item.price}</span>
+                    <span className="text-3xl font-bold sm:text-lg">${item.price.toFixed(2)}</span>
                   </div>
 
                   <div className="mt-auto flex items-center justify-between">
                     <div className="flex items-center gap-6 rounded-full bg-[#f3f3f4] px-4 py-2">
-                      <button type="button" onClick={() => decrement(index)} className="material-symbols-outlined text-sm">remove</button>
-                      <span className="w-4 text-center text-sm font-bold">{quantity}</span>
-                      <button type="button" onClick={() => increment(index)} className="material-symbols-outlined text-sm">add</button>
+                      <button
+                        type="button"
+                        disabled={activeProductId === item.productId || item.quantity <= 1}
+                        onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                        className="material-symbols-outlined text-sm disabled:opacity-40"
+                      >
+                        remove
+                      </button>
+                      <span className="w-4 text-center text-sm font-bold">{item.quantity}</span>
+                      <button
+                        type="button"
+                        disabled={activeProductId === item.productId || item.quantity >= item.stockQuantity}
+                        onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                        className="material-symbols-outlined text-sm disabled:opacity-40"
+                      >
+                        add
+                      </button>
                     </div>
-                    <button type="button" onClick={() => removeItem(index)} className="text-[10px] font-bold uppercase tracking-widest text-neutral-600">Remove</button>
+                    <button
+                      type="button"
+                      disabled={activeProductId === item.productId}
+                      onClick={() => removeItem(item.productId)}
+                      className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 disabled:opacity-40"
+                    >
+                      Remove
+                    </button>
                   </div>
                 </div>
               </article>
-            );
-            })}
+            )))}
           </div>
 
           <section className="mt-20 rounded-xl bg-[#f3f3f4] p-8">
             <h2 className="mb-8 text-2xl font-black uppercase tracking-tight">Shipping Detail</h2>
             <form className="space-y-8">
               <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                <input className="w-full border-0 border-b-2 border-[#c6c6cd] bg-transparent px-0 py-3 font-medium focus:border-[#497cff] focus:ring-0" placeholder="Full Name" />
-                <input className="w-full border-0 border-b-2 border-[#c6c6cd] bg-transparent px-0 py-3 font-medium focus:border-[#497cff] focus:ring-0" placeholder="Phone Number" />
+                <input
+                  value={shippingForm.fullName}
+                  onChange={(event) => onShippingChange("fullName", event.target.value)}
+                  className="w-full border-0 border-b-2 border-[#c6c6cd] bg-transparent px-0 py-3 font-medium focus:border-[#497cff] focus:ring-0"
+                  placeholder="Full Name"
+                />
+                <input
+                  value={shippingForm.phone}
+                  onChange={(event) => onShippingChange("phone", event.target.value)}
+                  className="w-full border-0 border-b-2 border-[#c6c6cd] bg-transparent px-0 py-3 font-medium focus:border-[#497cff] focus:ring-0"
+                  placeholder="Phone Number"
+                />
               </div>
-              <input className="w-full border-0 border-b-2 border-[#c6c6cd] bg-transparent px-0 py-3 font-medium focus:border-[#497cff] focus:ring-0" placeholder="Street Address" />
+              <input
+                value={shippingForm.line1}
+                onChange={(event) => onShippingChange("line1", event.target.value)}
+                className="w-full border-0 border-b-2 border-[#c6c6cd] bg-transparent px-0 py-3 font-medium focus:border-[#497cff] focus:ring-0"
+                placeholder="Street Address"
+              />
               <div className="grid grid-cols-2 gap-8 md:grid-cols-3">
-                <input className="w-full border-0 border-b-2 border-[#c6c6cd] bg-transparent px-0 py-3 font-medium focus:border-[#497cff] focus:ring-0" placeholder="City" />
-                <input className="w-full border-0 border-b-2 border-[#c6c6cd] bg-transparent px-0 py-3 font-medium focus:border-[#497cff] focus:ring-0" placeholder="Postal Code" />
-                <input className="col-span-2 w-full border-0 border-b-2 border-[#c6c6cd] bg-transparent px-0 py-3 font-medium focus:border-[#497cff] focus:ring-0 md:col-span-1" placeholder="Country" />
+                <input
+                  value={shippingForm.city}
+                  onChange={(event) => onShippingChange("city", event.target.value)}
+                  className="w-full border-0 border-b-2 border-[#c6c6cd] bg-transparent px-0 py-3 font-medium focus:border-[#497cff] focus:ring-0"
+                  placeholder="City"
+                />
+                <input
+                  value={shippingForm.postalCode}
+                  onChange={(event) => onShippingChange("postalCode", event.target.value)}
+                  className="w-full border-0 border-b-2 border-[#c6c6cd] bg-transparent px-0 py-3 font-medium focus:border-[#497cff] focus:ring-0"
+                  placeholder="Postal Code"
+                />
+                <input
+                  value={shippingForm.country}
+                  onChange={(event) => onShippingChange("country", event.target.value)}
+                  className="col-span-2 w-full border-0 border-b-2 border-[#c6c6cd] bg-transparent px-0 py-3 font-medium focus:border-[#497cff] focus:ring-0 md:col-span-1"
+                  placeholder="Country"
+                />
               </div>
             </form>
           </section>
@@ -158,7 +371,13 @@ export default function CartCheckoutPage() {
               <h2 className="mb-6 text-sm font-black uppercase tracking-widest">Payment Method</h2>
               <div className="space-y-4">
                 <label className="block cursor-pointer">
-                  <input type="radio" name="payment" defaultChecked className="peer hidden" />
+                  <input
+                    type="radio"
+                    name="payment"
+                    checked={paymentMethod === "card"}
+                    onChange={() => setPaymentMethod("card")}
+                    className="peer hidden"
+                  />
                   <div className="flex items-center justify-between rounded-lg border border-[#c6c6cd] bg-[#141b2b] p-4 text-white transition-all">
                     <div className="flex items-center gap-4">
                       <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -174,7 +393,13 @@ export default function CartCheckoutPage() {
                 </label>
 
                 <label className="block cursor-pointer">
-                  <input type="radio" name="payment" className="peer hidden" />
+                  <input
+                    type="radio"
+                    name="payment"
+                    checked={paymentMethod === "cod"}
+                    onChange={() => setPaymentMethod("cod")}
+                    className="peer hidden"
+                  />
                   <div className="flex items-center justify-between rounded-lg border border-[#c6c6cd] p-4 transition-all peer-checked:border-[#141b2b] peer-checked:bg-[#141b2b] peer-checked:text-white">
                     <div className="flex items-center gap-4">
                       <span className="material-symbols-outlined">payments</span>
@@ -194,7 +419,7 @@ export default function CartCheckoutPage() {
               <div className="space-y-4 font-medium">
                 <div className="flex items-center justify-between opacity-70">
                   <span className="text-sm uppercase tracking-wide">Subtotal</span>
-                  <span className="text-sm">${subtotal.toFixed(2)}</span>
+                  <span className="text-sm">${cart.subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between opacity-70">
                   <span className="text-sm uppercase tracking-wide">Shipping</span>
@@ -210,9 +435,14 @@ export default function CartCheckoutPage() {
                 </div>
               </div>
 
-              <a href="/profile" className="mt-10 block w-full rounded-full bg-gradient-to-br from-[#497cff] to-[#003ea8] py-5 text-center text-xs font-black uppercase tracking-[0.2em] text-white transition hover:scale-[1.02] active:scale-95">
-                Place Order
-              </a>
+              <button
+                type="button"
+                disabled={placingOrder || loading || needsAuth}
+                onClick={placeOrder}
+                className="mt-10 block w-full rounded-full bg-gradient-to-br from-[#497cff] to-[#003ea8] py-5 text-center text-xs font-black uppercase tracking-[0.2em] text-white transition hover:scale-[1.02] active:scale-95 disabled:opacity-40"
+              >
+                {placingOrder ? "Placing Order..." : "Place Order"}
+              </button>
               <div className="mt-6 flex items-center justify-center gap-2 opacity-60">
                 <span className="material-symbols-outlined text-sm">lock</span>
                 <span className="text-[10px] font-bold uppercase tracking-widest">Encrypted Checkout</span>

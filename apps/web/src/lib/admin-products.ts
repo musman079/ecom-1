@@ -1,6 +1,6 @@
-import { randomUUID } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { ObjectId } from "mongodb";
+
+import { getMongoDb } from "./mongodb";
 
 export type ProductStatus = "draft" | "published";
 
@@ -38,39 +38,48 @@ export class ProductValidationError extends Error {
   }
 }
 
-type ProductStore = {
-  products: AdminProduct[];
+type ProductDocument = {
+  _id: ObjectId;
+  title: string;
+  description: string;
+  price: number;
+  taxCategory: string;
+  collection: string;
+  sku: string;
+  stockQuantity: number;
+  lowStockAlert: boolean;
+  status: ProductStatus;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
-const dataDirectory = path.join(process.cwd(), "data");
-const dataFilePath = path.join(dataDirectory, "admin-products.json");
-
-async function ensureStoreFile() {
-  await mkdir(dataDirectory, { recursive: true });
-
-  try {
-    await readFile(dataFilePath, "utf8");
-  } catch {
-    const seedStore: ProductStore = { products: [] };
-    await writeFile(dataFilePath, JSON.stringify(seedStore, null, 2), "utf8");
+function toObjectId(id: string) {
+  if (!ObjectId.isValid(id)) {
+    return null;
   }
+  return new ObjectId(id);
 }
 
-async function readStore(): Promise<ProductStore> {
-  await ensureStoreFile();
-
-  const raw = await readFile(dataFilePath, "utf8");
-  let parsed: Partial<ProductStore>;
-
-  try {
-    parsed = JSON.parse(raw) as Partial<ProductStore>;
-  } catch {
-    parsed = { products: [] };
-  }
-
+function mapProduct(document: ProductDocument): AdminProduct {
   return {
-    products: Array.isArray(parsed.products) ? parsed.products : [],
+    id: document._id.toHexString(),
+    title: document.title,
+    description: document.description,
+    price: document.price,
+    taxCategory: document.taxCategory,
+    collection: document.collection,
+    sku: document.sku,
+    stockQuantity: document.stockQuantity,
+    lowStockAlert: document.lowStockAlert,
+    status: document.status,
+    createdAt: document.createdAt.toISOString(),
+    updatedAt: document.updatedAt.toISOString(),
   };
+}
+
+async function productsCollection() {
+  const db = await getMongoDb();
+  return db.collection<ProductDocument>("products");
 }
 
 function validateProductInput(input: ProductInput) {
@@ -95,35 +104,36 @@ function validateProductInput(input: ProductInput) {
   }
 }
 
-async function writeStore(store: ProductStore) {
-  await ensureStoreFile();
-  await writeFile(dataFilePath, JSON.stringify(store, null, 2), "utf8");
-}
-
 export async function listAdminProducts() {
-  const store = await readStore();
-  return store.products.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+  const products = await productsCollection();
+  const items = await products.find({}).sort({ createdAt: -1 }).toArray();
+  return items.map(mapProduct);
 }
 
 export async function getAdminProductById(id: string) {
-  const store = await readStore();
-  return store.products.find((product) => product.id === id) ?? null;
+  const products = await productsCollection();
+  const objectId = toObjectId(id);
+  if (!objectId) {
+    return null;
+  }
+
+  const product = await products.findOne({ _id: objectId });
+  return product ? mapProduct(product) : null;
 }
 
 export async function createAdminProduct(input: ProductInput) {
-  const now = new Date().toISOString();
-  const store = await readStore();
+  const now = new Date();
+  const products = await productsCollection();
 
   validateProductInput(input);
 
   const normalizedSku = input.sku.trim().toLowerCase();
-  const skuExists = store.products.some((product) => product.sku.trim().toLowerCase() === normalizedSku);
+  const skuExists = await products.findOne({ sku: { $regex: new RegExp(`^${normalizedSku}$`, "i") } });
   if (skuExists) {
     throw new ProductValidationError("A product with this SKU already exists.");
   }
 
-  const product: AdminProduct = {
-    id: randomUUID(),
+  const product = {
     title: input.title.trim(),
     description: input.description.trim(),
     price: input.price,
@@ -137,21 +147,25 @@ export async function createAdminProduct(input: ProductInput) {
     updatedAt: now,
   };
 
-  store.products.unshift(product);
-  await writeStore(store);
+  const created = await products.insertOne(product as ProductDocument);
+  const inserted = await products.findOne({ _id: created.insertedId });
 
-  return product;
+  if (!inserted) {
+    throw new ProductValidationError("Product could not be created.");
+  }
+
+  return mapProduct(inserted);
 }
 
 export async function updateAdminProduct(id: string, input: ProductInput) {
-  const store = await readStore();
-  const index = store.products.findIndex((product) => product.id === id);
+  const products = await productsCollection();
+  const objectId = toObjectId(id);
 
-  if (index < 0) {
+  if (!objectId) {
     return null;
   }
 
-  const existing = store.products[index];
+  const existing = await products.findOne({ _id: objectId });
   if (!existing) {
     return null;
   }
@@ -159,42 +173,43 @@ export async function updateAdminProduct(id: string, input: ProductInput) {
   validateProductInput(input);
 
   const normalizedSku = input.sku.trim().toLowerCase();
-  const conflictingSku = store.products.some(
-    (product) => product.id !== id && product.sku.trim().toLowerCase() === normalizedSku,
-  );
+  const conflictingSku = await products.findOne({
+    _id: { $ne: objectId },
+    sku: { $regex: new RegExp(`^${normalizedSku}$`, "i") },
+  });
   if (conflictingSku) {
     throw new ProductValidationError("A product with this SKU already exists.");
   }
 
-  const updated: AdminProduct = {
-    ...existing,
-    title: input.title.trim(),
-    description: input.description.trim(),
-    price: input.price,
-    taxCategory: input.taxCategory.trim(),
-    collection: input.collection.trim(),
-    sku: input.sku.trim(),
-    stockQuantity: input.stockQuantity,
-    lowStockAlert: input.lowStockAlert,
-    status: input.status,
-    updatedAt: new Date().toISOString(),
-  };
+  await products.updateOne(
+    { _id: objectId },
+    {
+      $set: {
+        title: input.title.trim(),
+        description: input.description.trim(),
+        price: input.price,
+        taxCategory: input.taxCategory.trim(),
+        collection: input.collection.trim(),
+        sku: input.sku.trim(),
+        stockQuantity: input.stockQuantity,
+        lowStockAlert: input.lowStockAlert,
+        status: input.status,
+        updatedAt: new Date(),
+      },
+    },
+  );
 
-  store.products[index] = updated;
-  await writeStore(store);
-
-  return updated;
+  const updated = await products.findOne({ _id: objectId });
+  return updated ? mapProduct(updated) : null;
 }
 
 export async function deleteAdminProduct(id: string) {
-  const store = await readStore();
-  const previousCount = store.products.length;
-  store.products = store.products.filter((product) => product.id !== id);
-
-  if (store.products.length === previousCount) {
+  const products = await productsCollection();
+  const objectId = toObjectId(id);
+  if (!objectId) {
     return false;
   }
 
-  await writeStore(store);
-  return true;
+  const deleted = await products.deleteOne({ _id: objectId });
+  return deleted.deletedCount > 0;
 }

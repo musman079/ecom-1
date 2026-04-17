@@ -67,7 +67,7 @@ export default function KineticLuxuryFashionEcommercePage() {
               <button type="button" onClick={() => router.push("/auth")} className="text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500 transition hover:text-black">
                 Forgot Password?
               </button>
-              <button type="button" onClick={() => router.push("/auth")} className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#497cff] transition hover:underline">
+              <button type="button" onClick={() => router.push("/auth?mode=register")} className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#497cff] transition hover:underline">
                 Create Account
               </button>
             </div>

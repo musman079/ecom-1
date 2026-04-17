@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const completeLookItems = [
   {
@@ -44,6 +44,81 @@ const thumbImages = [
 export default function ProductDetailsPage() {
   const [selectedColor, setSelectedColor] = useState("Black");
   const [selectedSize, setSelectedSize] = useState("M");
+  const [featuredProductId, setFeaturedProductId] = useState<string | null>(null);
+  const [addToCartLoading, setAddToCartLoading] = useState(false);
+  const [addToCartMessage, setAddToCartMessage] = useState<string | null>(null);
+  const [addToCartError, setAddToCartError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadFeaturedProduct = async () => {
+      try {
+        const response = await fetch("/api/products", { cache: "no-store" });
+        if (!response.ok) {
+          return;
+        }
+
+        const payload = (await response.json()) as {
+          products?: Array<{
+            id: string;
+          }>;
+        };
+
+        const firstProductId = payload.products?.[0]?.id;
+        if (firstProductId) {
+          setFeaturedProductId(firstProductId);
+        }
+      } catch {
+        // Keep UX usable even if featured product fetch fails.
+      }
+    };
+
+    void loadFeaturedProduct();
+  }, []);
+
+  const addToCart = async () => {
+    setAddToCartError(null);
+    setAddToCartMessage(null);
+
+    if (!featuredProductId) {
+      setAddToCartError("No published product is available to add right now.");
+      return;
+    }
+
+    setAddToCartLoading(true);
+
+    try {
+      const response = await fetch("/api/cart", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          productId: featuredProductId,
+          quantity: 1,
+        }),
+      });
+
+      const payload = (await response.json()) as {
+        error?: string;
+      };
+
+      if (response.status === 401) {
+        setAddToCartError("Please login first to add products into cart.");
+        return;
+      }
+
+      if (!response.ok) {
+        setAddToCartError(payload.error ?? "Unable to add product to cart.");
+        return;
+      }
+
+      setAddToCartMessage("Added to cart successfully.");
+    } catch {
+      setAddToCartError("Unable to add product due to network issue.");
+    } finally {
+      setAddToCartLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f9f9f9] text-[#1a1c1c]">
@@ -176,10 +251,17 @@ export default function ProductDetailsPage() {
               </div>
 
               <div className="hidden lg:block pt-6">
-                <a href="/cart_checkout" className="flex w-full items-center justify-center gap-2 rounded-full bg-black py-6 text-sm font-bold uppercase tracking-widest text-white transition hover:opacity-90 active:scale-[0.98]">
+                <button
+                  type="button"
+                  onClick={addToCart}
+                  disabled={addToCartLoading}
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-black py-6 text-sm font-bold uppercase tracking-widest text-white transition hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
+                >
                   Add to Cart
                   <span className="material-symbols-outlined text-lg">arrow_forward</span>
-                </a>
+                </button>
+                {addToCartError ? <p className="mt-3 text-xs font-bold text-red-600">{addToCartError}</p> : null}
+                {addToCartMessage ? <p className="mt-3 text-xs font-bold text-emerald-700">{addToCartMessage}</p> : null}
               </div>
             </div>
           </section>
@@ -209,10 +291,17 @@ export default function ProductDetailsPage() {
             <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Total</span>
             <span className="text-lg font-black">$285.00</span>
           </div>
-          <a href="/cart_checkout" className="flex-1 rounded-full bg-black py-4 text-center text-xs font-bold uppercase tracking-widest text-white transition active:scale-95">
+          <button
+            type="button"
+            onClick={addToCart}
+            disabled={addToCartLoading}
+            className="flex-1 rounded-full bg-black py-4 text-center text-xs font-bold uppercase tracking-widest text-white transition active:scale-95 disabled:opacity-40"
+          >
             Add to Cart
-          </a>
+          </button>
         </div>
+        {addToCartError ? <p className="mt-3 text-xs font-bold text-red-600">{addToCartError}</p> : null}
+        {addToCartMessage ? <p className="mt-3 text-xs font-bold text-emerald-700">{addToCartMessage}</p> : null}
       </div>
 
       <footer className="mt-24 bg-[#f3f3f4] px-8 py-20">
