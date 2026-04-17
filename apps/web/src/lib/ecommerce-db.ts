@@ -22,6 +22,12 @@ export type ProductDocument = {
   title: string;
   description: string;
   price: number;
+  category?: string;
+  images?: string[];
+  rating?: number;
+  reviewCount?: number;
+  isActive?: boolean;
+  createdBy?: string;
   taxCategory: string;
   collection: string;
   sku: string;
@@ -58,7 +64,7 @@ type OrderDocument = {
   _id: ObjectId;
   orderNumber: string;
   userId: ObjectId;
-  status: "pending" | "confirmed";
+  status: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
   items: OrderItemSnapshot[];
   subtotal: number;
   shippingCost: number;
@@ -73,9 +79,54 @@ type OrderDocument = {
     country: string;
   };
   paymentMethod: "card" | "cod";
+  paymentStatus?: "pending" | "paid" | "failed";
+  trackingNumber?: string;
+  estimatedDelivery?: Date;
+  deliveredAt?: Date;
+  cancelledAt?: Date;
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
+};
+
+type ReviewDocument = {
+  _id: ObjectId;
+  productId: ObjectId;
+  userId: ObjectId;
+  userName: string;
+  rating: number;
+  comment: string;
+  isApproved: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type CouponDocument = {
+  _id: ObjectId;
+  code: string;
+  discountType: "percentage" | "fixed";
+  discountValue: number;
+  minOrderAmount?: number;
+  maxDiscount?: number;
+  isActive: boolean;
+  validFrom?: Date;
+  validUntil?: Date;
+  usageLimit?: number;
+  usedCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type ProductQueryOptions = {
+  publishedOnly?: boolean;
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  search?: string;
+  sortBy?: "createdAt" | "price" | "title";
+  order?: "asc" | "desc";
+  limit?: number;
+  page?: number;
 };
 
 function toObjectId(id: string) {
@@ -105,12 +156,28 @@ async function ordersCollection() {
   return db.collection<OrderDocument>("orders");
 }
 
+async function reviewsCollection() {
+  const db = await getMongoDb();
+  return db.collection<ReviewDocument>("reviews");
+}
+
+async function couponsCollection() {
+  const db = await getMongoDb();
+  return db.collection<CouponDocument>("coupons");
+}
+
 export function mapProduct(document: ProductDocument) {
   return {
     id: document._id.toHexString(),
     title: document.title,
     description: document.description,
     price: document.price,
+    category: document.category ?? "General",
+    images: Array.isArray(document.images) ? document.images : [],
+    rating: Number(document.rating ?? 0),
+    reviewCount: Number(document.reviewCount ?? 0),
+    isActive: document.isActive ?? true,
+    createdBy: document.createdBy ?? null,
     taxCategory: document.taxCategory,
     collection: document.collection,
     sku: document.sku,
@@ -167,12 +234,87 @@ export async function findUserById(userId: string) {
   return users.findOne({ _id: objectId });
 }
 
-export async function listProducts(options?: { publishedOnly?: boolean }) {
-  const products = await productsCollection();
-  const filter = options?.publishedOnly ? { status: "published" as const } : {};
+export async function updateUserProfile(userId: string, input: { fullName: string; phone?: string }) {
+  const users = await usersCollection();
+  const objectId = toObjectId(userId);
+  if (!objectId) {
+    return null;
+  }
 
-  const items = await products.find(filter).sort({ createdAt: -1 }).toArray();
-  return items.map(mapProduct);
+  const fullName = input.fullName.trim();
+  if (!fullName) {
+    return null;
+  }
+
+  const now = new Date();
+  await users.updateOne(
+    { _id: objectId },
+    {
+      $set: {
+        fullName,
+        phone: input.phone?.trim() || undefined,
+        updatedAt: now,
+      },
+    },
+  );
+
+  return users.findOne({ _id: objectId });
+}
+
+export async function listProducts(options?: { publishedOnly?: boolean }) {
+  const result = await listProductsWithMeta({ publishedOnly: options?.publishedOnly });
+  return result.products;
+}
+
+export async function listProductsWithMeta(options?: ProductQueryOptions) {
+  const products = await productsCollection();
+
+  const filter: Record<string, unknown> = {};
+  if (options?.publishedOnly) {
+    filter.status = "published";
+    filter.isActive = { $ne: false };
+  }
+
+  if (options?.category) {
+    filter.category = options.category;
+  }
+
+  if (Number.isFinite(options?.minPrice) || Number.isFinite(options?.maxPrice)) {
+    filter.price = {};
+    if (Number.isFinite(options?.minPrice)) {
+      (filter.price as Record<string, number>).$gte = Number(options?.minPrice);
+    }
+    if (Number.isFinite(options?.maxPrice)) {
+      (filter.price as Record<string, number>).$lte = Number(options?.maxPrice);
+    }
+  }
+
+  if (options?.search?.trim()) {
+    const searchRegex = new RegExp(options.search.trim(), "i");
+    filter.$or = [{ title: searchRegex }, { description: searchRegex }, { sku: searchRegex }];
+  }
+
+  const page = Math.max(1, options?.page ?? 1);
+  const limit = Math.max(1, Math.min(options?.limit ?? 20, 100));
+  const sortField = options?.sortBy ?? "createdAt";
+  const sortDirection = options?.order === "asc" ? 1 : -1;
+
+  const [total, docs] = await Promise.all([
+    products.countDocuments(filter),
+    products
+      .find(filter)
+      .sort({ [sortField]: sortDirection })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .toArray(),
+  ]);
+
+  return {
+    products: docs.map(mapProduct),
+    total,
+    page,
+    limit,
+  };
 }
 
 export async function findProductById(productId: string) {
@@ -185,6 +327,104 @@ export async function findProductById(productId: string) {
 
   const found = await products.findOne({ _id: objectId });
   return found ? mapProduct(found) : null;
+}
+
+export async function listReviewsByProduct(productId: string, options?: { approvedOnly?: boolean; limit?: number }) {
+  const productObjectId = toObjectId(productId);
+  if (!productObjectId) {
+    return [];
+  }
+
+  const reviews = await reviewsCollection();
+  const filter: Record<string, unknown> = { productId: productObjectId };
+  if (options?.approvedOnly) {
+    filter.isApproved = true;
+  }
+
+  const limit = Math.max(1, Math.min(options?.limit ?? 50, 100));
+  const docs = await reviews.find(filter).sort({ createdAt: -1 }).limit(limit).toArray();
+
+  return docs.map((review) => ({
+    id: review._id.toHexString(),
+    productId: review.productId.toHexString(),
+    userId: review.userId.toHexString(),
+    userName: review.userName,
+    rating: review.rating,
+    comment: review.comment,
+    isApproved: review.isApproved,
+    createdAt: review.createdAt.toISOString(),
+    updatedAt: review.updatedAt.toISOString(),
+  }));
+}
+
+export async function createReview(input: {
+  productId: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+}) {
+  const productObjectId = toObjectId(input.productId);
+  const userObjectId = toObjectId(input.userId);
+  if (!productObjectId || !userObjectId) {
+    return null;
+  }
+
+  const products = await productsCollection();
+  const product = await products.findOne({ _id: productObjectId, status: "published" });
+  if (!product) {
+    return null;
+  }
+
+  const reviews = await reviewsCollection();
+  const now = new Date();
+
+  const reviewDoc: Omit<ReviewDocument, "_id"> = {
+    productId: productObjectId,
+    userId: userObjectId,
+    userName: input.userName,
+    rating: input.rating,
+    comment: input.comment,
+    isApproved: true,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  const insertResult = await reviews.insertOne(reviewDoc as ReviewDocument);
+
+  const approvedReviews = await reviews.find({ productId: productObjectId, isApproved: true }).toArray();
+  const reviewCount = approvedReviews.length;
+  const averageRating = reviewCount
+    ? Number((approvedReviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount).toFixed(2))
+    : 0;
+
+  await products.updateOne(
+    { _id: productObjectId },
+    {
+      $set: {
+        rating: averageRating,
+        reviewCount,
+        updatedAt: now,
+      },
+    },
+  );
+
+  const inserted = await reviews.findOne({ _id: insertResult.insertedId });
+  if (!inserted) {
+    return null;
+  }
+
+  return {
+    id: inserted._id.toHexString(),
+    productId: inserted.productId.toHexString(),
+    userId: inserted.userId.toHexString(),
+    userName: inserted.userName,
+    rating: inserted.rating,
+    comment: inserted.comment,
+    isApproved: inserted.isApproved,
+    createdAt: inserted.createdAt.toISOString(),
+    updatedAt: inserted.updatedAt.toISOString(),
+  };
 }
 
 export async function getProductDocumentById(productId: string) {
@@ -475,7 +715,7 @@ export async function checkoutCart(userId: string, payload: {
   const order = {
     orderNumber: buildOrderNumber(),
     userId: userObjectId,
-    status: "confirmed",
+    status: "processing",
     items: orderItems,
     subtotal,
     shippingCost,
@@ -483,6 +723,8 @@ export async function checkoutCart(userId: string, payload: {
     total,
     shippingAddress: payload.shippingAddress,
     paymentMethod: payload.paymentMethod,
+    paymentStatus: payload.paymentMethod === "cod" ? "pending" : "paid",
+    estimatedDelivery: new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000),
     notes: payload.notes,
     createdAt: now,
     updatedAt: now,
@@ -517,5 +759,179 @@ export async function checkoutCart(userId: string, payload: {
       lineTotal: item.lineTotal,
     })),
     createdAt: now.toISOString(),
+  };
+}
+
+export async function listRecentOrdersByUser(userId: string, options?: { limit?: number }) {
+  const userObjectId = toObjectId(userId);
+  if (!userObjectId) {
+    return [];
+  }
+
+  const limit = Math.max(1, Math.min(options?.limit ?? 12, 50));
+  const orders = await ordersCollection();
+
+  const docs = await orders
+    .find({ userId: userObjectId })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .toArray();
+
+  return docs.map((order) => ({
+    id: order._id.toHexString(),
+    orderNumber: order.orderNumber,
+    status: order.status,
+    paymentStatus: order.paymentStatus ?? "pending",
+    trackingNumber: order.trackingNumber ?? null,
+    total: order.total,
+    totalItems: order.items.reduce((sum, item) => sum + item.quantity, 0),
+    leadItemTitle: order.items[0]?.title ?? "Order Item",
+    createdAt: order.createdAt.toISOString(),
+  }));
+}
+
+export async function getOrderByIdForUser(userId: string, orderId: string) {
+  const userObjectId = toObjectId(userId);
+  const orderObjectId = toObjectId(orderId);
+  if (!userObjectId || !orderObjectId) {
+    return null;
+  }
+
+  const orders = await ordersCollection();
+  const order = await orders.findOne({ _id: orderObjectId, userId: userObjectId });
+  if (!order) {
+    return null;
+  }
+
+  return {
+    id: order._id.toHexString(),
+    orderNumber: order.orderNumber,
+    status: order.status,
+    paymentStatus: order.paymentStatus ?? "pending",
+    trackingNumber: order.trackingNumber ?? null,
+    estimatedDelivery: order.estimatedDelivery ? order.estimatedDelivery.toISOString() : null,
+    subtotal: order.subtotal,
+    shippingCost: order.shippingCost,
+    taxAmount: order.taxAmount,
+    total: order.total,
+    items: order.items.map((item) => ({
+      productId: item.productId.toHexString(),
+      title: item.title,
+      sku: item.sku,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      lineTotal: item.lineTotal,
+    })),
+    shippingAddress: order.shippingAddress,
+    notes: order.notes ?? "",
+    createdAt: order.createdAt.toISOString(),
+    updatedAt: order.updatedAt.toISOString(),
+  };
+}
+
+export async function trackOrderForUser(userId: string, orderNumber: string) {
+  const userObjectId = toObjectId(userId);
+  if (!userObjectId) {
+    return null;
+  }
+
+  const orders = await ordersCollection();
+  const order = await orders.findOne({ userId: userObjectId, orderNumber: orderNumber.trim() });
+  if (!order) {
+    return null;
+  }
+
+  return {
+    id: order._id.toHexString(),
+    orderNumber: order.orderNumber,
+    status: order.status,
+    trackingNumber: order.trackingNumber ?? null,
+    estimatedDelivery: order.estimatedDelivery ? order.estimatedDelivery.toISOString() : null,
+    paymentStatus: order.paymentStatus ?? "pending",
+    updatedAt: order.updatedAt.toISOString(),
+  };
+}
+
+export async function cancelOrderForUser(userId: string, orderId: string) {
+  const userObjectId = toObjectId(userId);
+  const orderObjectId = toObjectId(orderId);
+  if (!userObjectId || !orderObjectId) {
+    return null;
+  }
+
+  const orders = await ordersCollection();
+  const order = await orders.findOne({ _id: orderObjectId, userId: userObjectId });
+  if (!order) {
+    return null;
+  }
+
+  if (!["pending", "confirmed", "processing"].includes(order.status)) {
+    return { error: "Order cannot be cancelled at this stage." as const };
+  }
+
+  await orders.updateOne(
+    { _id: orderObjectId },
+    {
+      $set: {
+        status: "cancelled",
+        cancelledAt: new Date(),
+        updatedAt: new Date(),
+      },
+    },
+  );
+
+  return { ok: true as const };
+}
+
+export async function applyCouponCode(input: { code: string; subtotal: number }) {
+  const normalizedCode = input.code.trim().toUpperCase();
+  if (!normalizedCode || !Number.isFinite(input.subtotal) || input.subtotal < 0) {
+    return { error: "Invalid coupon or subtotal." as const };
+  }
+
+  const coupons = await couponsCollection();
+  const now = new Date();
+
+  const coupon = await coupons.findOne({
+    code: normalizedCode,
+    isActive: true,
+    $or: [{ validFrom: { $exists: false } }, { validFrom: { $lte: now } }],
+  });
+
+  if (!coupon) {
+    return { error: "Coupon not found or inactive." as const };
+  }
+
+  if (coupon.validUntil && coupon.validUntil < now) {
+    return { error: "Coupon has expired." as const };
+  }
+
+  if (coupon.usageLimit !== undefined && coupon.usedCount >= coupon.usageLimit) {
+    return { error: "Coupon usage limit reached." as const };
+  }
+
+  if (coupon.minOrderAmount !== undefined && input.subtotal < coupon.minOrderAmount) {
+    return { error: `Minimum order amount is ${coupon.minOrderAmount}.` as const };
+  }
+
+  let discountAmount = 0;
+  if (coupon.discountType === "percentage") {
+    discountAmount = (input.subtotal * coupon.discountValue) / 100;
+  } else {
+    discountAmount = coupon.discountValue;
+  }
+
+  if (coupon.maxDiscount !== undefined) {
+    discountAmount = Math.min(discountAmount, coupon.maxDiscount);
+  }
+
+  discountAmount = Number(Math.max(0, Math.min(discountAmount, input.subtotal)).toFixed(2));
+
+  return {
+    code: coupon.code,
+    discountAmount,
+    discountType: coupon.discountType,
+    discountValue: coupon.discountValue,
+    finalSubtotal: Number((input.subtotal - discountAmount).toFixed(2)),
   };
 }

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 
 const navLinks = [
-  { label: 'New Arrivals', href: '/' },
-  { label: 'Designers', href: '/product_details' },
-  { label: 'Editorial', href: '/kinetic_luxury_fashion_e_commerce' },
-  { label: 'Archive', href: '/product_detail_desktop' },
-  { label: 'Sustainability', href: '/kinetic_luxury_fashion_e_commerce' },
+  { label: 'New Arrivals', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
+  { label: 'Designers', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
+  { label: 'Editorial', href: CUSTOMER_ROUTES.PRODUCT_DETAILS },
+  { label: 'Archive', href: CUSTOMER_ROUTES.PRODUCT_DETAILS },
+  { label: 'Sustainability', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
 ];
 
 const lookItems = [
@@ -57,16 +58,16 @@ export default function ProductDetailDesktopPage() {
           </nav>
 
           <div className="flex items-center gap-5">
-            <a href="/profile" aria-label="Favorite">
+            <a href={CUSTOMER_ROUTES.PROFILE} aria-label="Favorite">
               <span className="material-symbols-outlined">favorite</span>
             </a>
-            <a href="/cart_checkout_desktop" className="relative" aria-label="Shopping Bag">
+            <a href={CUSTOMER_ROUTES.CART_CHECKOUT} className="relative" aria-label="Shopping Bag">
               <span className="material-symbols-outlined">shopping_bag</span>
               <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#497cff] text-[8px] font-bold text-white">
                 2
               </span>
             </a>
-            <a href="/profile" aria-label="Profile">
+            <a href={CUSTOMER_ROUTES.PROFILE} aria-label="Profile">
               <span className="material-symbols-outlined">person</span>
             </a>
           </div>
@@ -136,7 +137,7 @@ export default function ProductDetailDesktopPage() {
                 <div>
                   <div className="mb-4 flex items-center justify-between">
                     <span className="text-[10px] font-semibold uppercase tracking-[0.2em]">Size - International</span>
-                    <a href="/product_details" className="text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-500 underline underline-offset-4">
+                    <a href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-500 underline underline-offset-4">
                       Size Guide
                     </a>
                   </div>
@@ -157,10 +158,10 @@ export default function ProductDetailDesktopPage() {
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  <a href="/cart_checkout_desktop" className="block w-full rounded-full bg-black py-5 text-center text-sm font-bold uppercase tracking-[0.2em] text-white shadow-xl shadow-black/10 transition-transform hover:scale-[1.01]">
+                  <a href={CUSTOMER_ROUTES.CART_CHECKOUT} className="block w-full rounded-full bg-black py-5 text-center text-sm font-bold uppercase tracking-[0.2em] text-white shadow-xl shadow-black/10 transition-transform hover:scale-[1.01]">
                     Add to Cart
                   </a>
-                  <a href="/profile" className="flex w-full items-center justify-center gap-2 rounded-full border border-neutral-300 py-5 text-sm font-bold uppercase tracking-[0.2em] transition-colors hover:bg-neutral-200">
+                  <a href={CUSTOMER_ROUTES.PROFILE} className="flex w-full items-center justify-center gap-2 rounded-full border border-neutral-300 py-5 text-sm font-bold uppercase tracking-[0.2em] transition-colors hover:bg-neutral-200">
                     <span className="material-symbols-outlined text-sm">favorite</span>
                     Add to Wishlist
                   </a>
@@ -198,7 +199,7 @@ export default function ProductDetailDesktopPage() {
               <h3 className="text-3xl font-black uppercase leading-[0.9] tracking-[-0.05em] sm:text-5xl">Complete The Look</h3>
               <p className="mt-2 text-sm uppercase tracking-[0.16em] text-neutral-500">Curated by Kinetic Editorial</p>
             </div>
-            <a href="/product_details" className="self-start border-b-2 border-black pb-1 text-xs font-bold uppercase tracking-[0.2em] md:self-auto">
+            <a href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="self-start border-b-2 border-black pb-1 text-xs font-bold uppercase tracking-[0.2em] md:self-auto">
               Shop All Recommendations
             </a>
           </div>
@@ -208,7 +209,7 @@ export default function ProductDetailDesktopPage() {
               <article key={item.name} className="group cursor-pointer">
                 <div className="relative mb-6 aspect-[4/5] overflow-hidden rounded-xl bg-white">
                   <img src={item.image} alt={item.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
-                  <a href="/cart_checkout_desktop" className="absolute bottom-4 right-4 translate-y-2 rounded-full bg-white p-3 opacity-0 shadow-lg transition-all group-hover:translate-y-0 group-hover:opacity-100" aria-label="Add To Cart">
+                  <a href={CUSTOMER_ROUTES.CART_CHECKOUT} className="absolute bottom-4 right-4 translate-y-2 rounded-full bg-white p-3 opacity-0 shadow-lg transition-all group-hover:translate-y-0 group-hover:opacity-100" aria-label="Add To Cart">
                     <span className="material-symbols-outlined">add</span>
                   </a>
                 </div>
@@ -234,7 +235,7 @@ export default function ProductDetailDesktopPage() {
                   <br />
                   Nomad.
                 </h4>
-                <a href="/kinetic_luxury_fashion_e_commerce" className="inline-flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em]">
+                <a href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="inline-flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em]">
                   Read Story
                   <span className="material-symbols-outlined text-sm">arrow_forward</span>
                 </a>
@@ -274,7 +275,7 @@ export default function ProductDetailDesktopPage() {
                   placeholder="EMAIL ADDRESS"
                   className="w-full border-b border-neutral-300 bg-transparent pb-2 text-[10px] tracking-[0.2em] uppercase focus:border-black focus:outline-none"
                 />
-                <a href="/auth" className="absolute bottom-2 right-0 text-[10px] font-bold uppercase tracking-[0.2em]">Join</a>
+                <a href={CUSTOMER_ROUTES.AUTH} className="absolute bottom-2 right-0 text-[10px] font-bold uppercase tracking-[0.2em]">Join</a>
               </div>
             </div>
           </div>
@@ -282,8 +283,8 @@ export default function ProductDetailDesktopPage() {
           <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-4 border-t border-black/5 px-6 py-8 md:flex-row md:items-center md:justify-between xl:px-12">
             <span className="text-xs uppercase tracking-[0.14em] text-neutral-400">© 2024 Kinetic Editorial. All Rights Reserved.</span>
             <div className="flex gap-8 text-xs tracking-[0.14em] text-neutral-400">
-              <a href="/auth" className="underline underline-offset-4">Privacy Policy</a>
-              <a href="/auth" className="underline underline-offset-4">Terms of Use</a>
+              <a href={CUSTOMER_ROUTES.PRIVACY_POLICY} className="underline underline-offset-4">Privacy Policy</a>
+              <a href={CUSTOMER_ROUTES.TERMS_OF_SERVICE} className="underline underline-offset-4">Terms of Use</a>
             </div>
           </div>
         </footer>
@@ -291,10 +292,10 @@ export default function ProductDetailDesktopPage() {
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-white/95 p-3 backdrop-blur-xl lg:hidden">
         <div className="mx-auto flex max-w-[560px] gap-2">
-          <a href="/profile" className="flex-1 rounded-full border border-neutral-300 py-3 text-center text-[11px] font-bold uppercase tracking-[0.18em]">
+          <a href={CUSTOMER_ROUTES.PROFILE} className="flex-1 rounded-full border border-neutral-300 py-3 text-center text-[11px] font-bold uppercase tracking-[0.18em]">
             Wishlist
           </a>
-          <a href="/cart_checkout_desktop" className="flex-1 rounded-full bg-black py-3 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-white">
+          <a href={CUSTOMER_ROUTES.CART_CHECKOUT} className="flex-1 rounded-full bg-black py-3 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-white">
             Add to Cart
           </a>
         </div>

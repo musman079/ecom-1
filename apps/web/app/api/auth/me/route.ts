@@ -23,6 +23,7 @@ export async function GET(request: Request) {
       id: user._id.toHexString(),
       email: user.email,
       fullName: user.fullName,
+      phone: user.phone ?? "",
       roles,
     },
   });

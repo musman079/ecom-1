@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import AdminLogoutButton from "../../src/components/admin-logout-button";
 
 const navItems = [
   { icon: "dashboard", label: "Overview" },
@@ -55,7 +56,7 @@ export default function AdminPostEditProductPage() {
 
         const roles = Array.isArray(payload.user.roles) ? payload.user.roles : [];
         if (!roles.includes("ADMIN")) {
-          router.replace("/profile");
+          router.replace("/");
           return;
         }
 
@@ -100,10 +101,10 @@ export default function AdminPostEditProductPage() {
         </nav>
 
         <div className="border-t border-zinc-200 pt-4">
-          <a href="/admin_products" className="mx-2 flex items-center rounded-full px-4 py-3 text-sm font-medium text-zinc-500 transition hover:bg-zinc-200/70">
-            <span className="material-symbols-outlined mr-3 text-[20px]">logout</span>
-            <span>Logout</span>
-          </a>
+          <AdminLogoutButton
+            className="mx-2 flex w-full items-center rounded-full px-4 py-3 text-sm font-medium text-zinc-500 transition hover:bg-zinc-200/70"
+            iconClassName="material-symbols-outlined mr-3 text-[20px]"
+          />
         </div>
       </aside>
 
@@ -125,6 +126,10 @@ export default function AdminPostEditProductPage() {
               alt="Admin profile"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4GT8C29KZ2z93aHRA6mrYbA9kg0A8SYUndH_8d_nCIJvv310gJAMdHLDdcxN8vv1FfaqKqyfuFU5tpk88e9z2AH9ePYJGWtELAHGoiK3GtASQspyGVYFi36nYZtX2xLdxcxbE_iVy6xxZtsn2MtfJTAk-WMaS9Xh9hbpXjGlsLpC2lzb67oDYP971BG-8ZiQcSQTmfO25Wf96xbmT0DkzieopzjVb77EjUehsjs6BLZ2akLJPFUmnw3KDOnhnpAsVf5PSxo4udjOk"
               className="h-8 w-8 rounded-full object-cover"
+            />
+            <AdminLogoutButton
+              className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-600"
+              iconClassName="material-symbols-outlined text-sm"
             />
           </div>
         </div>

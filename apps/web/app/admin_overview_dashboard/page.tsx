@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { listAdminProducts } from "../../src/lib/admin-products";
 import { getSessionFromRequest } from "../../src/lib/auth-session";
 import { isAdminSessionUser } from "../../src/lib/admin-auth";
+import AdminLogoutButton from "../../src/components/admin-logout-button";
 
 const orders = [
   { id: "#ORD-2841", customer: "Sarah Miller", initials: "SM", date: "Oct 12, 2023", status: "Delivered", amount: "$450.00", tone: "bg-emerald-50 text-emerald-700" },
@@ -59,7 +60,7 @@ export default async function AdminOverviewDashboardPage() {
   }
 
   if (!isAdminSessionUser(session)) {
-    redirect("/profile");
+    redirect("/");
   }
 
   const products = await listAdminProducts();
@@ -102,10 +103,10 @@ export default async function AdminOverviewDashboardPage() {
         </nav>
 
         <div className="mt-auto border-t border-zinc-200 pt-4">
-          <a href="/admin_products" className="mx-2 flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium text-zinc-500 transition hover:bg-zinc-200/70">
-            <span className="material-symbols-outlined text-[20px]">logout</span>
-            <span>Logout</span>
-          </a>
+          <AdminLogoutButton
+            className="mx-2 flex w-full items-center gap-3 rounded-full px-4 py-3 text-sm font-medium text-zinc-500 transition hover:bg-zinc-200/70"
+            iconClassName="material-symbols-outlined text-[20px]"
+          />
         </div>
       </aside>
 
@@ -140,6 +141,11 @@ export default async function AdminOverviewDashboardPage() {
               />
             </div>
           </div>
+
+          <AdminLogoutButton
+            className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-600"
+            iconClassName="material-symbols-outlined text-sm"
+          />
         </div>
       </header>
 

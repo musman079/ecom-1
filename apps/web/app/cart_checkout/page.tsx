@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 
 type ApiCartItem = {
   productId: string;
@@ -165,7 +166,7 @@ export default function CartCheckoutPage() {
     setMessage(null);
 
     if (needsAuth) {
-      router.push("/auth");
+      router.push(CUSTOMER_ROUTES.AUTH);
       return;
     }
 
@@ -208,6 +209,7 @@ export default function CartCheckoutPage() {
 
       setMessage(`Order placed successfully (${payload.order.orderNumber}).`);
       await loadCart();
+      router.push(CUSTOMER_ROUTES.ORDER_TRACKING);
     } catch {
       setError("Unable to place order right now.");
     } finally {
@@ -220,7 +222,7 @@ export default function CartCheckoutPage() {
       <header className="fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-4">
-            <a href="/" className="active:scale-95 transition" aria-label="Menu">
+            <a href={CUSTOMER_ROUTES.HOME} className="active:scale-95 transition" aria-label="Menu">
               <span className="material-symbols-outlined">menu</span>
             </a>
             <span className="text-xl font-black uppercase tracking-tight">KINETIC</span>
@@ -228,10 +230,10 @@ export default function CartCheckoutPage() {
 
           <div className="flex items-center gap-6">
             <nav className="hidden gap-8 md:flex">
-              <a href="/product_details" className="text-xs font-bold uppercase tracking-tight text-neutral-500">Explore</a>
-              <a href="/cart_checkout" className="text-xs font-bold uppercase tracking-tight">Cart</a>
+              <a href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="text-xs font-bold uppercase tracking-tight text-neutral-500">Explore</a>
+              <a href={CUSTOMER_ROUTES.CART_CHECKOUT} className="text-xs font-bold uppercase tracking-tight">Cart</a>
             </nav>
-            <a href="/cart_checkout" className="relative active:scale-95 transition" aria-label="Cart">
+            <a href={CUSTOMER_ROUTES.CART_CHECKOUT} className="relative active:scale-95 transition" aria-label="Cart">
               <span className="material-symbols-outlined">shopping_bag</span>
               <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#497cff] text-[8px] font-bold text-white">
                 {cart.totalItems}
@@ -257,7 +259,7 @@ export default function CartCheckoutPage() {
             ) : needsAuth ? (
               <div className="rounded-xl bg-white p-8 text-sm text-neutral-600">
                 <p className="mb-4">Please sign in to access your cart.</p>
-                <a href="/auth" className="inline-flex rounded-full bg-black px-6 py-3 text-xs font-bold uppercase tracking-[0.16em] text-white">
+                <a href={CUSTOMER_ROUTES.AUTH} className="inline-flex rounded-full bg-black px-6 py-3 text-xs font-bold uppercase tracking-[0.16em] text-white">
                   Go to Login
                 </a>
               </div>
@@ -453,25 +455,25 @@ export default function CartCheckoutPage() {
       </main>
 
       <nav className="fixed bottom-0 left-0 z-50 flex w-full items-center justify-around rounded-t-2xl bg-white/90 px-4 pb-6 pt-3 shadow-[0_-10px_30px_rgba(0,0,0,0.03)] backdrop-blur-xl md:hidden">
-        <a href="/" className="flex flex-col items-center text-neutral-400">
+        <a href={CUSTOMER_ROUTES.HOME} className="flex flex-col items-center text-neutral-400">
           <span className="material-symbols-outlined">home</span>
           <span className="mt-1 text-[10px] font-medium uppercase tracking-widest">Home</span>
         </a>
-        <a href="/product_details" className="flex flex-col items-center text-neutral-400">
+        <a href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="flex flex-col items-center text-neutral-400">
           <span className="material-symbols-outlined">search</span>
           <span className="mt-1 text-[10px] font-medium uppercase tracking-widest">Search</span>
         </a>
-        <a href="/product_detail_desktop" className="flex flex-col items-center text-neutral-400">
+        <a href={CUSTOMER_ROUTES.REVIEWS} className="flex flex-col items-center text-neutral-400">
           <span className="material-symbols-outlined">favorite</span>
-          <span className="mt-1 text-[10px] font-medium uppercase tracking-widest">Saved</span>
+          <span className="mt-1 text-[10px] font-medium uppercase tracking-widest">Reviews</span>
         </a>
-        <a href="/cart_checkout" className="flex scale-110 flex-col items-center text-black">
+        <a href={CUSTOMER_ROUTES.ORDER_TRACKING} className="flex scale-110 flex-col items-center text-black">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
             package_2
           </span>
           <span className="mt-1 text-[10px] font-medium uppercase tracking-widest">Orders</span>
         </a>
-        <a href="/profile" className="flex flex-col items-center text-neutral-400">
+        <a href={CUSTOMER_ROUTES.PROFILE} className="flex flex-col items-center text-neutral-400">
           <span className="material-symbols-outlined">person</span>
           <span className="mt-1 text-[10px] font-medium uppercase tracking-widest">Profile</span>
         </a>

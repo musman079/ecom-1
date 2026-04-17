@@ -1,0 +1,59 @@
+{
+  "products": [
+    {
+      "title": "Nike Air Zoom Pegasus 41",
+      "description": "Responsive daily trainer with breathable upper and durable grip for road runs.",
+      "price": 28999,
+      "category": "footwear",
+      "collection": "Performance Running",
+      "sku": "NIKE-PEG-41-BLK",
+      "stock": 35,
+      "lowStockAlert": false,
+      "status": "published"
+    },
+    {
+      "title": "Adidas Ultraboost Light",
+      "description": "Energy-return cushioning shoe built for comfort and long-distance use.",
+      "price": 31999,
+      "category": "footwear",
+      "collection": "Performance Running",
+      "sku": "ADIDAS-UBL-LIGHT-WHT",
+      "stock": 22,
+      "lowStockAlert": false,
+      "status": "published"
+    },
+    {
+      "title": "Puma Essentials Fleece Hoodie",
+      "description": "Soft fleece hoodie for everyday wear with clean minimal branding.",
+      "price": 7999,
+      "category": "apparel",
+      "collection": "Essentials",
+      "sku": "PUMA-HOODIE-ESS-GRY",
+      "stock": 48,
+      "lowStockAlert": false,
+      "status": "published"
+    },
+    {
+      "title": "Under Armour HeatGear T-Shirt",
+      "description": "Lightweight moisture-wicking tee made for gym and active training.",
+      "price": 4599,
+      "category": "apparel",
+      "collection": "Training Core",
+      "sku": "UA-HEATGEAR-TS-BLU",
+      "stock": 64,
+      "lowStockAlert": false,
+      "status": "published"
+    },
+    {
+      "title": "Reebok Nano X4 Training Shoes",
+      "description": "Stable and flexible training shoes optimized for lifting and HIIT sessions.",
+      "price": 24999,
+      "category": "footwear",
+      "collection": "Training Pro",
+      "sku": "REEBOK-NANOX4-BLK",
+      "stock": 18,
+      "lowStockAlert": true,
+      "status": "published"
+    }
+  ]
+}

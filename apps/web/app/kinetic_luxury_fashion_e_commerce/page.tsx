@@ -30,7 +30,7 @@ export default function KineticLuxuryFashionEcommercePage() {
             className="space-y-6"
             onSubmit={(e) => {
               e.preventDefault();
-              router.push("/profile");
+              router.push("/");
             }}
           >
             <div className="space-y-4">

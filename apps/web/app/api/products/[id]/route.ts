@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { findProductById } from "../../../../src/lib/ecommerce-db";
+import { findProductById, listReviewsByProduct } from "../../../../src/lib/ecommerce-db";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -14,5 +14,6 @@ export async function GET(_: Request, context: RouteContext) {
     return NextResponse.json({ error: "Product not found." }, { status: 404 });
   }
 
-  return NextResponse.json({ product });
+  const reviews = await listReviewsByProduct(id, { approvedOnly: true, limit: 50 });
+  return NextResponse.json({ product, reviews });
 }

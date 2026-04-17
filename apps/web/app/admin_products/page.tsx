@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import AdminLogoutButton from "../../src/components/admin-logout-button";
 
 type ProductStatus = "draft" | "published";
 
@@ -70,7 +71,7 @@ export default function AdminProductsPage() {
 
         const roles = Array.isArray(payload.user.roles) ? payload.user.roles : [];
         if (!roles.includes("ADMIN")) {
-          router.replace("/profile");
+          router.replace("/");
           return;
         }
 
@@ -231,6 +232,10 @@ export default function AdminProductsPage() {
             <a href="/admin_post_edit_product" className="rounded-full bg-black px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white">
               Editor
             </a>
+            <AdminLogoutButton
+              className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-zinc-600"
+              iconClassName="material-symbols-outlined text-sm"
+            />
           </div>
         </div>
       </header>

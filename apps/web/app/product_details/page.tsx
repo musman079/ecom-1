@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 
 const completeLookItems = [
   {
@@ -125,7 +126,7 @@ export default function ProductDetailsPage() {
       <header className="fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 md:px-8">
           <div className="flex items-center gap-4">
-            <a href="/" aria-label="Menu" className="transition hover:opacity-70 active:scale-95">
+            <a href={CUSTOMER_ROUTES.HOME} aria-label="Menu" className="transition hover:opacity-70 active:scale-95">
               <span className="material-symbols-outlined">menu</span>
             </a>
             <span className="text-xl font-black uppercase tracking-tight">KINETIC</span>
@@ -133,11 +134,11 @@ export default function ProductDetailsPage() {
 
           <div className="flex items-center gap-6">
             <nav className="hidden items-center gap-8 md:flex">
-              <a href="/" className="text-sm font-bold uppercase tracking-tight">Shop</a>
-              <a href="/kinetic_luxury_fashion_e_commerce" className="text-sm uppercase tracking-tight text-neutral-500 hover:opacity-70">Editorial</a>
-              <a href="/product_detail_desktop" className="text-sm uppercase tracking-tight text-neutral-500 hover:opacity-70">Archive</a>
+              <a href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="text-sm font-bold uppercase tracking-tight">Shop</a>
+              <a href={CUSTOMER_ROUTES.PRODUCT_DETAILS} className="text-sm uppercase tracking-tight text-neutral-500 hover:opacity-70">Editorial</a>
+              <a href={CUSTOMER_ROUTES.PRODUCT_DETAILS} className="text-sm uppercase tracking-tight text-neutral-500 hover:opacity-70">Archive</a>
             </nav>
-            <a href="/cart_checkout" aria-label="Bag" className="transition hover:opacity-70 active:scale-95">
+            <a href={CUSTOMER_ROUTES.CART_CHECKOUT} aria-label="Bag" className="transition hover:opacity-70 active:scale-95">
               <span className="material-symbols-outlined">shopping_bag</span>
             </a>
           </div>
@@ -211,7 +212,7 @@ export default function ProductDetailsPage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold uppercase tracking-widest">Select Size</span>
-                    <a href="/product_detail_desktop" className="text-xs text-neutral-500 underline">Size Guide</a>
+                    <a href={CUSTOMER_ROUTES.PRODUCT_DETAILS} className="text-xs text-neutral-500 underline">Size Guide</a>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     {(["S", "M", "L", "XL"] as const).map((size) => (
@@ -336,7 +337,7 @@ export default function ProductDetailsPage() {
                 placeholder="EMAIL ADDRESS"
                 className="w-full border-none bg-transparent text-sm uppercase tracking-widest placeholder:text-neutral-400 focus:outline-none"
               />
-              <a href="/auth" className="material-symbols-outlined text-xl">arrow_forward</a>
+              <a href={CUSTOMER_ROUTES.AUTH} className="material-symbols-outlined text-xl">arrow_forward</a>
             </div>
           </div>
         </div>
@@ -344,8 +345,8 @@ export default function ProductDetailsPage() {
         <div className="mx-auto mt-20 flex max-w-7xl flex-col gap-4 border-t border-neutral-300/40 pt-8 text-[10px] font-medium uppercase tracking-widest text-neutral-600 md:flex-row md:items-center md:justify-between">
           <span>© 2024 Kinetic Collective</span>
           <div className="flex gap-8">
-            <a href="/auth">Privacy Policy</a>
-            <a href="/auth">Terms of Service</a>
+            <a href={CUSTOMER_ROUTES.PRIVACY_POLICY}>Privacy Policy</a>
+            <a href={CUSTOMER_ROUTES.TERMS_OF_SERVICE}>Terms of Service</a>
           </div>
         </div>
       </footer>

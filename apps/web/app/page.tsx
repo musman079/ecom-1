@@ -1,18 +1,27 @@
 import Link from "next/link";
+import { CUSTOMER_ROUTES } from "../src/constants/routes";
+import { listProducts } from "../src/lib/ecommerce-db";
 
 const navLinks = ["New Arrivals", "Designers", "Editorial", "Archive", "Sustainability"] as const;
 
 const navRoutes: Record<(typeof navLinks)[number], string> = {
-  "New Arrivals": "/product_details",
-  Designers: "/product_detail_desktop",
-  Editorial: "/kinetic_luxury_fashion_e_commerce",
-  Archive: "/product_detail_desktop",
-  Sustainability: "/product_details",
+  "New Arrivals": CUSTOMER_ROUTES.BROWSE_PRODUCTS,
+  Designers: CUSTOMER_ROUTES.BROWSE_PRODUCTS,
+  Editorial: CUSTOMER_ROUTES.PRODUCT_DETAILS,
+  Archive: CUSTOMER_ROUTES.PRODUCT_DETAILS,
+  Sustainability: CUSTOMER_ROUTES.BROWSE_PRODUCTS,
 };
 
 const filters = ["Category", "Size", "Color", "Price Range", "Material"];
 
-const newArrivals = [
+type DisplayProductCard = {
+  label: string;
+  name: string;
+  price: string;
+  image: string;
+};
+
+const fallbackNewArrivals: DisplayProductCard[] = [
   {
     label: "Kinetic Lab",
     name: "Structured Wool Blazer",
@@ -43,20 +52,23 @@ const newArrivals = [
   },
 ];
 
-const bestSellers = [
+const fallbackBestSellers: DisplayProductCard[] = [
   {
+    label: "Best Seller",
     name: "Heavy Box Tee",
     price: "$85",
     image:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuD46zSzWfWyIFbs_U595J3GkOBwqYglYgB6BXQf0w2Ru-HKLQd-TVhQCBZHCqtZvkSeY5Bkl4wb1KTuROse_t2VhEetdB4kS74VJa4NvyKra4RBDTYtYnaAruB5mAO4iaGl3wiPNMwG-An1Sm0s2bEG22VaAisQyD98wEy_yGQm77avKkV5DzeBc5_O2D-UYzhtw_q2aonNmttEx7wDQgfUq8aaG3vBfsnDYpUlFWEbaZMqFVbbp9rN85cuEHye_BlAwKaADswV0atD",
   },
   {
+    label: "Best Seller",
     name: "Orbital Frame",
     price: "$240",
     image:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuA2WsTompm8zco7Euqews9CnE-lsEx6nw_7ouXE_pTL_dYRyZ5jFli2oT_OEtCEciX0GW7ih9xf-WbvNSxGX_ap6hC1cg3e2JdnZVpuoglvZhMtpEN_yBBhDwjdK-RCPpF79D6xsudLQMHaNPdKeAHsp7ZMIf0F_OhxbUAp-rNkt4oFpIE-OU1-nC2v7xND3bV7Xnud9Cs-Cw5nX3iI8Grcc8OOx3vJp_hMVd70v4AEXIGpQBRN7kMS-Y5lCGnkQJAnZiCCn1MxenVl",
   },
   {
+    label: "Best Seller",
     name: "Shell L3 Jacket",
     price: "$375",
     image:
@@ -64,7 +76,50 @@ const bestSellers = [
   },
 ];
 
-export default function Home() {
+const fallbackImages = [
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuDYCbArsFOqPxGlq03JSdqhQIOoQU6vbuIAZ8YlyEadaXVRd7JPq56MexLgniTm5J0O1VbnwSD8wwGc_V91OEumnzsiCuQYU9uwpd2W87PjGvq1IX2e7ZSlz9OvlRNILGlLaMjWOYYy-X5WNwcFS3bys2n04uoveFQwri9I-aiPnwMYKgCdL1lHa2V3MgvB_Yc-jh6ZC8vkZqldFySMYZYYKKU3qryheXIg9GCeqtzkl-kR157bYdMTDUsn6yOurowgtYm2f6_ypZyt",
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuDxyOv6DIo8zAm5VCuTWNPPCqt_67myzLrpo0181uyDcokg13jBTmPp2vkuSaTTV2M5nIOvOcM5RCzYt7UhjX_2oWs7qjM6KIFuBtTD0PqDTbsufqf-GjgFw2K-UM9KJMHNje9FnuSdfifPPdPrKGscOuzPNVnBv_VphdDqHKAOKHkcAk40mbCUHgtWXMOpi4O62ixACHEZU5dUTBndX5yzpale23YuW2gzB_nSK28LdU_LFNaoM-S2bAhyzH96pmEtqIKf7R8jJRqy",
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuASccMpb35t429bezXDi4EhKuOieCSpaAGu73_vPUkC2RVwr2aR5-7xTbA5lJxEaz9Db65gXA7dEA4irVM9Ni-v59XD1li0mMjhQI8LwF08cBgs4sC3OA43sV1EMCm46x_QqLZwDxuUD--fyxbhqIoKOhw1cdzxSjuTARqHxbGqdBhxF5K5kn_DaHImKeuXYRBwRyKFvEWpU8XQ18VJRhmG_YQKJha5hKVLvDqTIQFyYkaOFRCmuXVcQOlYtdlaY7WQvTqZLe6vOJsB",
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuDr4tvf-0RRKrgc4NIRHUnTX9E1qyxH2RvrXJ9JQxFsGp8DluhrNdFIJgn3Twrh3N29nGcBIlKJp1NcVNeIsrq2cfY8nyreBmJ6N_pJACkSC_Lr16u8QF9Y2bEoe7Ya02MjnNvhcBhAlv8eIA23fPSWH2RRYzORGX6L_nFifEtEJ4Eblcq2L-6fL02Lo3bJhcV0f-2YWx4yAUQ6gPQdp2S3OTOxmjv7KT4OKKepFQ4-aYDpZQ6gwEgY7l-Iq8xNwhIrxf4apZT-ek2S",
+];
+
+function formatDashboardPrice(price: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(price);
+}
+
+function getCardImage(images: string[] | undefined, index: number) {
+  const fromProduct = Array.isArray(images) ? images[0] : null;
+  return fromProduct || fallbackImages[index % fallbackImages.length] || fallbackImages[0] || "";
+}
+
+export default async function Home() {
+  let newArrivals: DisplayProductCard[] = fallbackNewArrivals;
+  let bestSellers: DisplayProductCard[] = fallbackBestSellers;
+
+  try {
+    const products = await listProducts({ publishedOnly: true });
+    if (products.length > 0) {
+      const mapped = products.map((product, index) => ({
+        label: product.collection || product.category || "Kinetic Catalog",
+        name: product.title,
+        price: formatDashboardPrice(product.price),
+        image: getCardImage(product.images, index),
+      }));
+
+      newArrivals = mapped.slice(0, 4);
+      bestSellers = (mapped.length > 4 ? mapped.slice(4, 7) : mapped.slice(0, 3)).map((item) => ({
+        ...item,
+        label: "Best Seller",
+      }));
+    }
+  } catch {
+    // Keep fallback visuals if DB is unavailable.
+  }
+
   return (
     <div className="min-h-screen bg-[#f3f3f4] text-[#1a1c1c]">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-black/5 bg-white/85 backdrop-blur-xl">
@@ -88,9 +143,9 @@ export default function Home() {
           </nav>
 
           <div className="flex items-center gap-5 text-lg">
-            <Link href="/cart_checkout" aria-label="Bag">👜</Link>
-            <Link href="/product_details" aria-label="Favorites">♥</Link>
-            <Link href="/profile" aria-label="Profile">◉</Link>
+            <Link href={CUSTOMER_ROUTES.CART_CHECKOUT} aria-label="Bag">👜</Link>
+            <Link href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} aria-label="Favorites">♥</Link>
+            <Link href={CUSTOMER_ROUTES.PROFILE} aria-label="Profile">◉</Link>
           </div>
         </div>
       </header>
@@ -115,10 +170,10 @@ export default function Home() {
             </h2>
 
             <div className="flex flex-wrap gap-4">
-              <Link href="/product_details" className="rounded-full bg-white px-10 py-4 text-sm font-bold text-black transition hover:scale-105">
+              <Link href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="rounded-full bg-white px-10 py-4 text-sm font-bold text-black transition hover:scale-105">
                 Shop Collection
               </Link>
-              <Link href="/product_detail_desktop" className="rounded-full border border-white/20 bg-white/5 px-10 py-4 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/15">
+              <Link href={CUSTOMER_ROUTES.PRODUCT_DETAILS} className="rounded-full border border-white/20 bg-white/5 px-10 py-4 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/15">
                 View Editorial
               </Link>
             </div>
@@ -136,7 +191,7 @@ export default function Home() {
               {filters.map((item, idx) => (
                 <a
                   key={item}
-                  href={`/product_details?filter=${encodeURIComponent(item.toLowerCase())}`}
+                  href={`${CUSTOMER_ROUTES.BROWSE_PRODUCTS}?filter=${encodeURIComponent(item.toLowerCase())}`}
                   className={`flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-[10px] font-semibold uppercase tracking-[0.2em] ${
                     idx === 0 ? "text-black" : "text-neutral-400 hover:bg-white"
                   }`}
@@ -160,7 +215,7 @@ export default function Home() {
                   <h3 className="text-4xl font-black uppercase tracking-[-0.05em]">New Arrivals</h3>
                   <div className="mt-2 h-1 w-12 bg-black" />
                 </div>
-                <Link href="/product_details" className="text-xs font-bold uppercase tracking-[0.2em] underline underline-offset-8">
+                <Link href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="text-xs font-bold uppercase tracking-[0.2em] underline underline-offset-8">
                   Explore All
                 </Link>
               </div>
@@ -191,7 +246,7 @@ export default function Home() {
                   <p className="mt-6 max-w-md text-sm leading-7 text-neutral-600">
                     The foundation of the modern wardrobe. These pieces have defined our narrative this season, blending timeless silhouettes with technical mastery.
                   </p>
-                  <Link href="/product_details" className="mt-8 inline-block rounded-full bg-gradient-to-br from-[#497cff] to-[#003ea8] px-8 py-3 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-xl shadow-blue-700/20">
+                  <Link href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="mt-8 inline-block rounded-full bg-gradient-to-br from-[#497cff] to-[#003ea8] px-8 py-3 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-xl shadow-blue-700/20">
                     View Favorites
                   </Link>
                 </div>
@@ -225,7 +280,7 @@ export default function Home() {
                       <br />
                       Nomads
                     </h4>
-                    <Link href="/product_detail_desktop" className="mt-4 inline-block border-b border-white text-xs font-bold text-white">Read The Story</Link>
+                    <Link href={CUSTOMER_ROUTES.PRODUCT_DETAILS} className="mt-4 inline-block border-b border-white text-xs font-bold text-white">Read The Story</Link>
                   </div>
                 </div>
               </article>
@@ -240,7 +295,7 @@ export default function Home() {
                 <p className="mt-6 text-sm leading-7 text-white/70">
                   Every stitch is a conscious decision to move forward. Explore the technology behind our FW24 textile selection.
                 </p>
-                <Link href="/product_detail_desktop" className="mt-8 inline-block text-xs font-bold uppercase tracking-[0.18em]">
+                <Link href={CUSTOMER_ROUTES.PRODUCT_DETAILS} className="mt-8 inline-block text-xs font-bold uppercase tracking-[0.18em]">
                   Discover Technicals +
                 </Link>
               </article>
@@ -279,7 +334,7 @@ export default function Home() {
                   placeholder="Enter Email"
                   className="w-full bg-transparent text-[10px] font-medium uppercase tracking-[0.2em] placeholder:text-neutral-400 focus:outline-none"
                 />
-                <a href="/auth" className="text-sm">→</a>
+                <a href={CUSTOMER_ROUTES.AUTH} className="text-sm">→</a>
               </div>
             </div>
           </div>

@@ -1,13 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 
 const navLinks = [
-  { label: 'New Arrivals', href: '/' },
-  { label: 'Designers', href: '/product_details' },
-  { label: 'Editorial', href: '/kinetic_luxury_fashion_e_commerce' },
-  { label: 'Archive', href: '/product_detail_desktop' },
-  { label: 'Sustainability', href: '/kinetic_luxury_fashion_e_commerce' },
+  { label: 'New Arrivals', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
+  { label: 'Designers', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
+  { label: 'Editorial', href: CUSTOMER_ROUTES.PRODUCT_DETAILS },
+  { label: 'Archive', href: CUSTOMER_ROUTES.PRODUCT_DETAILS },
+  { label: 'Sustainability', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
 ];
 
 const cartItems = [
@@ -91,9 +92,9 @@ export default function CartCheckoutDesktopPage() {
           </nav>
 
           <div className="flex items-center gap-5">
-            <a href="/cart_checkout_desktop" aria-label="Shopping Bag" className="material-symbols-outlined cursor-pointer text-2xl">shopping_bag</a>
-            <a href="/profile" aria-label="Favorite" className="material-symbols-outlined cursor-pointer text-2xl">favorite</a>
-            <a href="/profile" aria-label="Profile" className="material-symbols-outlined cursor-pointer text-2xl">person</a>
+            <a href={CUSTOMER_ROUTES.CART_CHECKOUT} aria-label="Shopping Bag" className="material-symbols-outlined cursor-pointer text-2xl">shopping_bag</a>
+            <a href={CUSTOMER_ROUTES.REVIEWS} aria-label="Favorite" className="material-symbols-outlined cursor-pointer text-2xl">favorite</a>
+            <a href={CUSTOMER_ROUTES.PROFILE} aria-label="Profile" className="material-symbols-outlined cursor-pointer text-2xl">person</a>
           </div>
         </div>
       </header>
@@ -249,7 +250,7 @@ export default function CartCheckoutDesktopPage() {
                   </div>
                 </div>
 
-                <a href="/profile" className="block w-full rounded-full bg-black py-6 text-center text-sm font-bold uppercase tracking-[0.3em] text-white shadow-xl transition-transform hover:scale-[1.02]">
+                <a href={CUSTOMER_ROUTES.ORDER_TRACKING} className="block w-full rounded-full bg-black py-6 text-center text-sm font-bold uppercase tracking-[0.3em] text-white shadow-xl transition-transform hover:scale-[1.02]">
                   Complete Order
                 </a>
 
@@ -272,16 +273,16 @@ export default function CartCheckoutDesktopPage() {
 
           <div className="flex flex-col gap-4">
             <h4 className="mb-2 text-xs font-black uppercase tracking-widest">Support</h4>
-            <a href="/auth" className="text-xs tracking-widest text-neutral-400 underline underline-offset-4">Customer Care</a>
-            <a href="/auth" className="text-xs tracking-widest text-neutral-400">Shipping &amp; Returns</a>
-            <a href="/" className="text-xs tracking-widest text-neutral-400">Store Locator</a>
+            <a href={CUSTOMER_ROUTES.AUTH} className="text-xs tracking-widest text-neutral-400 underline underline-offset-4">Customer Care</a>
+            <a href={CUSTOMER_ROUTES.RETURNS_REFUNDS} className="text-xs tracking-widest text-neutral-400">Shipping &amp; Returns</a>
+            <a href={CUSTOMER_ROUTES.HOME} className="text-xs tracking-widest text-neutral-400">Store Locator</a>
           </div>
 
           <div className="flex flex-col gap-4">
             <h4 className="mb-2 text-xs font-black uppercase tracking-widest">Company</h4>
-            <a href="/auth" className="text-xs tracking-widest text-neutral-400">Privacy Policy</a>
-            <a href="/kinetic_luxury_fashion_e_commerce" className="text-xs tracking-widest text-neutral-400">Careers</a>
-            <a href="/kinetic_luxury_fashion_e_commerce" className="text-xs tracking-widest text-neutral-400">Sustainability</a>
+            <a href={CUSTOMER_ROUTES.PRIVACY_POLICY} className="text-xs tracking-widest text-neutral-400">Privacy Policy</a>
+            <a href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="text-xs tracking-widest text-neutral-400">Careers</a>
+            <a href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="text-xs tracking-widest text-neutral-400">Sustainability</a>
           </div>
 
           <div className="flex flex-col gap-6">
@@ -292,7 +293,7 @@ export default function CartCheckoutDesktopPage() {
                 placeholder="ENTER YOUR EMAIL"
                 className="w-full border-0 border-b border-neutral-200 bg-transparent py-3 text-[10px] uppercase tracking-widest focus:border-black focus:ring-0"
               />
-              <a href="/auth" className="absolute right-0 top-1/2 -translate-y-1/2">
+              <a href={CUSTOMER_ROUTES.AUTH} className="absolute right-0 top-1/2 -translate-y-1/2">
                 <span className="material-symbols-outlined text-lg">arrow_forward</span>
               </a>
             </div>

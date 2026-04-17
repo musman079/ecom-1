@@ -52,7 +52,7 @@ export default function AuthPage() {
 
         if (data.user?.id) {
           const roles = Array.isArray(data.user.roles) ? data.user.roles : [];
-          router.replace(roles.includes("ADMIN") ? "/admin_overview_dashboard" : "/profile");
+          router.replace(roles.includes("ADMIN") ? "/admin_overview_dashboard" : "/");
         }
       } catch {
         // Ignore transient session check issues on initial load.
@@ -136,7 +136,7 @@ export default function AuthPage() {
 
       setMessage(mode === "login" ? "Login successful. Redirecting..." : "Account created. Redirecting...");
       const roles = Array.isArray(payload.user?.roles) ? payload.user?.roles : [];
-      router.push(roles.includes("ADMIN") ? "/admin_overview_dashboard" : "/profile");
+      router.push(roles.includes("ADMIN") ? "/admin_overview_dashboard" : "/");
     } catch {
       setError("Network issue while signing in. Please retry.");
     } finally {
