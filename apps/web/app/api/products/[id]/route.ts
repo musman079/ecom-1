@@ -7,7 +7,7 @@ import {
   updateAdminProduct,
 } from "../../../../src/lib/admin-products";
 import { AuthError } from "../../../../src/lib/auth-session";
-import { findProductById, listReviewsByProduct } from "../../../../src/lib/ecommerce-db";
+import { getPublicProductByIdOrSlug } from "../../../../src/lib/products";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -29,14 +29,13 @@ type UpdateProductPayload = {
 
 export async function GET(_: Request, context: RouteContext) {
   const { id } = await context.params;
-  const product = await findProductById(id);
+  const product = await getPublicProductByIdOrSlug(id);
 
-  if (!product || product.status !== "published") {
+  if (!product) {
     return NextResponse.json({ error: "Product not found." }, { status: 404 });
   }
 
-  const reviews = await listReviewsByProduct(id, { approvedOnly: true, limit: 50 });
-  return NextResponse.json({ product, reviews });
+  return NextResponse.json({ product });
 }
 
 export async function PUT(request: Request, context: RouteContext) {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CUSTOMER_ROUTES } from "../src/constants/routes";
-import { listProducts } from "../src/lib/ecommerce-db";
+import { listPublicProducts } from "../src/lib/products";
 
 const navLinks = ["New Arrivals", "Designers", "Editorial", "Archive", "Sustainability"] as const;
 
@@ -15,6 +15,8 @@ const navRoutes: Record<(typeof navLinks)[number], string> = {
 const filters = ["Category", "Size", "Color", "Price Range", "Material"];
 
 type DisplayProductCard = {
+  id?: string;
+  slug?: string;
   label: string;
   name: string;
   price: string;
@@ -97,17 +99,25 @@ function getCardImage(images: string[] | undefined, index: number) {
 }
 
 export default async function Home() {
-  let newArrivals: DisplayProductCard[] = fallbackNewArrivals;
-  let bestSellers: DisplayProductCard[] = fallbackBestSellers;
+  let newArrivals: DisplayProductCard[] = [];
+  let bestSellers: DisplayProductCard[] = [];
 
   try {
-    const products = await listProducts({ publishedOnly: true });
+    const result = await listPublicProducts({
+      page: 1,
+      limit: 16,
+      sort: "newest",
+    });
+
+    const products = result.products;
     if (products.length > 0) {
       const mapped = products.map((product, index) => ({
-        label: product.collection || product.category || "Kinetic Catalog",
+        id: product.id,
+        slug: product.slug,
+        label: product.categories[0] || "Kinetic Catalog",
         name: product.title,
         price: formatDashboardPrice(product.price),
-        image: getCardImage(product.images, index),
+        image: getCardImage(product.thumbnail ? [product.thumbnail] : undefined, index),
       }));
 
       newArrivals = mapped.slice(0, 4);
@@ -117,7 +127,8 @@ export default async function Home() {
       }));
     }
   } catch {
-    // Keep fallback visuals if DB is unavailable.
+    newArrivals = [];
+    bestSellers = [];
   }
 
   return (
@@ -222,7 +233,11 @@ export default async function Home() {
 
               <div className="grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 xl:grid-cols-4">
                 {newArrivals.map((item) => (
-                  <article key={item.name} className="group cursor-pointer">
+                  <Link
+                    key={item.id || item.name}
+                    href={`/product_detail_desktop?product=${encodeURIComponent(item.slug || item.id || item.name)}`}
+                    className="group cursor-pointer"
+                  >
                     <div className="mb-6 aspect-[3/4] overflow-hidden rounded-xl bg-neutral-200">
                       <img
                         src={item.image}
@@ -233,8 +248,11 @@ export default async function Home() {
                     <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-neutral-400">{item.label}</p>
                     <h4 className="mb-2 text-base font-bold tracking-tight">{item.name}</h4>
                     <p className="text-sm font-medium">{item.price}</p>
-                  </article>
+                  </Link>
                 ))}
+                {newArrivals.length === 0 ? (
+                  <p className="col-span-full text-sm text-neutral-500">No published products available right now.</p>
+                ) : null}
               </div>
             </section>
 
@@ -253,14 +271,21 @@ export default async function Home() {
 
                 <div className="no-scrollbar flex w-full gap-8 overflow-x-auto pb-2 lg:w-[66%]">
                   {bestSellers.map((item, idx) => (
-                    <article key={item.name} className={`min-w-[280px] ${idx === 2 ? "opacity-40" : ""}`}>
+                    <Link
+                      key={item.id || item.name}
+                      href={`/product_detail_desktop?product=${encodeURIComponent(item.slug || item.id || item.name)}`}
+                      className={`min-w-[280px] ${idx === 2 ? "opacity-40" : ""}`}
+                    >
                       <div className="mb-4 aspect-[4/5] overflow-hidden rounded-xl bg-white">
                         <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
                       </div>
                       <h4 className="text-xs font-bold uppercase tracking-[0.15em]">{item.name}</h4>
                       <p className="text-xs text-neutral-500">{item.price}</p>
-                    </article>
+                    </Link>
                   ))}
+                  {bestSellers.length === 0 ? (
+                    <p className="min-w-[280px] text-sm text-neutral-500">No best-seller data available yet.</p>
+                  ) : null}
                 </div>
               </div>
             </section>

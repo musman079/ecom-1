@@ -1,10 +1,17 @@
-import { SignJWT, jwtVerify } from "jose";
 import { NextResponse } from "next/server";
+
+import {
+  clearAuthCookie,
+  readAuthTokenFromRequest,
+  signAuthToken,
+  type AuthRole,
+  setAuthCookie,
+  verifyAuthToken,
+} from "./auth";
 
 export type SessionUser = {
   userId: string;
   email: string;
-  fullName: string;
   roles: string[];
 };
 
@@ -15,67 +22,43 @@ export class AuthError extends Error {
   }
 }
 
-const SESSION_COOKIE_NAME = "ecom_session";
-const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
-
-const sessionSecret = process.env.JWT_SECRET;
-if (!sessionSecret) {
-  throw new Error("JWT_SECRET is not set. Add it in apps/web/.env.");
-}
-
-const secretKey = new TextEncoder().encode(sessionSecret);
-
-function parseCookieHeader(cookieHeader: string | null, name: string) {
-  if (!cookieHeader) {
-    return null;
+function primaryRoleFromRoles(roles: string[]): AuthRole {
+  if (roles.includes("SUPER_ADMIN")) {
+    return "SUPER_ADMIN";
   }
 
-  const parts = cookieHeader.split(";");
-  for (const part of parts) {
-    const [rawKey, ...rawValueParts] = part.trim().split("=");
-    if (rawKey !== name) {
-      continue;
-    }
-
-    const rawValue = rawValueParts.join("=");
-    return decodeURIComponent(rawValue);
+  if (roles.includes("ADMIN")) {
+    return "ADMIN";
   }
 
-  return null;
+  return "CUSTOMER";
 }
 
 export async function createSessionToken(payload: SessionUser) {
-  return new SignJWT(payload)
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime(`${SESSION_TTL_SECONDS}s`)
-    .sign(secretKey);
+  return signAuthToken({
+    sub: payload.userId,
+    email: payload.email,
+    role: primaryRoleFromRoles(payload.roles),
+  });
 }
 
 export async function getSessionFromRequest(request: Request) {
-  const token = parseCookieHeader(request.headers.get("cookie"), SESSION_COOKIE_NAME);
+  const token = readAuthTokenFromRequest(request);
 
   if (!token) {
     return null;
   }
 
-  try {
-    const verified = await jwtVerify(token, secretKey);
-    const payload = verified.payload as Partial<SessionUser>;
-
-    if (!payload.userId || !payload.email || !payload.fullName || !Array.isArray(payload.roles)) {
-      return null;
-    }
-
-    return {
-      userId: payload.userId,
-      email: payload.email,
-      fullName: payload.fullName,
-      roles: payload.roles,
-    } satisfies SessionUser;
-  } catch {
+  const payload = await verifyAuthToken(token);
+  if (!payload) {
     return null;
   }
+
+  return {
+    userId: payload.sub,
+    email: payload.email,
+    roles: [payload.role],
+  } satisfies SessionUser;
 }
 
 export async function requireSession(request: Request) {
@@ -89,30 +72,9 @@ export async function requireSession(request: Request) {
 
 export async function applySessionCookie(response: NextResponse, user: SessionUser) {
   const token = await createSessionToken(user);
-
-  response.cookies.set({
-    name: SESSION_COOKIE_NAME,
-    value: token,
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: SESSION_TTL_SECONDS,
-  });
-
-  return response;
+  return setAuthCookie(response, token);
 }
 
 export function clearSessionCookie(response: NextResponse) {
-  response.cookies.set({
-    name: SESSION_COOKIE_NAME,
-    value: "",
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
-  });
-
-  return response;
+  return clearAuthCookie(response);
 }

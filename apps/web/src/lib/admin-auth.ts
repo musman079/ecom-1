@@ -15,7 +15,7 @@ function getAdminEmails() {
 }
 
 export function isAdminSessionUser(user: SessionUser) {
-  if (user.roles.includes(ADMIN_ROLE)) {
+  if (user.roles.includes(ADMIN_ROLE) || user.roles.includes("SUPER_ADMIN")) {
     return true;
   }
 

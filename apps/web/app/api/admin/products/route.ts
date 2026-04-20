@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { ProductValidationError, createAdminProduct, listAdminProducts } from "../../../../src/lib/admin-products";
+import {
+  ProductConflictError,
+  ProductValidationError,
+  createAdminProduct,
+  listAdminProducts,
+} from "../../../../src/lib/admin-products";
 import { AuthError } from "../../../../src/lib/auth-session";
 import { requireAdminSession } from "../../../../src/lib/admin-auth";
 
@@ -89,6 +94,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ product }, { status: 201 });
   } catch (error) {
+    if (error instanceof ProductConflictError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
+
     if (error instanceof ProductValidationError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }

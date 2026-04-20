@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
@@ -63,7 +63,7 @@ enum InventoryEventType {
 }
 
 model User {
-  id                   String             @id @default(cuid())
+  id                   String             @id @default(cuid()) @map("_id")
   email                String             @unique
   passwordHash         String
   fullName             String
@@ -81,14 +81,14 @@ model User {
 }
 
 model Role {
-  id        String     @id @default(cuid())
+  id        String     @id @default(cuid()) @map("_id")
   name      RoleType   @unique
   createdAt DateTime   @default(now())
   users     UserRole[]
 }
 
 model UserRole {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid()) @map("_id")
   userId    String
   roleId    String
   assignedAt DateTime @default(now())
@@ -100,7 +100,7 @@ model UserRole {
 }
 
 model Address {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @map("_id")
   userId        String
   label         String?
   fullName      String
@@ -122,7 +122,7 @@ model Address {
 }
 
 model Category {
-  id          String            @id @default(cuid())
+  id          String            @id @default(cuid()) @map("_id")
   name        String            @unique
   slug        String            @unique
   createdAt   DateTime          @default(now())
@@ -131,10 +131,13 @@ model Category {
 }
 
 model Product {
-  id               String               @id @default(cuid())
+  id               String               @id @default(cuid()) @map("_id")
   title            String
   slug             String               @unique
   description      String
+  taxCategory      String?
+  collection       String?
+  lowStockAlert    Boolean?
   status           ProductStatus        @default(DRAFT)
   createdById      String?
   createdAt        DateTime             @default(now())
@@ -149,7 +152,7 @@ model Product {
 }
 
 model ProductVariant {
-  id                    String                 @id @default(cuid())
+  id                    String                 @id @default(cuid()) @map("_id")
   productId             String
   sku                   String                 @unique
   title                 String
@@ -171,18 +174,19 @@ model ProductVariant {
 }
 
 model ProductCategory {
+  id         String   @id @default(cuid()) @map("_id")
   productId   String
   categoryId  String
   assignedAt  DateTime @default(now())
   product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-  @@id([productId, categoryId])
+  @@unique([productId, categoryId])
   @@index([categoryId])
 }
 
 model Cart {
-  id         String     @id @default(cuid())
+  id         String     @id @default(cuid()) @map("_id")
   userId     String     @unique
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
@@ -191,7 +195,7 @@ model Cart {
 }
 
 model CartItem {
-  id         String         @id @default(cuid())
+  id         String         @id @default(cuid()) @map("_id")
   cartId     String
   variantId  String
   quantity   Int            @default(1)
@@ -205,7 +209,7 @@ model CartItem {
 }
 
 model Order {
-  id                 String              @id @default(cuid())
+  id                 String              @id @default(cuid()) @map("_id")
   orderNumber        String              @unique
   userId             String?
   status             OrderStatus         @default(PENDING)
@@ -233,7 +237,7 @@ model Order {
 }
 
 model OrderItem {
-  id                String         @id @default(cuid())
+  id                String         @id @default(cuid()) @map("_id")
   orderId           String
   variantId         String?
   productTitle      String
@@ -250,7 +254,7 @@ model OrderItem {
 }
 
 model Payment {
-  id                   String        @id @default(cuid())
+  id                   String        @id @default(cuid()) @map("_id")
   orderId              String
   provider             String
   providerReference    String?
@@ -267,7 +271,7 @@ model Payment {
 }
 
 model Shipment {
-  id              String          @id @default(cuid())
+  id              String          @id @default(cuid()) @map("_id")
   orderId         String
   carrier         String?
   trackingNumber  String?
@@ -283,7 +287,7 @@ model Shipment {
 }
 
 model Review {
-  id         String   @id @default(cuid())
+  id         String   @id @default(cuid()) @map("_id")
   userId     String
   productId  String
   rating     Int
@@ -299,7 +303,7 @@ model Review {
 }
 
 model InventoryTransaction {
-  id               String             @id @default(cuid())
+  id               String             @id @default(cuid()) @map("_id")
   variantId        String
   type             InventoryEventType
   quantityDelta    Int
@@ -313,7 +317,7 @@ model InventoryTransaction {
 }
 
 model Coupon {
-  id                 String             @id @default(cuid())
+  id                 String             @id @default(cuid()) @map("_id")
   code               String             @unique
   description        String?
   discountPercent    Int?
@@ -328,7 +332,7 @@ model Coupon {
 }
 
 model CouponRedemption {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   couponId    String
   orderId     String
   userId      String?
@@ -342,3 +346,4 @@ model CouponRedemption {
   @@index([orderId])
   @@index([userId])
 }
+

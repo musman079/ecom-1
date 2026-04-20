@@ -1,70 +1,149 @@
-import { hash } from "bcryptjs";
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
-import { mapUserRoles } from "../../../../src/lib/admin-auth";
-import { applySessionCookie } from "../../../../src/lib/auth-session";
-import { createUser } from "../../../../src/lib/ecommerce-db";
+import {
+  assertAuthEnvironment,
+  AuthConfigError,
+  hashPassword,
+  normalizeEmail,
+  signAuthToken,
+  setAuthCookie,
+  validateEmailFormat,
+  validatePasswordStrength,
+} from "../../../../src/lib/auth";
+import { sanitizeAuthUser } from "../../../../src/lib/get-current-user";
+import { prisma } from "../../../../src/lib/prisma";
 
 type RegisterPayload = {
   email?: string;
   password?: string;
   fullName?: string;
-  name?: string;
   phone?: string;
 };
 
+function errorResponse(message: string, status: number) {
+  return NextResponse.json(
+    {
+      success: false,
+      message,
+    },
+    { status },
+  );
+}
+
 export async function POST(request: Request) {
+  try {
+    assertAuthEnvironment();
+  } catch (error) {
+    const message = error instanceof AuthConfigError ? error.message : "Authentication environment is not configured.";
+    return errorResponse(message, 500);
+  }
+
   let payload: RegisterPayload;
 
   try {
     payload = (await request.json()) as RegisterPayload;
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+    return errorResponse("Invalid JSON body.", 400);
   }
 
-  const normalizedName = payload.fullName ?? payload.name;
+  const fullName = payload.fullName?.trim() ?? "";
+  const email = normalizeEmail(payload.email ?? "");
+  const password = payload.password ?? "";
+  const phone = payload.phone?.trim() || null;
 
-  if (!payload.email || !payload.password || !normalizedName) {
-    return NextResponse.json({ error: "email, password and fullName are required." }, { status: 400 });
+  if (!fullName || !email || !password) {
+    return errorResponse("fullName, email and password are required.", 400);
   }
 
-  if (payload.password.length < 8) {
-    return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
+  if (!validateEmailFormat(email)) {
+    return errorResponse("A valid email address is required.", 400);
   }
 
-  const passwordHash = await hash(payload.password, 10);
-  const user = await createUser({
-    email: payload.email,
-    passwordHash,
-    fullName: normalizedName,
-    phone: payload.phone,
-  });
-
-  if (!user) {
-    return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
+  if (!validatePasswordStrength(password)) {
+    return errorResponse("Password must be at least 8 characters.", 400);
   }
 
-  const roles = mapUserRoles(user.email, user.roles);
+  try {
+    const existing = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
 
-  const response = NextResponse.json(
-    {
-      token: null,
-      user: {
-        id: user._id.toHexString(),
-        email: user.email,
-        fullName: user.fullName,
-        roles,
+    if (existing) {
+      return errorResponse("An account with this email already exists.", 409);
+    }
+
+    const passwordHash = await hashPassword(password);
+
+    await prisma.role.upsert({
+      where: { name: "CUSTOMER" },
+      update: {},
+      create: { name: "CUSTOMER" },
+    });
+
+    const user = await prisma.user.create({
+      data: {
+        fullName,
+        email,
+        passwordHash,
+        phone,
+        isActive: true,
+        roles: {
+          create: [
+            {
+              role: {
+                connect: { name: "CUSTOMER" },
+              },
+            },
+          ],
+        },
       },
-    },
-    { status: 201 },
-  );
+      include: {
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+      },
+    });
 
-  await applySessionCookie(response, {
-    userId: user._id.toHexString(),
-    email: user.email,
-    fullName: user.fullName,
-    roles,
-  });
+    const roleNames = user.roles.map((entry) => entry.role.name);
+    const role = roleNames.includes("SUPER_ADMIN")
+      ? "SUPER_ADMIN"
+      : roleNames.includes("ADMIN")
+        ? "ADMIN"
+        : "CUSTOMER";
 
-  return response;
+    const token = await signAuthToken({
+      sub: user.id,
+      email: user.email,
+      role,
+    });
+
+    const response = NextResponse.json(
+      {
+        success: true,
+        message: "Registration successful.",
+        user: sanitizeAuthUser({
+          id: user.id,
+          email: user.email,
+          fullName: user.fullName,
+          phone: user.phone,
+          role,
+        }),
+      },
+      { status: 201 },
+    );
+
+    setAuthCookie(response, token);
+    return response;
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return errorResponse("An account with this email already exists.", 409);
+    }
+
+    console.error("Register API failed", error);
+    return errorResponse("Failed to register user.", 500);
+  }
 }

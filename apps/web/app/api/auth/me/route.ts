@@ -1,30 +1,39 @@
 import { NextResponse } from "next/server";
 
-import { mapUserRoles } from "../../../../src/lib/admin-auth";
-import { getSessionFromRequest } from "../../../../src/lib/auth-session";
-import { findUserById } from "../../../../src/lib/ecommerce-db";
+import { assertAuthEnvironment, AuthConfigError } from "../../../../src/lib/auth";
+import { getCurrentUserFromRequest } from "../../../../src/lib/get-current-user";
+
+function errorResponse(message: string, status: number) {
+  return NextResponse.json(
+    {
+      success: false,
+      message,
+    },
+    { status },
+  );
+}
 
 export async function GET(request: Request) {
-  const session = await getSessionFromRequest(request);
-
-  if (!session) {
-    return NextResponse.json({ user: null });
+  try {
+    assertAuthEnvironment();
+  } catch (error) {
+    const message = error instanceof AuthConfigError ? error.message : "Authentication environment is not configured.";
+    return errorResponse(message, 500);
   }
 
-  const user = await findUserById(session.userId);
-  if (!user || !user.isActive) {
-    return NextResponse.json({ user: null });
+  try {
+    const user = await getCurrentUserFromRequest(request);
+    if (!user) {
+      return errorResponse("Unauthorized.", 401);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Current user retrieved.",
+      user,
+    });
+  } catch (error) {
+    console.error("Auth me API failed", error);
+    return errorResponse("Failed to fetch current user.", 500);
   }
-
-  const roles = mapUserRoles(user.email, user.roles);
-
-  return NextResponse.json({
-    user: {
-      id: user._id.toHexString(),
-      email: user.email,
-      fullName: user.fullName,
-      phone: user.phone ?? "",
-      roles,
-    },
-  });
 }

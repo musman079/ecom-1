@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 
 const navLinks = [
@@ -36,8 +37,98 @@ const lookItems = [
 ];
 
 export default function ProductDetailDesktopPage() {
+  const searchParams = useSearchParams();
   const [selectedColor, setSelectedColor] = useState("Black");
   const [selectedSize, setSelectedSize] = useState("S");
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [product, setProduct] = useState<{
+    id: string;
+    slug: string;
+    title: string;
+    description: string;
+    price: number;
+    compareAtPrice?: number;
+    sku: string;
+    stockQuantity: number;
+    inStock: boolean;
+    images: string[];
+    categories: string[];
+  } | null>(null);
+
+  const productIdOrSlug = useMemo(() => searchParams.get("product")?.trim() ?? "", [searchParams]);
+  const desktopImages = product?.images && product.images.length > 0
+    ? product.images
+    : [
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuCuDny4SKGJzALRE-iBCUljuB6J14e_79v6rmOm-aKOvGN5ba95nlmi2t80un8qrFw5P1H_s-S35tS9XrALh0fozYfvG7eS86LCyo8rwdr3IHghH6PkU9qBrLHitSA4UBOdYtZYJApFJ5Wf_Lks_LPzY3cqD9kiZXEMzG0GSyEAKV1BYsRj2yl6hZ9wpEGREJRy97EO2woy5yqNYqtoaKuQzwWuqdUGwOQq3PleW4Z9SQhfFfknRczdZmwnuSVjdCSO0Mk0w9DapB8q",
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuAA9ShVaVLTG2YsQuVR0EprDeGe37jQdqq7Pf_zGGRK9_IbVwPPjur6zrPT3VzeN7lL1DZulT6WuxGnk1sAgqj2qzLpkZsHUJJMwndSu4KHZSObrc_T1nswnkER1FrlU81rHJX6bXAEKiOsKzYS3Z-WUZ-pVLNregowMb4xqGrRbu2VMct4LLcJMZmHAr6w2daV_5ghqCoZjnSLdJAcqfijo6NZ6hhbO_4AZ7edrTO7RZS00v4IFiHaE0oCYtWTeu1dNl5LjFT7YZyH",
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuDM3yobJAQ9iFc0l4NY8udyzkfIF4blCC2z0eW9tfbZO1sGAPk_mmUTP6mX3R3n_WXYNnwe-XbX3UdTD-loNuuDccacs7W0w0tNUaVcKMsryGRxTUttOsZvYP3yYNg6vnP1f0M-8_m5KL-Y1gcMZpWUoq52hDpIADxMam3Vw4qmUQrViLDh-0WX-Q0sDHiMtd8mpEIQAwj9h1MDOr7VMHtipZxzr8j82qxWvCOzO4BS25Dmf2eTrDXWeXOP8-xZVXqR0Pnz-gsKMViM",
+      ];
+
+  useEffect(() => {
+    const loadProduct = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        let value = productIdOrSlug;
+        if (!value) {
+          const listing = await fetch("/api/products?page=1&limit=1", { cache: "no-store" });
+          if (!listing.ok) {
+            throw new Error("Unable to load product list.");
+          }
+
+          const listingPayload = (await listing.json()) as {
+            products?: Array<{ id: string; slug?: string }>;
+          };
+          value = listingPayload.products?.[0]?.slug || listingPayload.products?.[0]?.id || "";
+        }
+
+        if (!value) {
+          setProduct(null);
+          setError("No published products available.");
+          return;
+        }
+
+        const response = await fetch(`/api/products/${encodeURIComponent(value)}`, { cache: "no-store" });
+        if (response.status === 404) {
+          setProduct(null);
+          setError("Product not found.");
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error("Unable to load product details.");
+        }
+
+        const payload = (await response.json()) as {
+          product?: {
+            id: string;
+            slug: string;
+            title: string;
+            description: string;
+            price: number;
+            compareAtPrice?: number;
+            sku: string;
+            stockQuantity: number;
+            inStock: boolean;
+            images: string[];
+            categories: string[];
+          };
+        };
+
+        setProduct(payload.product ?? null);
+      } catch {
+        setProduct(null);
+        setError("Failed to load product details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadProduct();
+  }, [productIdOrSlug]);
 
   return (
     <div className="min-h-screen bg-[#f3f3f4] text-[#1a1c1c]">
@@ -89,22 +180,22 @@ export default function ProductDetailDesktopPage() {
           <div className="flex flex-col gap-4 lg:col-span-7">
             <div className="group aspect-[3/4] w-full overflow-hidden bg-neutral-200">
               <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuDny4SKGJzALRE-iBCUljuB6J14e_79v6rmOm-aKOvGN5ba95nlmi2t80un8qrFw5P1H_s-S35tS9XrALh0fozYfvG7eS86LCyo8rwdr3IHghH6PkU9qBrLHitSA4UBOdYtZYJApFJ5Wf_Lks_LPzY3cqD9kiZXEMzG0GSyEAKV1BYsRj2yl6hZ9wpEGREJRy97EO2woy5yqNYqtoaKuQzwWuqdUGwOQq3PleW4Z9SQhfFfknRczdZmwnuSVjdCSO0Mk0w9DapB8q"
-                alt="Kinetic 01 Tech Coat"
+                src={desktopImages[0]}
+                alt={product?.title || "Product image"}
                 className="h-full w-full object-cover transition duration-1000 group-hover:scale-105"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="aspect-[3/4] overflow-hidden bg-neutral-200">
                 <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAA9ShVaVLTG2YsQuVR0EprDeGe37jQdqq7Pf_zGGRK9_IbVwPPjur6zrPT3VzeN7lL1DZulT6WuxGnk1sAgqj2qzLpkZsHUJJMwndSu4KHZSObrc_T1nswnkER1FrlU81rHJX6bXAEKiOsKzYS3Z-WUZ-pVLNregowMb4xqGrRbu2VMct4LLcJMZmHAr6w2daV_5ghqCoZjnSLdJAcqfijo6NZ6hhbO_4AZ7edrTO7RZS00v4IFiHaE0oCYtWTeu1dNl5LjFT7YZyH"
+                  src={desktopImages[1] || desktopImages[0]}
                   alt="Detail View"
                   className="h-full w-full object-cover transition duration-700 hover:scale-110"
                 />
               </div>
               <div className="aspect-[3/4] overflow-hidden bg-neutral-200">
                 <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDM3yobJAQ9iFc0l4NY8udyzkfIF4blCC2z0eW9tfbZO1sGAPk_mmUTP6mX3R3n_WXYNnwe-XbX3UdTD-loNuuDccacs7W0w0tNUaVcKMsryGRxTUttOsZvYP3yYNg6vnP1f0M-8_m5KL-Y1gcMZpWUoq52hDpIADxMam3Vw4qmUQrViLDh-0WX-Q0sDHiMtd8mpEIQAwj9h1MDOr7VMHtipZxzr8j82qxWvCOzO4BS25Dmf2eTrDXWeXOP8-xZVXqR0Pnz-gsKMViM"
+                  src={desktopImages[2] || desktopImages[0]}
                   alt="Styling Shot"
                   className="h-full w-full object-cover transition duration-700 hover:scale-110"
                 />
@@ -115,14 +206,17 @@ export default function ProductDetailDesktopPage() {
           <div className="px-4 pt-10 sm:px-6 sm:pt-12 lg:col-span-5 lg:px-0 lg:pl-20 lg:pt-0">
             <div className="lg:sticky lg:top-32 lg:max-w-md">
               <span className="mb-4 block text-[10px] font-bold uppercase tracking-[0.3em] text-[#497cff]">
-                New Season Collection
+                {loading ? "Loading..." : "New Season Collection"}
               </span>
               <h2 className="mb-4 text-4xl font-black uppercase leading-[0.86] tracking-[-0.05em] sm:text-5xl lg:text-6xl">
-                KINETIC 01-TECH
-                <br />
-                COAT
+                {product?.title || "Product"}
               </h2>
-              <p className="mb-8 text-3xl font-light text-neutral-600 sm:text-4xl">$1,250.00</p>
+              <p className="mb-8 text-3xl font-light text-neutral-600 sm:text-4xl">
+                {typeof product?.price === "number" ? `$${product.price.toFixed(2)}` : "$0.00"}
+                {typeof product?.compareAtPrice === "number" ? (
+                  <span className="ml-3 text-xl text-neutral-400 line-through">${product.compareAtPrice.toFixed(2)}</span>
+                ) : null}
+              </p>
 
               <div className="mb-12 space-y-8">
                 <div>
@@ -175,7 +269,7 @@ export default function ProductDetailDesktopPage() {
                     <span className="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
                   </summary>
                   <p className="pt-4 text-sm leading-relaxed text-neutral-600">
-                    100% Recycled Polyamide. Our Graphene-infused shell offers technical weather protection while maintaining breathable comfort.
+                    {error || product?.description || "This product description is currently unavailable."}
                   </p>
                 </details>
 
@@ -185,7 +279,7 @@ export default function ProductDetailDesktopPage() {
                     <span className="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
                   </summary>
                   <p className="pt-4 text-sm leading-relaxed text-neutral-600">
-                    Complimentary express shipping worldwide with a 14-day return window and low-impact packaging.
+                    SKU {product?.sku || "N/A"}. Stock {typeof product?.stockQuantity === "number" ? product.stockQuantity : 0}. {product?.inStock ? "In stock" : "Out of stock"}.
                   </p>
                 </details>
               </div>

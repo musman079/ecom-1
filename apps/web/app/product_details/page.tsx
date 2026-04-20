@@ -1,34 +1,33 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 
-const completeLookItems = [
-  {
-    name: 'PLEATED TROUSERS',
-    price: '$145.00',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuACwmbls4cAdaHeQFav2FLho0KhG_4rTwcxN6BpaWWZfmDoxU8wXzLApq1yqLoyJcR03QD9eU8QdnnmKzeNCCoYvFTTMv24A3VOZUiM1EvFn3_iQK-J-Sqz1mJWevj8YAh2-7L8AhguMJFJpxXqLThdeQENns5ULbtnXMG_mf5Z2rbQ5SXG_xbv5mIg_oaeq2nkw0CK7OoWuCxNKhDZtqjx0VfiXY-vUS9gB2Ls5-lYUw7EgNtEqjyxNg_ORfYceqKwyLv0i8dGjxfu',
-  },
-  {
-    name: 'HEAVY TEE',
-    price: '$65.00',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCw2L9HpNAu2ITJSHybiVBi9OF78rJfNBaI6u_g_yTn8dPZ1ZWffQUuq-AwK_ZeGnp89BaW1SpfO23Po1yXylhUQt64JFazyEmUoF8uzQk3G2KevzZpI_bMy7HevTvbVdae-S1DapLtsPIzLnpXsfUh7w6STsI5Sj9Ic-fPqCsW2FLIqwfjtERY2-yeDGnIafgJbsRL3d5V5gA6n3VPzcJBZiwX5CBQWOrTSAgnDgA4EJ1eU84xINyy1SOFWt8qfRfiwjm6_a6HQJwu',
-  },
-  {
-    name: 'METRIC SNEAKER',
-    price: '$210.00',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAJic7o07KRw0ex9QruabUxlpZPcyD8jrpnDaf__bPhZ7v_87Kpu6C2PI5eu6_Oohdm0lGaUcU6JYvJUmD_TU_yuVcSS5kgBUItlqc9Is_2Fwb2slU0ZEFblHKHY_fVL9zLA7BkTovXicJ4BJRtIcLBlIL_5ksPnTgrPWeSJsszQ4K3BGedwAyZDDKXhBfRRuc8xi-04rXLS2eAkZIk1QftaGIH_tJFIwjO5f01iFXeTJIjkhBCoFm81PhbWmFrnGE4gd7BBYbB87kX',
-  },
-  {
-    name: 'VECTOR TIMEPIECE',
-    price: '$450.00',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDby6it9jUTogQZHX_Jo3DM5SEgz1K33mZ0u-OyeToQi7XlvwzdXzph08LiQCWioIkJMpiIdS8KKYwbGy232oeIheEDlSxI6HLrO_85y2NtDrH7NfWjdGFTIK-If4Iy3ChxjDEC8RxMr1aoAwYeh-MlQHi49KEuZG7yedoXIIIhDwIGFnunI9mT__Aqv1qM6kDvQqTJJkG4vUULv38UhTAAXS4vmrQ7gk07qHrpOorJ_hpMmRNOZ6XewyrQ17ZWsFVkql3FpMx_KhDD',
-  },
-];
+type ProductCard = {
+  id: string;
+  slug: string;
+  title: string;
+  shortDescription: string;
+  price: number;
+  stockQuantity: number;
+  inStock: boolean;
+  thumbnail: string | null;
+};
+
+type ProductDetail = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  price: number;
+  compareAtPrice?: number;
+  sku: string;
+  stockQuantity: number;
+  inStock: boolean;
+  images: string[];
+  categories: string[];
+};
 
 const galleryImages = [
   'https://lh3.googleusercontent.com/aida-public/AB6AXuAOxZYhTmNSexvgQ6GDh54igLjroBcQ7ioVBk6V4cw1VWP5L_A07-e8MKl8pt4jrETKY9Z-DCde7pecXAb-DFFz0tXmldwELRkd5DgizmRWPGX_xk0RlHaUWtdC56aBQmd8YRW45CgkqWay8pfR_X_aUdIJBpx4qXbSWjl5zC0rt-5LYt6i6v4bPVjzxo6eYEE-7NpQPwlq_TGCKzqydUc6v226wrKpbehfYbvAcO626HVe8aels6ez-mt3Xqa_6cJYLWz2Y1jzSolz',
@@ -43,44 +42,137 @@ const thumbImages = [
 ];
 
 export default function ProductDetailsPage() {
+  const searchParams = useSearchParams();
   const [selectedColor, setSelectedColor] = useState("Black");
   const [selectedSize, setSelectedSize] = useState("M");
-  const [featuredProductId, setFeaturedProductId] = useState<string | null>(null);
+  const [product, setProduct] = useState<ProductDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(true);
+  const [detailError, setDetailError] = useState<string | null>(null);
+
+  const [listItems, setListItems] = useState<ProductCard[]>([]);
+  const [listLoading, setListLoading] = useState(true);
+  const [listError, setListError] = useState<string | null>(null);
+  const [searchText, setSearchText] = useState("");
+  const [sort, setSort] = useState("newest");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   const [addToCartLoading, setAddToCartLoading] = useState(false);
   const [addToCartMessage, setAddToCartMessage] = useState<string | null>(null);
   const [addToCartError, setAddToCartError] = useState<string | null>(null);
 
+  const productIdOrSlug = useMemo(() => searchParams.get("product")?.trim() ?? "", [searchParams]);
+  const detailGallery = product?.images && product.images.length > 0 ? product.images : galleryImages;
+
   useEffect(() => {
-    const loadFeaturedProduct = async () => {
+    const loadProduct = async () => {
+      setDetailLoading(true);
+      setDetailError(null);
+
       try {
-        const response = await fetch("/api/products", { cache: "no-store" });
-        if (!response.ok) {
+        let value = productIdOrSlug;
+        if (!value) {
+          const listing = await fetch("/api/products?page=1&limit=1", { cache: "no-store" });
+          if (!listing.ok) {
+            throw new Error("Unable to load product list.");
+          }
+
+          const listingPayload = (await listing.json()) as {
+            products?: Array<{ id: string; slug?: string }>;
+          };
+          value = listingPayload.products?.[0]?.slug || listingPayload.products?.[0]?.id || "";
+        }
+
+        if (!value) {
+          setProduct(null);
+          setDetailError("No published products available.");
           return;
         }
 
+        const response = await fetch(`/api/products/${encodeURIComponent(value)}`, { cache: "no-store" });
+        if (response.status === 404) {
+          setProduct(null);
+          setDetailError("Product not found.");
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error("Unable to load product details.");
+        }
+
         const payload = (await response.json()) as {
-          products?: Array<{
-            id: string;
-          }>;
+          product?: ProductDetail;
         };
 
-        const firstProductId = payload.products?.[0]?.id;
-        if (firstProductId) {
-          setFeaturedProductId(firstProductId);
-        }
+        setProduct(payload.product ?? null);
       } catch {
-        // Keep UX usable even if featured product fetch fails.
+        setProduct(null);
+        setDetailError("Failed to load product details.");
+      } finally {
+        setDetailLoading(false);
       }
     };
 
-    void loadFeaturedProduct();
-  }, []);
+    void loadProduct();
+  }, [productIdOrSlug]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadList = async () => {
+      setListLoading(true);
+      setListError(null);
+
+      try {
+        const params = new URLSearchParams();
+        params.set("page", String(page));
+        params.set("limit", "8");
+        params.set("sort", sort);
+        if (searchText.trim()) {
+          params.set("q", searchText.trim());
+        }
+
+        const response = await fetch(`/api/products?${params.toString()}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error("Unable to load products.");
+        }
+
+        const payload = (await response.json()) as {
+          products?: ProductCard[];
+          totalPages?: number;
+        };
+
+        setListItems(Array.isArray(payload.products) ? payload.products : []);
+        setTotalPages(Math.max(1, Number(payload.totalPages ?? 1)));
+      } catch (error) {
+        if ((error as { name?: string }).name === "AbortError") {
+          return;
+        }
+        setListItems([]);
+        setTotalPages(1);
+        setListError("Unable to load products right now.");
+      } finally {
+        setListLoading(false);
+      }
+    };
+
+    void loadList();
+    return () => controller.abort();
+  }, [page, searchText, sort]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchText, sort]);
 
   const addToCart = async () => {
     setAddToCartError(null);
     setAddToCartMessage(null);
 
-    if (!featuredProductId) {
+    if (!product?.id) {
       setAddToCartError("No published product is available to add right now.");
       return;
     }
@@ -94,7 +186,7 @@ export default function ProductDetailsPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          productId: featuredProductId,
+          productId: product.id,
           quantity: 1,
         }),
       });
@@ -150,7 +242,7 @@ export default function ProductDetailsPage() {
           <section className="w-full space-y-6 lg:w-3/5">
             <div className="relative">
               <div className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto rounded-xl bg-[#f3f3f4]">
-                {galleryImages.map((image, idx) => (
+                {detailGallery.map((image, idx) => (
                   <div key={image} className="relative aspect-[4/5] w-full shrink-0 snap-center md:aspect-square">
                     <img src={image} alt={`Gallery ${idx + 1}`} className="h-full w-full object-cover" />
                   </div>
@@ -181,7 +273,9 @@ export default function ProductDetailsPage() {
             <div className="space-y-8">
               <div className="space-y-2">
                 <span className="text-xs font-bold uppercase tracking-[0.2em] text-neutral-500">New Arrival - FW24</span>
-                <h1 className="text-4xl font-extrabold uppercase leading-none tracking-tighter md:text-5xl">KINETIC MONO SWEATER</h1>
+                <h1 className="text-4xl font-extrabold uppercase leading-none tracking-tighter md:text-5xl">
+                  {detailLoading ? "Loading Product..." : product?.title ?? "Product Not Found"}
+                </h1>
                 <div className="flex items-center gap-4 pt-2">
                   <div className="flex items-center">
                     <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
@@ -194,7 +288,12 @@ export default function ProductDetailsPage() {
                 </div>
               </div>
 
-              <p className="text-4xl font-light tracking-tight">$285.00</p>
+              <p className="text-4xl font-light tracking-tight">
+                {typeof product?.price === "number" ? `$${product.price.toFixed(2)}` : "$0.00"}
+                {typeof product?.compareAtPrice === "number" ? (
+                  <span className="ml-3 text-xl text-neutral-400 line-through">${product.compareAtPrice.toFixed(2)}</span>
+                ) : null}
+              </p>
 
               <div className="space-y-6">
                 <div className="space-y-4">
@@ -233,20 +332,20 @@ export default function ProductDetailsPage() {
 
               <div className="space-y-4 border-t border-neutral-300/40 pt-8">
                 <p className="text-sm leading-relaxed text-neutral-600 md:text-base">
-                  Crafted from premium Italian merino wool, the Kinetic Mono Sweater features an avant-garde oversized silhouette with dropped shoulders and technical ribbing.
+                  {detailError || product?.description || "This product description is currently unavailable."}
                 </p>
                 <ul className="space-y-3 pt-2 text-sm">
                   <li className="flex items-center gap-3">
                     <span className="material-symbols-outlined text-lg">check_circle</span>
-                    100% Responsibly sourced Merino Wool
+                    SKU: {product?.sku || "N/A"}
                   </li>
                   <li className="flex items-center gap-3">
                     <span className="material-symbols-outlined text-lg">check_circle</span>
-                    Anti-pilling architectural knit
+                    Stock: {typeof product?.stockQuantity === "number" ? product.stockQuantity : 0}
                   </li>
                   <li className="flex items-center gap-3">
                     <span className="material-symbols-outlined text-lg">check_circle</span>
-                    Made in Portugal
+                    Status: {product?.inStock ? "In Stock" : "Out of Stock"}
                   </li>
                 </ul>
               </div>
@@ -270,19 +369,76 @@ export default function ProductDetailsPage() {
 
         <section className="mt-24 space-y-12">
           <h2 className="text-center text-3xl font-black uppercase tracking-tighter">Complete the Look</h2>
+
+          <div className="mx-auto flex max-w-3xl flex-col gap-4 md:flex-row">
+            <input
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
+              placeholder="Search products"
+              className="h-11 flex-1 rounded-full border border-neutral-300 bg-white px-4 text-sm outline-none focus:border-black"
+            />
+            <select
+              value={sort}
+              onChange={(event) => setSort(event.target.value)}
+              className="h-11 rounded-full border border-neutral-300 bg-white px-4 text-sm outline-none focus:border-black"
+            >
+              <option value="newest">Newest</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+            </select>
+          </div>
+
+          {listLoading ? <p className="text-center text-sm text-neutral-500">Loading products...</p> : null}
+          {listError ? <p className="text-center text-sm font-semibold text-red-600">{listError}</p> : null}
+          {!listLoading && !listError && listItems.length === 0 ? (
+            <p className="text-center text-sm text-neutral-500">No published products matched your filters.</p>
+          ) : null}
+
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-            {completeLookItems.map((item) => (
-              <article key={item.name} className="group cursor-pointer space-y-4">
+            {listItems.map((item, index) => (
+              <a
+                key={item.id}
+                href={`/product_detail_desktop?product=${encodeURIComponent(item.slug || item.id)}`}
+                className="group cursor-pointer space-y-4"
+              >
                 <div className="aspect-[3/4] overflow-hidden rounded-lg bg-[#f3f3f4]">
-                  <img src={item.image} alt={item.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                  <img
+                    src={item.thumbnail || thumbImages[index % thumbImages.length]}
+                    alt={item.title}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-xs font-bold uppercase tracking-wider">{item.name}</h3>
-                  <p className="text-sm text-neutral-600">{item.price}</p>
+                  <h3 className="text-xs font-bold uppercase tracking-wider">{item.title}</h3>
+                  <p className="text-sm text-neutral-600">${item.price.toFixed(2)}</p>
                 </div>
-              </article>
+              </a>
             ))}
           </div>
+
+          {!listLoading && !listError ? (
+            <div className="flex items-center justify-center gap-4">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                className="rounded-full border border-neutral-300 px-4 py-2 text-xs font-bold uppercase tracking-wider disabled:opacity-40"
+              >
+                Prev
+              </button>
+              <span className="text-xs font-bold uppercase tracking-wider text-neutral-500">
+                Page {page} / {totalPages}
+              </span>
+              <button
+                type="button"
+                disabled={page >= totalPages}
+                onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                className="rounded-full border border-neutral-300 px-4 py-2 text-xs font-bold uppercase tracking-wider disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          ) : null}
         </section>
       </main>
 

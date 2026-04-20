@@ -62,3 +62,39 @@ If user was created before this setup, either:
 
 - Add their email to `ADMIN_EMAILS` and login again, or
 - Update `users.roles` in MongoDB to include `ADMIN`
+
+## Local Environment Setup (MongoDB)
+
+1. Copy env template:
+
+```bash
+cp .env.example .env.local
+```
+
+2. Fill `DATABASE_URL` and required secrets in `.env.local`.
+3. Install dependencies from repo root:
+
+```bash
+pnpm install
+```
+
+4. Generate Prisma client:
+
+```bash
+pnpm --filter web db:generate
+```
+
+5. Push Prisma schema to MongoDB:
+
+```bash
+pnpm --filter web db:push
+```
+
+6. Run web app:
+
+```bash
+pnpm --filter web dev
+```
+
+Troubleshooting:
+- If `db:push` fails, verify MongoDB URI, network access, and DB user permissions.

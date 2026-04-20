@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { requireAdminSession } from "../../../src/lib/admin-auth";
 import { ProductValidationError, createAdminProduct } from "../../../src/lib/admin-products";
 import { AuthError } from "../../../src/lib/auth-session";
-import { listProductsWithMeta } from "../../../src/lib/ecommerce-db";
+import { listPublicProducts, type PublicSort } from "../../../src/lib/products";
 
 type CreateProductPayload = {
   name?: string;
@@ -22,43 +22,63 @@ type CreateProductPayload = {
 export async function GET(request: Request) {
   const url = new URL(request.url);
 
+  const q = url.searchParams.get("q") ?? undefined;
   const category = url.searchParams.get("category") ?? undefined;
-  const search = url.searchParams.get("search") ?? undefined;
-  const sortParam = url.searchParams.get("sort");
-  const sortByParam = url.searchParams.get("sortBy");
-  const orderParam = url.searchParams.get("order");
 
-  const minPrice = url.searchParams.get("minPrice");
-  const maxPrice = url.searchParams.get("maxPrice");
-  const limit = url.searchParams.get("limit");
-  const page = url.searchParams.get("page");
+  const pageParam = url.searchParams.get("page");
+  const limitParam = url.searchParams.get("limit");
+  const minPriceParam = url.searchParams.get("minPrice");
+  const maxPriceParam = url.searchParams.get("maxPrice");
+  const sortParam = (url.searchParams.get("sort") ?? "newest") as PublicSort;
 
-  const sortBy =
-    sortByParam === "price" || sortByParam === "title" || sortByParam === "createdAt"
-      ? sortByParam
-      : sortParam === "price" || sortParam === "title" || sortParam === "createdAt"
-        ? sortParam
-      : undefined;
-  const order = orderParam === "asc" || orderParam === "desc" ? orderParam : undefined;
+  const page = pageParam === null ? 1 : Number(pageParam);
+  const limit = limitParam === null ? 12 : Number(limitParam);
+  const minPrice = minPriceParam === null ? undefined : Number(minPriceParam);
+  const maxPrice = maxPriceParam === null ? undefined : Number(maxPriceParam);
 
-  const result = await listProductsWithMeta({
-    publishedOnly: true,
-    category,
-    search,
-    sortBy,
-    order,
-    minPrice: minPrice !== null ? Number(minPrice) : undefined,
-    maxPrice: maxPrice !== null ? Number(maxPrice) : undefined,
-    limit: limit !== null ? Number(limit) : undefined,
-    page: page !== null ? Number(page) : undefined,
-  });
+  if (!Number.isInteger(page) || page < 1) {
+    return NextResponse.json({ error: "page must be an integer greater than or equal to 1." }, { status: 400 });
+  }
 
-  return NextResponse.json({
-    products: result.products,
-    total: result.total,
-    page: result.page,
-    limit: result.limit,
-  });
+  if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
+    return NextResponse.json({ error: "limit must be an integer between 1 and 50." }, { status: 400 });
+  }
+
+  if (minPriceParam !== null && (!Number.isFinite(minPrice) || (minPrice ?? 0) < 0)) {
+    return NextResponse.json({ error: "minPrice must be a non-negative number." }, { status: 400 });
+  }
+
+  if (maxPriceParam !== null && (!Number.isFinite(maxPrice) || (maxPrice ?? 0) < 0)) {
+    return NextResponse.json({ error: "maxPrice must be a non-negative number." }, { status: 400 });
+  }
+
+  if (typeof minPrice === "number" && typeof maxPrice === "number" && minPrice > maxPrice) {
+    return NextResponse.json({ error: "minPrice must be less than or equal to maxPrice." }, { status: 400 });
+  }
+
+  try {
+    const result = await listPublicProducts({
+      q,
+      category,
+      minPrice,
+      maxPrice,
+      sort: sortParam,
+      page,
+      limit,
+    });
+
+    return NextResponse.json({
+      products: result.products,
+      page: result.meta.page,
+      limit: result.meta.limit,
+      total: result.meta.total,
+      totalPages: result.meta.totalPages,
+      hasNextPage: result.meta.hasNextPage,
+      hasPrevPage: result.meta.hasPrevPage,
+    });
+  } catch {
+    return NextResponse.json({ error: "Failed to load products." }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {

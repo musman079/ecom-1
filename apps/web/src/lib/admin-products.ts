@@ -1,6 +1,6 @@
-import { ObjectId } from "mongodb";
+import { ProductStatus as PrismaProductStatus } from "@prisma/client";
 
-import { getMongoDb } from "./mongodb";
+import { prisma } from "./prisma";
 
 export type ProductStatus = "draft" | "published";
 
@@ -38,48 +38,120 @@ export class ProductValidationError extends Error {
   }
 }
 
-type ProductDocument = {
-  _id: ObjectId;
-  title: string;
-  description: string;
-  price: number;
-  taxCategory: string;
-  collection: string;
-  sku: string;
-  stockQuantity: number;
-  lowStockAlert: boolean;
-  status: ProductStatus;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-function toObjectId(id: string) {
-  if (!ObjectId.isValid(id)) {
-    return null;
+export class ProductConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ProductConflictError";
   }
-  return new ObjectId(id);
 }
 
-function mapProduct(document: ProductDocument): AdminProduct {
+const DEFAULT_TAX_CATEGORY = "Standard Goods (20%)";
+const DEFAULT_COLLECTION = "FW24 Editorial";
+
+function toAdminStatus(status: PrismaProductStatus): ProductStatus {
+  return status === PrismaProductStatus.PUBLISHED ? "published" : "draft";
+}
+
+function toPrismaStatus(status: ProductStatus): PrismaProductStatus {
+  return status === "published" ? PrismaProductStatus.PUBLISHED : PrismaProductStatus.DRAFT;
+}
+
+function mapProduct(document: {
+  id: string;
+  title: string;
+  description: string;
+  status: PrismaProductStatus;
+  taxCategory?: string | null;
+  collection?: string | null;
+  lowStockAlert?: boolean | null;
+  createdAt: Date;
+  updatedAt: Date;
+  variants: Array<{
+    sku: string;
+    priceInCents: number;
+    stockQuantity: number;
+  }>;
+}): AdminProduct {
+  const primaryVariant =
+    document.variants[0] ??
+    ({
+      sku: "",
+      priceInCents: 0,
+      stockQuantity: 0,
+    } as const);
+
   return {
-    id: document._id.toHexString(),
+    id: document.id,
     title: document.title,
     description: document.description,
-    price: document.price,
-    taxCategory: document.taxCategory,
-    collection: document.collection,
-    sku: document.sku,
-    stockQuantity: document.stockQuantity,
-    lowStockAlert: document.lowStockAlert,
-    status: document.status,
+    price: primaryVariant.priceInCents / 100,
+    taxCategory: document.taxCategory || DEFAULT_TAX_CATEGORY,
+    collection: document.collection || DEFAULT_COLLECTION,
+    sku: primaryVariant.sku,
+    stockQuantity: primaryVariant.stockQuantity,
+    lowStockAlert: document.lowStockAlert ?? false,
+    status: toAdminStatus(document.status),
     createdAt: document.createdAt.toISOString(),
     updatedAt: document.updatedAt.toISOString(),
   };
 }
 
-async function productsCollection() {
-  const db = await getMongoDb();
-  return db.collection<ProductDocument>("products");
+function normalizeSku(sku: string) {
+  return sku.trim().toLowerCase();
+}
+
+function slugify(value: string) {
+  const slug = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  return slug || "product";
+}
+
+async function createUniqueSlug(title: string) {
+  const base = slugify(title);
+  let candidate = base;
+  let attempt = 1;
+
+  while (true) {
+    const existing = await prisma.product.findUnique({
+      where: { slug: candidate },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      return candidate;
+    }
+
+    attempt += 1;
+    candidate = `${base}-${attempt}`;
+  }
+}
+
+async function ensureSkuUnique(sku: string, excludedVariantId?: string) {
+  const normalized = normalizeSku(sku);
+  const existingVariants = await prisma.productVariant.findMany({
+    select: {
+      id: true,
+      sku: true,
+    },
+  });
+
+  const conflict = existingVariants.find((variant) => {
+    if (excludedVariantId && variant.id === excludedVariantId) {
+      return false;
+    }
+
+    return normalizeSku(variant.sku) === normalized;
+  });
+
+  if (conflict) {
+    throw new ProductConflictError("A product with this SKU already exists.");
+  }
 }
 
 function validateProductInput(input: ProductInput) {
@@ -105,111 +177,197 @@ function validateProductInput(input: ProductInput) {
 }
 
 export async function listAdminProducts() {
-  const products = await productsCollection();
-  const items = await products.find({}).sort({ createdAt: -1 }).toArray();
+  const items = await prisma.product.findMany({
+    include: {
+      variants: {
+        select: {
+          sku: true,
+          priceInCents: true,
+          stockQuantity: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
   return items.map(mapProduct);
 }
 
 export async function getAdminProductById(id: string) {
-  const products = await productsCollection();
-  const objectId = toObjectId(id);
-  if (!objectId) {
-    return null;
-  }
+  const product = await prisma.product.findUnique({
+    where: { id },
+    include: {
+      variants: {
+        select: {
+          sku: true,
+          priceInCents: true,
+          stockQuantity: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
+    },
+  });
 
-  const product = await products.findOne({ _id: objectId });
   return product ? mapProduct(product) : null;
 }
 
 export async function createAdminProduct(input: ProductInput) {
-  const now = new Date();
-  const products = await productsCollection();
-
   validateProductInput(input);
 
-  const normalizedSku = input.sku.trim().toLowerCase();
-  const skuExists = await products.findOne({ sku: { $regex: new RegExp(`^${normalizedSku}$`, "i") } });
-  if (skuExists) {
-    throw new ProductValidationError("A product with this SKU already exists.");
-  }
+  const title = input.title.trim();
+  const description = input.description.trim();
+  const sku = input.sku.trim();
+  const taxCategory = input.taxCategory.trim() || DEFAULT_TAX_CATEGORY;
+  const collection = input.collection.trim() || DEFAULT_COLLECTION;
 
-  const product = {
-    title: input.title.trim(),
-    description: input.description.trim(),
-    price: input.price,
-    taxCategory: input.taxCategory.trim(),
-    collection: input.collection.trim(),
-    sku: input.sku.trim(),
-    stockQuantity: input.stockQuantity,
-    lowStockAlert: input.lowStockAlert,
-    status: input.status,
-    createdAt: now,
-    updatedAt: now,
-  };
+  await ensureSkuUnique(sku);
 
-  const created = await products.insertOne(product as ProductDocument);
-  const inserted = await products.findOne({ _id: created.insertedId });
+  const slug = await createUniqueSlug(title);
+  const created = await prisma.product.create({
+    data: {
+      title,
+      slug,
+      description,
+      status: toPrismaStatus(input.status),
+      taxCategory,
+      collection,
+      lowStockAlert: input.lowStockAlert,
+      variants: {
+        create: [
+          {
+            sku,
+            title,
+            priceInCents: Math.round(input.price * 100),
+            stockQuantity: input.stockQuantity,
+            isActive: true,
+          },
+        ],
+      },
+    },
+    include: {
+      variants: {
+        select: {
+          sku: true,
+          priceInCents: true,
+          stockQuantity: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
+    },
+  });
 
-  if (!inserted) {
-    throw new ProductValidationError("Product could not be created.");
-  }
-
-  return mapProduct(inserted);
+  return mapProduct(created);
 }
 
 export async function updateAdminProduct(id: string, input: ProductInput) {
-  const products = await productsCollection();
-  const objectId = toObjectId(id);
+  const existing = await prisma.product.findUnique({
+    where: { id },
+    include: {
+      variants: {
+        select: {
+          id: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
+    },
+  });
 
-  if (!objectId) {
-    return null;
-  }
-
-  const existing = await products.findOne({ _id: objectId });
   if (!existing) {
     return null;
   }
 
   validateProductInput(input);
 
-  const normalizedSku = input.sku.trim().toLowerCase();
-  const conflictingSku = await products.findOne({
-    _id: { $ne: objectId },
-    sku: { $regex: new RegExp(`^${normalizedSku}$`, "i") },
-  });
-  if (conflictingSku) {
-    throw new ProductValidationError("A product with this SKU already exists.");
-  }
+  const primaryVariantId = existing.variants[0]?.id;
+  await ensureSkuUnique(input.sku, primaryVariantId);
 
-  await products.updateOne(
-    { _id: objectId },
-    {
-      $set: {
-        title: input.title.trim(),
-        description: input.description.trim(),
-        price: input.price,
-        taxCategory: input.taxCategory.trim(),
-        collection: input.collection.trim(),
-        sku: input.sku.trim(),
-        stockQuantity: input.stockQuantity,
+  const title = input.title.trim();
+  const description = input.description.trim();
+  const sku = input.sku.trim();
+  const taxCategory = input.taxCategory.trim() || DEFAULT_TAX_CATEGORY;
+  const collection = input.collection.trim() || DEFAULT_COLLECTION;
+
+  const updated = await prisma.$transaction(async (tx) => {
+    await tx.product.update({
+      where: { id },
+      data: {
+        title,
+        description,
+        status: toPrismaStatus(input.status),
+        taxCategory,
+        collection,
         lowStockAlert: input.lowStockAlert,
-        status: input.status,
-        updatedAt: new Date(),
       },
-    },
-  );
+    });
 
-  const updated = await products.findOne({ _id: objectId });
+    if (primaryVariantId) {
+      await tx.productVariant.update({
+        where: { id: primaryVariantId },
+        data: {
+          sku,
+          title,
+          priceInCents: Math.round(input.price * 100),
+          stockQuantity: input.stockQuantity,
+          isActive: true,
+        },
+      });
+    } else {
+      await tx.productVariant.create({
+        data: {
+          productId: id,
+          sku,
+          title,
+          priceInCents: Math.round(input.price * 100),
+          stockQuantity: input.stockQuantity,
+          isActive: true,
+        },
+      });
+    }
+
+    return tx.product.findUnique({
+      where: { id },
+      include: {
+        variants: {
+          select: {
+            sku: true,
+            priceInCents: true,
+            stockQuantity: true,
+          },
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
+      },
+    });
+  });
+
   return updated ? mapProduct(updated) : null;
 }
 
 export async function deleteAdminProduct(id: string) {
-  const products = await productsCollection();
-  const objectId = toObjectId(id);
-  if (!objectId) {
+  const existing = await prisma.product.findUnique({
+    where: { id },
+    select: { id: true },
+  });
+
+  if (!existing) {
     return false;
   }
 
-  const deleted = await products.deleteOne({ _id: objectId });
-  return deleted.deletedCount > 0;
+  await prisma.product.delete({
+    where: { id },
+  });
+
+  return true;
 }

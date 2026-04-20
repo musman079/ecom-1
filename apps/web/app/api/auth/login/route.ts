@@ -1,56 +1,105 @@
-import { compare } from "bcryptjs";
 import { NextResponse } from "next/server";
 
-import { mapUserRoles } from "../../../../src/lib/admin-auth";
-import { applySessionCookie } from "../../../../src/lib/auth-session";
-import { findUserByEmail } from "../../../../src/lib/ecommerce-db";
+import {
+  assertAuthEnvironment,
+  AuthConfigError,
+  normalizeEmail,
+  setAuthCookie,
+  signAuthToken,
+  verifyPassword,
+} from "../../../../src/lib/auth";
+import { sanitizeAuthUser } from "../../../../src/lib/get-current-user";
+import { prisma } from "../../../../src/lib/prisma";
 
 type LoginPayload = {
   email?: string;
   password?: string;
 };
 
+function errorResponse(message: string, status: number) {
+  return NextResponse.json(
+    {
+      success: false,
+      message,
+    },
+    { status },
+  );
+}
+
 export async function POST(request: Request) {
+  try {
+    assertAuthEnvironment();
+  } catch (error) {
+    const message = error instanceof AuthConfigError ? error.message : "Authentication environment is not configured.";
+    return errorResponse(message, 500);
+  }
+
   let payload: LoginPayload;
 
   try {
     payload = (await request.json()) as LoginPayload;
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+    return errorResponse("Invalid JSON body.", 400);
   }
 
-  if (!payload.email || !payload.password) {
-    return NextResponse.json({ error: "email and password are required." }, { status: 400 });
+  const email = normalizeEmail(payload.email ?? "");
+  const password = payload.password ?? "";
+
+  if (!email || !password) {
+    return errorResponse("email and password are required.", 400);
   }
 
-  const user = await findUserByEmail(payload.email);
-  if (!user || !user.isActive) {
-    return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
-  }
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+      },
+    });
 
-  const passwordValid = await compare(payload.password, user.passwordHash);
-  if (!passwordValid) {
-    return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
-  }
+    if (!user || !user.isActive) {
+      return errorResponse("Invalid credentials.", 401);
+    }
 
-  const roles = mapUserRoles(user.email, user.roles);
+    const passwordValid = await verifyPassword(password, user.passwordHash);
+    if (!passwordValid) {
+      return errorResponse("Invalid credentials.", 401);
+    }
 
-  const response = NextResponse.json({
-    token: null,
-    user: {
-      id: user._id.toHexString(),
+    const roleNames = user.roles.map((entry) => entry.role.name);
+    const role = roleNames.includes("SUPER_ADMIN")
+      ? "SUPER_ADMIN"
+      : roleNames.includes("ADMIN")
+        ? "ADMIN"
+        : "CUSTOMER";
+
+    const token = await signAuthToken({
+      sub: user.id,
       email: user.email,
-      fullName: user.fullName,
-      roles,
-    },
-  });
+      role,
+    });
 
-  await applySessionCookie(response, {
-    userId: user._id.toHexString(),
-    email: user.email,
-    fullName: user.fullName,
-    roles,
-  });
+    const response = NextResponse.json({
+      success: true,
+      message: "Login successful.",
+      user: sanitizeAuthUser({
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        phone: user.phone,
+        role,
+      }),
+    });
 
-  return response;
+    setAuthCookie(response, token);
+
+    return response;
+  } catch (error) {
+    console.error("Login API failed", error);
+    return errorResponse("Failed to login.", 500);
+  }
 }

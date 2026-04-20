@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import {
+  ProductConflictError,
   ProductValidationError,
   deleteAdminProduct,
   getAdminProductById,
@@ -105,6 +106,10 @@ export async function PUT(request: Request, context: RouteContext) {
       status: payload.status ?? "draft",
     });
   } catch (error) {
+    if (error instanceof ProductConflictError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
+
     if (error instanceof ProductValidationError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }

@@ -60,6 +60,7 @@ export default function AdminProductsPage() {
 
         const payload = (await response.json()) as {
           user?: {
+            role?: "CUSTOMER" | "ADMIN" | "SUPER_ADMIN";
             roles?: string[];
           } | null;
         };
@@ -70,7 +71,9 @@ export default function AdminProductsPage() {
         }
 
         const roles = Array.isArray(payload.user.roles) ? payload.user.roles : [];
-        if (!roles.includes("ADMIN")) {
+        const role = payload.user.role;
+        const isAdmin = roles.includes("ADMIN") || role === "ADMIN" || role === "SUPER_ADMIN";
+        if (!isAdmin) {
           router.replace("/");
           return;
         }

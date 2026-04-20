@@ -1,0 +1,92 @@
+import { cookies } from "next/headers";
+
+import { prisma } from "./prisma";
+import { readAuthTokenFromCookieHeader, readAuthTokenFromRequest, verifyAuthToken, type AuthRole } from "./auth";
+
+export type SanitizedAuthUser = {
+  id: string;
+  email: string;
+  fullName: string;
+  phone: string;
+  role: AuthRole;
+};
+
+function highestRole(roles: string[]): AuthRole {
+  if (roles.includes("SUPER_ADMIN")) {
+    return "SUPER_ADMIN";
+  }
+
+  if (roles.includes("ADMIN")) {
+    return "ADMIN";
+  }
+
+  return "CUSTOMER";
+}
+
+export function sanitizeAuthUser(input: {
+  id: string;
+  email: string;
+  fullName: string;
+  phone: string | null;
+  role: AuthRole;
+}): SanitizedAuthUser {
+  return {
+    id: input.id,
+    email: input.email,
+    fullName: input.fullName,
+    phone: input.phone ?? "",
+    role: input.role,
+  };
+}
+
+async function resolveUserByToken(token: string): Promise<SanitizedAuthUser | null> {
+  const decoded = await verifyAuthToken(token);
+  if (!decoded) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: decoded.sub },
+    include: {
+      roles: {
+        include: {
+          role: true,
+        },
+      },
+    },
+  });
+
+  if (!user || !user.isActive) {
+    return null;
+  }
+
+  const roleNames = user.roles.map((entry) => entry.role.name);
+
+  return sanitizeAuthUser({
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName,
+    phone: user.phone,
+    role: highestRole(roleNames.length > 0 ? roleNames : [decoded.role]),
+  });
+}
+
+export async function getCurrentUserFromRequest(request: Request): Promise<SanitizedAuthUser | null> {
+  const token = readAuthTokenFromRequest(request);
+  if (!token) {
+    return null;
+  }
+
+  return resolveUserByToken(token);
+}
+
+export async function getCurrentUser(): Promise<SanitizedAuthUser | null> {
+  const cookieStore = await cookies();
+  const token = readAuthTokenFromCookieHeader(cookieStore.toString());
+
+  if (!token) {
+    return null;
+  }
+
+  return resolveUserByToken(token);
+}

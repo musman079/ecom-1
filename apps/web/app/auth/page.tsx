@@ -44,15 +44,16 @@ export default function AuthPage() {
         }
 
         const data = (await response.json()) as {
+          success?: boolean;
           user?: {
             id: string;
-            roles?: string[];
+            role?: "CUSTOMER" | "ADMIN" | "SUPER_ADMIN";
           } | null;
         };
 
-        if (data.user?.id) {
-          const roles = Array.isArray(data.user.roles) ? data.user.roles : [];
-          router.replace(roles.includes("ADMIN") ? "/admin_overview_dashboard" : "/");
+        if (response.ok && data.success && data.user?.id) {
+          const role = data.user.role ?? "CUSTOMER";
+          router.replace(role === "ADMIN" || role === "SUPER_ADMIN" ? "/admin_overview_dashboard" : "/profile");
         }
       } catch {
         // Ignore transient session check issues on initial load.
@@ -123,20 +124,21 @@ export default function AuthPage() {
       });
 
       const payload = (await response.json()) as {
-        error?: string;
+        success?: boolean;
+        message?: string;
         user?: {
-          roles?: string[];
+          role?: "CUSTOMER" | "ADMIN" | "SUPER_ADMIN";
         };
       };
 
       if (!response.ok) {
-        setError(payload.error ?? "Unable to authenticate. Please try again.");
+        setError(payload.message ?? "Unable to authenticate. Please try again.");
         return;
       }
 
-      setMessage(mode === "login" ? "Login successful. Redirecting..." : "Account created. Redirecting...");
-      const roles = Array.isArray(payload.user?.roles) ? payload.user?.roles : [];
-      router.push(roles.includes("ADMIN") ? "/admin_overview_dashboard" : "/");
+      setMessage(payload.message ?? (mode === "login" ? "Login successful. Redirecting..." : "Account created. Redirecting..."));
+      const role = payload.user?.role ?? "CUSTOMER";
+      router.push(role === "ADMIN" || role === "SUPER_ADMIN" ? "/admin_overview_dashboard" : "/profile");
     } catch {
       setError("Network issue while signing in. Please retry.");
     } finally {
