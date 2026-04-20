@@ -36,6 +36,7 @@ export async function POST(request: Request) {
   const roles = mapUserRoles(user.email, user.roles);
 
   const response = NextResponse.json({
+    token: null,
     user: {
       id: user._id.toHexString(),
       email: user.email,

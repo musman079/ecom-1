@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
 
-import { AuthError, requireSession } from "../../../src/lib/auth-session";
-import { checkoutCart, listRecentOrdersByUser } from "../../../src/lib/ecommerce-db";
+import { AuthError, requireSession } from "../../../../src/lib/auth-session";
+import { checkoutCart } from "../../../../src/lib/ecommerce-db";
 
-type OrderCreatePayload = {
+type CheckoutPayload = {
+  address?: {
+    fullName?: string;
+    phone?: string;
+    line1?: string;
+    city?: string;
+    postalCode?: string;
+    country?: string;
+  };
   shippingAddress?: {
     fullName?: string;
     phone?: string;
@@ -16,25 +24,14 @@ type OrderCreatePayload = {
   notes?: string;
 };
 
-export async function GET(request: Request) {
-  try {
-    const session = await requireSession(request);
-    const orders = await listRecentOrdersByUser(session.userId, { limit: 20 });
-
-    return NextResponse.json({ orders });
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-}
-
 export async function POST(request: Request) {
   try {
     const session = await requireSession(request);
-    const payload = (await request.json()) as OrderCreatePayload;
+    const payload = (await request.json()) as CheckoutPayload;
 
-    const address = payload.shippingAddress;
+    const address = payload.shippingAddress ?? payload.address;
     if (!address || !address.fullName || !address.phone || !address.line1 || !address.city || !address.postalCode || !address.country) {
-      return NextResponse.json({ error: "Complete shippingAddress is required." }, { status: 400 });
+      return NextResponse.json({ error: "Complete address is required." }, { status: 400 });
     }
 
     if (payload.paymentMethod !== "card" && payload.paymentMethod !== "cod") {

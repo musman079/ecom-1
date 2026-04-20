@@ -9,6 +9,7 @@ type RegisterPayload = {
   email?: string;
   password?: string;
   fullName?: string;
+  name?: string;
   phone?: string;
 };
 
@@ -21,7 +22,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  if (!payload.email || !payload.password || !payload.fullName) {
+  const normalizedName = payload.fullName ?? payload.name;
+
+  if (!payload.email || !payload.password || !normalizedName) {
     return NextResponse.json({ error: "email, password and fullName are required." }, { status: 400 });
   }
 
@@ -33,7 +36,7 @@ export async function POST(request: Request) {
   const user = await createUser({
     email: payload.email,
     passwordHash,
-    fullName: payload.fullName,
+    fullName: normalizedName,
     phone: payload.phone,
   });
 
@@ -45,6 +48,7 @@ export async function POST(request: Request) {
 
   const response = NextResponse.json(
     {
+      token: null,
       user: {
         id: user._id.toHexString(),
         email: user.email,

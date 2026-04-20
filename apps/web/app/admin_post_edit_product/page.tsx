@@ -21,6 +21,9 @@ const getAdminNavHref = (label: string) => {
   if (label === "Products") {
     return "/admin_products";
   }
+  if (label === "Orders") {
+    return "/admin_orders";
+  }
   return "/admin_overview_dashboard";
 };
 

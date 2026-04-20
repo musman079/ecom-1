@@ -229,6 +229,9 @@ export default function AdminProductsPage() {
             <a href="/admin_overview_dashboard" className="rounded-full border border-zinc-200 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition hover:bg-zinc-50">
               Overview
             </a>
+            <a href="/admin_orders" className="rounded-full border border-zinc-200 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition hover:bg-zinc-50">
+              Orders
+            </a>
             <a href="/admin_post_edit_product" className="rounded-full bg-black px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white">
               Editor
             </a>

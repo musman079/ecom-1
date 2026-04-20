@@ -17,7 +17,11 @@ export async function GET(request: Request) {
   try {
     const session = await requireSession(request);
     const cart = await getCartWithProducts(session.userId);
-    return NextResponse.json({ cart });
+    return NextResponse.json({
+      cart,
+      items: cart.items,
+      totalPrice: cart.subtotal,
+    });
   } catch (error) {
     if (error instanceof AuthError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

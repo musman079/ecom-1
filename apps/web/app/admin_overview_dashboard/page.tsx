@@ -29,6 +29,9 @@ const getAdminNavHref = (label: string) => {
   if (label === "Products") {
     return "/admin_products";
   }
+  if (label === "Orders") {
+    return "/admin_orders";
+  }
   return "/admin_overview_dashboard";
 };
 
@@ -261,7 +264,7 @@ export default async function AdminOverviewDashboardPage() {
           <section className="overflow-hidden rounded-2xl bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-zinc-100 p-5 sm:p-6">
               <h4 className="text-xl font-bold">Recent Orders</h4>
-              <a href="/cart_checkout_desktop" className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">View All Orders</a>
+              <a href="/admin_orders" className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">View All Orders</a>
             </div>
 
             <div className="overflow-x-auto">

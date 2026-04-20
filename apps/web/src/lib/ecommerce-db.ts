@@ -129,6 +129,8 @@ type ProductQueryOptions = {
   page?: number;
 };
 
+export type AdminOrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
+
 function toObjectId(id: string) {
   if (!ObjectId.isValid(id)) {
     return null;
@@ -790,6 +792,106 @@ export async function listRecentOrdersByUser(userId: string, options?: { limit?:
   }));
 }
 
+export async function listRecentOrdersForAdmin(options?: { limit?: number; status?: AdminOrderStatus }) {
+  const limit = Math.max(1, Math.min(options?.limit ?? 30, 100));
+  const orders = await ordersCollection();
+
+  const filter: Record<string, unknown> = {};
+  if (options?.status) {
+    filter.status = options.status;
+  }
+
+  const docs = await orders.find(filter).sort({ createdAt: -1 }).limit(limit).toArray();
+
+  const userIds = Array.from(new Set(docs.map((order) => order.userId.toHexString()))).map((id) => new ObjectId(id));
+  const users = await usersCollection();
+  const userDocs = userIds.length > 0 ? await users.find({ _id: { $in: userIds } }).toArray() : [];
+  const userMap = new Map(userDocs.map((user) => [user._id.toHexString(), user]));
+
+  return docs.map((order) => {
+    const user = userMap.get(order.userId.toHexString());
+    return {
+      id: order._id.toHexString(),
+      orderNumber: order.orderNumber,
+      userId: order.userId.toHexString(),
+      customerName: user?.fullName ?? "Customer",
+      customerEmail: user?.email ?? "-",
+      status: order.status,
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus ?? "pending",
+      trackingNumber: order.trackingNumber ?? null,
+      total: order.total,
+      totalItems: order.items.reduce((sum, item) => sum + item.quantity, 0),
+      createdAt: order.createdAt.toISOString(),
+      updatedAt: order.updatedAt.toISOString(),
+    };
+  });
+}
+
+export async function updateOrderByAdmin(input: {
+  orderId: string;
+  status?: AdminOrderStatus;
+  trackingNumber?: string;
+  paymentStatus?: "pending" | "paid" | "failed";
+}) {
+  const orderObjectId = toObjectId(input.orderId);
+  if (!orderObjectId) {
+    return null;
+  }
+
+  const orders = await ordersCollection();
+  const existing = await orders.findOne({ _id: orderObjectId });
+  if (!existing) {
+    return null;
+  }
+
+  const updateSet: Record<string, unknown> = {
+    updatedAt: new Date(),
+  };
+
+  if (input.status) {
+    updateSet.status = input.status;
+
+    if (input.status === "delivered") {
+      updateSet.deliveredAt = new Date();
+    }
+
+    if (input.status === "cancelled") {
+      updateSet.cancelledAt = new Date();
+    }
+  }
+
+  if (input.trackingNumber !== undefined) {
+    const trimmedTracking = input.trackingNumber.trim();
+    updateSet.trackingNumber = trimmedTracking || null;
+  }
+
+  if (input.paymentStatus) {
+    updateSet.paymentStatus = input.paymentStatus;
+  }
+
+  await orders.updateOne(
+    { _id: orderObjectId },
+    {
+      $set: updateSet,
+    },
+  );
+
+  const updated = await orders.findOne({ _id: orderObjectId });
+  if (!updated) {
+    return null;
+  }
+
+  return {
+    id: updated._id.toHexString(),
+    orderNumber: updated.orderNumber,
+    status: updated.status,
+    paymentStatus: updated.paymentStatus ?? "pending",
+    trackingNumber: updated.trackingNumber ?? null,
+    updatedAt: updated.updatedAt.toISOString(),
+  };
+}
+
 export async function getOrderByIdForUser(userId: string, orderId: string) {
   const userObjectId = toObjectId(userId);
   const orderObjectId = toObjectId(orderId);
@@ -881,6 +983,134 @@ export async function cancelOrderForUser(userId: string, orderId: string) {
   );
 
   return { ok: true as const };
+}
+
+export async function getAdminDashboardMetrics() {
+  const [orders, products, users] = await Promise.all([ordersCollection(), productsCollection(), usersCollection()]);
+
+  const [totalOrders, totalCustomers, totalProducts, deliveredOrders, processingOrders, lowStockProducts] = await Promise.all([
+    orders.countDocuments({}),
+    users.countDocuments({ isActive: true }),
+    products.countDocuments({}),
+    orders.countDocuments({ status: "delivered" }),
+    orders.countDocuments({ status: "processing" }),
+    products.countDocuments({ stockQuantity: { $lte: 5 } }),
+  ]);
+
+  const revenueDocs = await orders
+    .aggregate<{ _id: null; totalRevenue: number }>([
+      {
+        $match: {
+          status: { $in: ["processing", "shipped", "delivered"] },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: "$total" },
+        },
+      },
+    ])
+    .toArray();
+
+  return {
+    totalRevenue: Number((revenueDocs[0]?.totalRevenue ?? 0).toFixed(2)),
+    totalOrders,
+    totalCustomers,
+    totalProducts,
+    deliveredOrders,
+    processingOrders,
+    lowStockProducts,
+  };
+}
+
+export async function getAdminAnalytics(options?: { months?: number; topProductsLimit?: number }) {
+  const months = Math.max(1, Math.min(options?.months ?? 6, 24));
+  const topProductsLimit = Math.max(1, Math.min(options?.topProductsLimit ?? 5, 20));
+  const fromDate = new Date();
+  fromDate.setMonth(fromDate.getMonth() - months + 1);
+  fromDate.setDate(1);
+  fromDate.setHours(0, 0, 0, 0);
+
+  const orders = await ordersCollection();
+
+  const salesByMonth = await orders
+    .aggregate<{
+      _id: { year: number; month: number };
+      revenue: number;
+      orders: number;
+    }>([
+      {
+        $match: {
+          createdAt: { $gte: fromDate },
+          status: { $in: ["processing", "shipped", "delivered"] },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+          },
+          revenue: { $sum: "$total" },
+          orders: { $sum: 1 },
+        },
+      },
+      {
+        $sort: {
+          "_id.year": 1,
+          "_id.month": 1,
+        },
+      },
+    ])
+    .toArray();
+
+  const topProducts = await orders
+    .aggregate<{
+      _id: string;
+      quantitySold: number;
+      revenue: number;
+      productTitle: string;
+      sku: string;
+    }>([
+      {
+        $unwind: "$items",
+      },
+      {
+        $group: {
+          _id: "$items.productId",
+          quantitySold: { $sum: "$items.quantity" },
+          revenue: { $sum: "$items.lineTotal" },
+          productTitle: { $first: "$items.title" },
+          sku: { $first: "$items.sku" },
+        },
+      },
+      {
+        $sort: {
+          quantitySold: -1,
+        },
+      },
+      {
+        $limit: topProductsLimit,
+      },
+    ])
+    .toArray();
+
+  return {
+    salesByMonth: salesByMonth.map((row) => ({
+      year: row._id.year,
+      month: row._id.month,
+      revenue: Number(row.revenue.toFixed(2)),
+      orders: row.orders,
+    })),
+    topProducts: topProducts.map((row) => ({
+      productId: row._id.toString(),
+      productTitle: row.productTitle,
+      sku: row.sku,
+      quantitySold: row.quantitySold,
+      revenue: Number(row.revenue.toFixed(2)),
+    })),
+  };
 }
 
 export async function applyCouponCode(input: { code: string; subtotal: number }) {

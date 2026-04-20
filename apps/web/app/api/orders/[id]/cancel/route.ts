@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { AuthError, requireSession } from "../../../../../src/lib/auth-session";
-import { cancelOrderForUser } from "../../../../../src/lib/ecommerce-db";
+import { cancelOrderForUser, getOrderByIdForUser } from "../../../../../src/lib/ecommerce-db";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -22,7 +22,8 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true });
+    const order = await getOrderByIdForUser(session.userId, id);
+    return NextResponse.json({ order });
   } catch (error) {
     if (error instanceof AuthError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -30,4 +31,8 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     return NextResponse.json({ error: "Failed to cancel order." }, { status: 500 });
   }
+}
+
+export async function PUT(request: Request, context: RouteContext) {
+  return PATCH(request, context);
 }
