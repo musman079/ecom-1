@@ -16,6 +16,11 @@ type OrderSummary = {
   createdAt: string;
 };
 
+function canCreateReturn(order: OrderSummary) {
+  const status = order.status.toLowerCase();
+  return status === "shipped" || status === "delivered";
+}
+
 type ReturnRequest = {
   id: string;
   returnNumber: string;
@@ -25,6 +30,7 @@ type ReturnRequest = {
   notes: string;
   resolution: "refund" | "exchange";
   status: "requested" | "approved" | "in_transit" | "refunded" | "rejected";
+  adminNote: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -127,15 +133,17 @@ export default function ReturnsRefundsPage() {
           setHighlightReturnNumber(returnNumberFromNotification);
         }
 
-        if (orderList.length > 0) {
+        const eligibleOrderList = orderList.filter(canCreateReturn);
+        if (eligibleOrderList.length > 0) {
+          const firstOrderId = eligibleOrderList[0]?.id ?? "";
           const matchedOrderByNumber =
             orderNumberFromNotification
-              ? orderList.find((order) => order.orderNumber === orderNumberFromNotification)
+              ? eligibleOrderList.find((order) => order.orderNumber === orderNumberFromNotification)
               : null;
 
           setForm((current) => ({
             ...current,
-            orderId: current.orderId || matchedOrderByNumber?.id || orderList[0].id,
+            orderId: current.orderId || matchedOrderByNumber?.id || firstOrderId,
           }));
         }
 
@@ -156,6 +164,7 @@ export default function ReturnsRefundsPage() {
     () => returns.filter((item) => ["requested", "approved", "in_transit"].includes(item.status)).length,
     [returns],
   );
+  const eligibleOrders = useMemo(() => orders.filter(canCreateReturn), [orders]);
 
   const submitReturnRequest = async () => {
     setError(null);
@@ -252,8 +261,8 @@ export default function ReturnsRefundsPage() {
           <div className="rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6 lg:col-span-5">
             <h2 className="text-sm font-black uppercase tracking-[0.16em]">Create Return Request</h2>
 
-            {orders.length === 0 ? (
-              <p className="mt-4 rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600">No orders available yet for returns.</p>
+            {eligibleOrders.length === 0 ? (
+              <p className="mt-4 rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600">No shipped or delivered orders are currently eligible for returns.</p>
             ) : (
               <div className="mt-4 space-y-4">
                 <label className="block text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">
@@ -263,7 +272,7 @@ export default function ReturnsRefundsPage() {
                     onChange={(event) => setForm((current) => ({ ...current, orderId: event.target.value }))}
                     className="mt-2 h-11 w-full rounded-lg border border-zinc-300 px-3 text-sm font-semibold text-zinc-900 outline-none focus:border-zinc-900"
                   >
-                    {orders.map((order) => (
+                    {eligibleOrders.map((order) => (
                       <option key={order.id} value={order.id}>
                         {order.orderNumber} - {order.leadItemTitle}
                       </option>
@@ -344,6 +353,7 @@ export default function ReturnsRefundsPage() {
                       </span>
                     </div>
                     {item.notes ? <p className="mt-2 text-xs text-zinc-700">Notes: {item.notes}</p> : null}
+                    {item.adminNote ? <p className="mt-1 text-xs font-semibold text-zinc-700">Admin update: {item.adminNote}</p> : null}
                   </article>
                 ))}
               </div>

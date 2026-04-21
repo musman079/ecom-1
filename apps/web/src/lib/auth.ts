@@ -2,6 +2,8 @@ import { compare, hash } from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import type { NextResponse } from "next/server";
 
+import { EnvConfigError, assertRuntimeEnvironment } from "./env";
+
 export type AuthRole = "CUSTOMER" | "ADMIN" | "SUPER_ADMIN";
 
 export type AuthTokenPayload = {
@@ -21,18 +23,23 @@ export const AUTH_COOKIE_NAME = "ecom_auth";
 const MIN_PASSWORD_LENGTH = 8;
 const SALT_ROUNDS = 10;
 
-function requireEnv(name: "DATABASE_URL" | "JWT_SECRET" | "JWT_EXPIRY") {
+function requireEnv(name: "JWT_SECRET" | "JWT_EXPIRY") {
   const value = process.env[name]?.trim();
   if (!value) {
-    throw new AuthConfigError(`${name} is not configured. Add it to apps/web/.env.local`);
+    throw new AuthConfigError(`${name} is not configured. Add it to apps/web/.env.`);
   }
   return value;
 }
 
 export function assertAuthEnvironment() {
-  requireEnv("DATABASE_URL");
-  requireEnv("JWT_SECRET");
-  requireEnv("JWT_EXPIRY");
+  try {
+    assertRuntimeEnvironment();
+  } catch (error) {
+    if (error instanceof EnvConfigError) {
+      throw new AuthConfigError(error.message);
+    }
+    throw error;
+  }
 }
 
 function getJwtSecretKey() {

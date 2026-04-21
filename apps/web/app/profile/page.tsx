@@ -78,6 +78,11 @@ function getStatusBadge(status: string) {
   return "bg-zinc-100 text-zinc-700";
 }
 
+function canCreateReturn(status: string) {
+  const normalized = status.toLowerCase();
+  return normalized === "shipped" || normalized === "delivered";
+}
+
 function getNotificationHref(item: UserNotification) {
   if (item.kind === "order_created" || item.kind === "order_status_updated") {
     const orderNumber = item.metadata?.orderNumber;
@@ -536,6 +541,14 @@ export default function ProfilePage() {
                     <span className={`mt-1 inline-block rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${getStatusBadge(order.status)}`}>
                       {order.status}
                     </span>
+                    {canCreateReturn(order.status) ? (
+                      <Link
+                        href={`${CUSTOMER_ROUTES.RETURNS_REFUNDS}?orderNumber=${encodeURIComponent(order.orderNumber)}`}
+                        className="mt-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-blue-700 hover:underline"
+                      >
+                        Start Return
+                      </Link>
+                    ) : null}
                   </div>
                 </article>
               ))}

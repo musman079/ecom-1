@@ -125,6 +125,13 @@ type CouponDocument = {
 };
 
 type ReturnRequestStatus = "requested" | "approved" | "in_transit" | "refunded" | "rejected";
+const RETURN_STATUS_TRANSITIONS: Record<ReturnRequestStatus, ReturnRequestStatus[]> = {
+  requested: ["approved", "rejected"],
+  approved: ["in_transit", "rejected"],
+  in_transit: ["refunded", "rejected"],
+  refunded: [],
+  rejected: [],
+};
 
 type ReturnRequestDocument = {
   _id: ObjectId;
@@ -915,6 +922,28 @@ function buildOrderNumber() {
   return `ORD-${stamp}-${random}`;
 }
 
+async function restockOrderItems(items: OrderItemSnapshot[]) {
+  if (!items.length) {
+    return;
+  }
+
+  const products = await productsCollection();
+
+  for (const item of items) {
+    await products.updateOne(
+      { _id: item.productId },
+      {
+        $inc: {
+          stockQuantity: item.quantity,
+        },
+        $set: {
+          updatedAt: new Date(),
+        },
+      },
+    );
+  }
+}
+
 export async function checkoutCart(userId: string, payload: {
   shippingAddress: {
     fullName: string;
@@ -1202,6 +1231,10 @@ export async function updateOrderByAdmin(input: {
     updateSet.paymentStatus = input.paymentStatus;
   }
 
+  if (input.status === "cancelled" && previousStatus !== "cancelled") {
+    await restockOrderItems(existing.items);
+  }
+
   await orders.updateOne(
     { _id: orderObjectId },
     {
@@ -1315,10 +1348,21 @@ export async function trackOrderForUser(userId: string, orderNumber: string) {
     id: order._id.toHexString(),
     orderNumber: order.orderNumber,
     status: order.status,
+    subtotal: order.subtotal,
+    discountAmount: order.discountAmount ?? 0,
+    shippingFee: order.shippingCost,
+    taxAmount: order.taxAmount,
+    total: order.total,
+    notes: order.notes ?? "",
+    couponCode: order.couponCode ?? undefined,
     trackingNumber: order.trackingNumber ?? null,
-    estimatedDelivery: order.estimatedDelivery ? order.estimatedDelivery.toISOString() : null,
     paymentStatus: order.paymentStatus ?? "pending",
-    updatedAt: order.updatedAt.toISOString(),
+    items: order.items.map((item) => ({
+      title: item.title,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+    })),
+    createdAt: order.createdAt.toISOString(),
   };
 }
 
@@ -1338,6 +1382,8 @@ export async function cancelOrderForUser(userId: string, orderId: string) {
   if (!["pending", "confirmed", "processing"].includes(order.status)) {
     return { error: "Order cannot be cancelled at this stage." as const };
   }
+
+  await restockOrderItems(order.items);
 
   await orders.updateOne(
     { _id: orderObjectId },
@@ -1370,6 +1416,14 @@ export async function createReturnRequestForUser(userId: string, payload: {
     return { error: "Reason is required." as const };
   }
 
+  if (reason.length < 8) {
+    return { error: "Reason must be at least 8 characters." as const };
+  }
+
+  if (reason.length > 300) {
+    return { error: "Reason must be 300 characters or less." as const };
+  }
+
   const orders = await ordersCollection();
   const order = await orders.findOne({ _id: orderObjectId, userId: userObjectId });
   if (!order) {
@@ -1382,6 +1436,15 @@ export async function createReturnRequestForUser(userId: string, payload: {
 
   if (order.status === "cancelled") {
     return { error: "Cancelled orders cannot be returned." as const };
+  }
+
+  if (!["delivered", "shipped"].includes(order.status)) {
+    return { error: "Returns are only available for shipped or delivered orders." as const };
+  }
+
+  const normalizedNotes = payload.notes?.trim();
+  if (normalizedNotes && normalizedNotes.length > 500) {
+    return { error: "Notes must be 500 characters or less." as const };
   }
 
   const returnRequests = await returnRequestsCollection();
@@ -1404,7 +1467,7 @@ export async function createReturnRequestForUser(userId: string, payload: {
     orderId: orderObjectId,
     orderNumber: order.orderNumber,
     reason,
-    notes: payload.notes?.trim() || undefined,
+    notes: normalizedNotes || undefined,
     resolution: payload.resolution,
     status: "requested",
     createdAt: now,
@@ -1554,6 +1617,26 @@ export async function updateReturnRequestByAdmin(input: {
   }
 
   const previousStatus = existing.status;
+  const requestedStatus = input.status;
+  const trimmedAdminNote = input.adminNote?.trim();
+
+  if (requestedStatus && requestedStatus !== previousStatus) {
+    const allowed = RETURN_STATUS_TRANSITIONS[previousStatus];
+    if (!allowed.includes(requestedStatus)) {
+      return {
+        error: `Invalid status transition: ${previousStatus} -> ${requestedStatus}.`,
+      } as const;
+    }
+  }
+
+  if (requestedStatus === "rejected") {
+    const noteValue = trimmedAdminNote ?? existing.adminNote?.trim() ?? "";
+    if (!noteValue) {
+      return {
+        error: "adminNote is required when rejecting a return request.",
+      } as const;
+    }
+  }
 
   const updateSet: Record<string, unknown> = {
     updatedAt: new Date(),
@@ -1564,8 +1647,7 @@ export async function updateReturnRequestByAdmin(input: {
   }
 
   if (input.adminNote !== undefined) {
-    const trimmed = input.adminNote.trim();
-    updateSet.adminNote = trimmed || undefined;
+    updateSet.adminNote = trimmedAdminNote || undefined;
   }
 
   await returnRequests.updateOne(

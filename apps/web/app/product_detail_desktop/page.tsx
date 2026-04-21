@@ -66,6 +66,9 @@ export default function ProductDetailDesktopPage() {
     images: string[];
     categories: string[];
   } | null>(null);
+  const [addToCartLoading, setAddToCartLoading] = useState(false);
+  const [addToCartMessage, setAddToCartMessage] = useState<string | null>(null);
+  const [addToCartError, setAddToCartError] = useState<string | null>(null);
 
   const productIdOrSlug = useMemo(() => searchParams.get("product")?.trim() ?? "", [searchParams]);
   const hasDesktopImages = Boolean(product?.images && product.images.length > 0);
@@ -133,6 +136,51 @@ export default function ProductDetailDesktopPage() {
 
     void loadProduct();
   }, [productIdOrSlug]);
+
+  const addToCart = async () => {
+    setAddToCartError(null);
+    setAddToCartMessage(null);
+
+    if (!product?.id) {
+      setAddToCartError("No published product is available to add right now.");
+      return;
+    }
+
+    setAddToCartLoading(true);
+
+    try {
+      const response = await fetch("/api/cart", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          productId: product.id,
+          quantity: 1,
+        }),
+      });
+
+      const payload = (await response.json()) as {
+        error?: string;
+      };
+
+      if (response.status === 401) {
+        setAddToCartError("Please login first to add products into cart.");
+        return;
+      }
+
+      if (!response.ok) {
+        setAddToCartError(payload.error ?? "Unable to add product to cart.");
+        return;
+      }
+
+      setAddToCartMessage("Added to cart successfully.");
+    } catch {
+      setAddToCartError("Unable to add product due to network issue.");
+    } finally {
+      setAddToCartLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f3f3f4] text-[#1a1c1c]">
@@ -273,13 +321,20 @@ export default function ProductDetailDesktopPage() {
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  <a href={CUSTOMER_ROUTES.CART_CHECKOUT} className="block w-full rounded-full bg-black py-5 text-center text-sm font-bold uppercase tracking-[0.2em] text-white shadow-xl shadow-black/10 transition-transform hover:scale-[1.01]">
-                    Add to Cart
-                  </a>
+                  <button
+                    type="button"
+                    onClick={addToCart}
+                    disabled={addToCartLoading}
+                    className="block w-full rounded-full bg-black py-5 text-center text-sm font-bold uppercase tracking-[0.2em] text-white shadow-xl shadow-black/10 transition-transform hover:scale-[1.01] disabled:opacity-40"
+                  >
+                    {addToCartLoading ? "Adding..." : "Add to Cart"}
+                  </button>
                   <a href={CUSTOMER_ROUTES.PROFILE} className="flex w-full items-center justify-center gap-2 rounded-full border border-neutral-300 py-5 text-sm font-bold uppercase tracking-[0.2em] transition-colors hover:bg-neutral-200">
                     <span className="material-symbols-outlined text-sm">favorite</span>
                     Add to Wishlist
                   </a>
+                  {addToCartError ? <p className="text-xs font-bold text-red-600">{addToCartError}</p> : null}
+                  {addToCartMessage ? <p className="text-xs font-bold text-emerald-700">{addToCartMessage}</p> : null}
                 </div>
               </div>
 

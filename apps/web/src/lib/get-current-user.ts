@@ -45,8 +45,11 @@ async function resolveUserByToken(token: string): Promise<SanitizedAuthUser | nu
     return null;
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: decoded.sub },
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [{ id: decoded.sub }, { email: decoded.email }],
+      isActive: true,
+    },
     include: {
       roles: {
         include: {
@@ -56,7 +59,7 @@ async function resolveUserByToken(token: string): Promise<SanitizedAuthUser | nu
     },
   });
 
-  if (!user || !user.isActive) {
+  if (!user) {
     return null;
   }
 

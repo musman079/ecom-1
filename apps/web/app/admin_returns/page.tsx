@@ -61,6 +61,13 @@ function getAdminNotificationHref(item: AdminNotification) {
 }
 
 const statusOptions: AdminReturn["status"][] = ["requested", "approved", "in_transit", "refunded", "rejected"];
+const transitionMap: Record<AdminReturn["status"], AdminReturn["status"][]> = {
+  requested: ["approved", "rejected"],
+  approved: ["in_transit", "rejected"],
+  in_transit: ["refunded", "rejected"],
+  refunded: [],
+  rejected: [],
+};
 
 function formatDate(iso: string) {
   const value = new Date(iso);
@@ -89,6 +96,10 @@ function statusTone(status: AdminReturn["status"]) {
     return "bg-emerald-50 text-emerald-700";
   }
   return "bg-red-50 text-red-700";
+}
+
+function nextAllowedStatuses(status: AdminReturn["status"]) {
+  return transitionMap[status];
 }
 
 export default function AdminReturnsPage() {
@@ -229,7 +240,24 @@ export default function AdminReturnsPage() {
 
   const onSave = async (returnId: string) => {
     const draft = drafts[returnId];
+    const row = returns.find((item) => item.id === returnId);
     if (!draft) {
+      return;
+    }
+    if (!row) {
+      setError("Return request not found.");
+      return;
+    }
+
+    const statusChanged = draft.status !== row.status;
+    const allowedStatuses = nextAllowedStatuses(row.status);
+    if (statusChanged && !allowedStatuses.includes(draft.status)) {
+      setError(`Invalid transition: ${row.status} -> ${draft.status}.`);
+      return;
+    }
+
+    if (draft.status === "rejected" && !draft.adminNote.trim()) {
+      setError("Admin note is required when rejecting a return request.");
       return;
     }
 
@@ -468,6 +496,8 @@ export default function AdminReturnsPage() {
                 ) : (
                   returns.map((row) => {
                     const draft = drafts[row.id];
+                    const allowedNextStatuses = nextAllowedStatuses(row.status);
+                    const isFinalStatus = allowedNextStatuses.length === 0;
                     const isHighlighted =
                       (highlightedReturnNumber && row.returnNumber === highlightedReturnNumber) ||
                       (highlightedOrderNumber && row.orderNumber === highlightedOrderNumber);
@@ -507,16 +537,24 @@ export default function AdminReturnsPage() {
                               }))
                             }
                             className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs font-bold"
+                            disabled={isFinalStatus}
                           >
-                            {statusOptions.map((status) => (
+                            {statusOptions
+                              .filter((status) => status === row.status || allowedNextStatuses.includes(status))
+                              .map((status) => (
                               <option key={status} value={status}>
                                 {status}
                               </option>
-                            ))}
+                              ))}
                           </select>
                           <span className={`mt-2 inline-block rounded-full px-2 py-1 text-[10px] font-bold uppercase ${statusTone(draft?.status ?? row.status)}`}>
                             {(draft?.status ?? row.status).replace("_", " ")}
                           </span>
+                          {isFinalStatus ? (
+                            <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                              Final status
+                            </p>
+                          ) : null}
                         </td>
                         <td className="px-4 py-4">
                           <textarea

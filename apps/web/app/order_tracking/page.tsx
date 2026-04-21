@@ -128,36 +128,40 @@ export default function OrderTrackingPage() {
   const [trackedOrder, setTrackedOrder] = useState<TrackedOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
+
+  const loadOrders = async () => {
+    setError(null);
+    try {
+      const response = await fetch("/api/orders", { cache: "no-store" });
+      if (response.status === 401) {
+        router.replace(CUSTOMER_ROUTES.AUTH);
+        return;
+      }
+
+      const payload = (await response.json()) as {
+        error?: string;
+        orders?: OrderSummary[];
+      };
+
+      if (!response.ok) {
+        setError(payload.error ?? "Unable to load orders.");
+        return;
+      }
+
+      setOrders(Array.isArray(payload.orders) ? payload.orders : []);
+    } catch {
+      setError("Unable to load order tracking right now.");
+    }
+  };
 
   useEffect(() => {
-    const loadOrders = async () => {
-      setError(null);
-      try {
-        const response = await fetch("/api/orders", { cache: "no-store" });
-        if (response.status === 401) {
-          router.replace(CUSTOMER_ROUTES.AUTH);
-          return;
-        }
-
-        const payload = (await response.json()) as {
-          error?: string;
-          orders?: OrderSummary[];
-        };
-
-        if (!response.ok) {
-          setError(payload.error ?? "Unable to load orders.");
-          return;
-        }
-
-        setOrders(Array.isArray(payload.orders) ? payload.orders : []);
-      } catch {
-        setError("Unable to load order tracking right now.");
-      } finally {
-        setLoading(false);
-      }
+    const init = async () => {
+      await loadOrders();
+      setLoading(false);
     };
-
-    void loadOrders();
+    void init();
   }, [router]);
 
   const totals = useMemo(() => {
@@ -208,6 +212,43 @@ export default function OrderTrackingPage() {
       setTrackedOrder(null);
     } finally {
       setLookupLoading(false);
+    }
+  };
+
+  const cancelOrder = async (orderId: string, orderNumber: string) => {
+    setError(null);
+    setMessage(null);
+    setCancellingOrderId(orderId);
+
+    try {
+      const response = await fetch(`/api/orders/${encodeURIComponent(orderId)}/cancel`, {
+        method: "PATCH",
+      });
+
+      if (response.status === 401) {
+        router.replace(CUSTOMER_ROUTES.AUTH);
+        return;
+      }
+
+      const payload = (await response.json()) as {
+        error?: string;
+      };
+
+      if (!response.ok) {
+        setError(payload.error ?? "Unable to cancel order.");
+        return;
+      }
+
+      setMessage(`Order ${orderNumber} cancelled successfully.`);
+      await loadOrders();
+
+      if (trackedOrder?.id === orderId) {
+        await lookupByOrderNumber(orderNumber);
+      }
+    } catch {
+      setError("Unable to cancel order right now.");
+    } finally {
+      setCancellingOrderId(null);
     }
   };
 
@@ -298,6 +339,7 @@ export default function OrderTrackingPage() {
       </section>
 
       {loading ? <p className="rounded-2xl border border-zinc-200 bg-white p-6 text-sm text-zinc-500">Loading orders...</p> : null}
+      {message ? <p className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-700">{message}</p> : null}
       {error ? <p className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm font-semibold text-red-700">{error}</p> : null}
 
       {!loading && !error && orders.length === 0 ? (
@@ -326,6 +368,19 @@ export default function OrderTrackingPage() {
                     {order.trackingNumber ? <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Track #{order.trackingNumber}</p> : null}
                   </div>
                 </div>
+
+                {["pending", "confirmed", "processing"].includes(order.status.toLowerCase()) ? (
+                  <div className="mb-4">
+                    <button
+                      type="button"
+                      onClick={() => void cancelOrder(order.id, order.orderNumber)}
+                      disabled={cancellingOrderId === order.id}
+                      className="rounded-full border border-red-300 bg-red-50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                    >
+                      {cancellingOrderId === order.id ? "Cancelling..." : "Cancel Order"}
+                    </button>
+                  </div>
+                ) : null}
 
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                   {steps.map((step) => (

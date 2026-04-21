@@ -37,14 +37,29 @@ export async function POST(request: Request) {
     const session = await requireSession(request);
     const payload = (await request.json()) as ReturnCreatePayload;
 
-    if (!payload.orderId || !payload.reason || (payload.resolution !== "refund" && payload.resolution !== "exchange")) {
+    const reason = payload.reason?.trim() ?? "";
+    const notes = payload.notes?.trim();
+
+    if (!payload.orderId || !reason || (payload.resolution !== "refund" && payload.resolution !== "exchange")) {
       return NextResponse.json({ error: "orderId, reason and valid resolution are required." }, { status: 400 });
+    }
+
+    if (reason.length < 8) {
+      return NextResponse.json({ error: "Reason must be at least 8 characters." }, { status: 400 });
+    }
+
+    if (reason.length > 300) {
+      return NextResponse.json({ error: "Reason must be 300 characters or less." }, { status: 400 });
+    }
+
+    if (notes && notes.length > 500) {
+      return NextResponse.json({ error: "Notes must be 500 characters or less." }, { status: 400 });
     }
 
     const created = await createReturnRequestForUser(session.userId, {
       orderId: payload.orderId,
-      reason: payload.reason,
-      notes: payload.notes,
+      reason,
+      notes,
       resolution: payload.resolution,
     });
 

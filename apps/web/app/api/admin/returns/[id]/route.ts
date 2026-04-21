@@ -43,5 +43,9 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Return request not found." }, { status: 404 });
   }
 
+  if ("error" in requestRow) {
+    return NextResponse.json({ error: requestRow.error }, { status: 400 });
+  }
+
   return NextResponse.json({ returnRequest: requestRow });
 }

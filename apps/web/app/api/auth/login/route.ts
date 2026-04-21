@@ -8,6 +8,7 @@ import {
   signAuthToken,
   verifyPassword,
 } from "../../../../src/lib/auth";
+import { ensureMongoCustomerUser } from "../../../../src/lib/auth-user-sync";
 import { sanitizeAuthUser } from "../../../../src/lib/get-current-user";
 import { prisma } from "../../../../src/lib/prisma";
 
@@ -77,8 +78,16 @@ export async function POST(request: Request) {
         ? "ADMIN"
         : "CUSTOMER";
 
+    const mongoUser = await ensureMongoCustomerUser({
+      email: user.email,
+      fullName: user.fullName,
+      phone: user.phone,
+      passwordHash: user.passwordHash,
+      isActive: user.isActive,
+    });
+
     const token = await signAuthToken({
-      sub: user.id,
+      sub: mongoUser.mongoUserId,
       email: user.email,
       role,
     });

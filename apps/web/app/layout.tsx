@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { assertRuntimeEnvironment } from "../src/lib/env";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -14,6 +15,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  assertRuntimeEnvironment();
+
   return (
     <html lang="en">
       <head>
