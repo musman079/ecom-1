@@ -29,6 +29,12 @@ type ShippingForm = {
   country: string;
 };
 
+type AppliedCoupon = {
+  code: string;
+  discountAmount: number;
+  finalSubtotal: number;
+};
+
 export default function CartCheckoutPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -51,6 +57,10 @@ export default function CartCheckoutPage() {
     postalCode: "",
     country: "",
   });
+  const [couponCode, setCouponCode] = useState("");
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
 
   const loadCart = async () => {
     try {
@@ -90,9 +100,25 @@ export default function CartCheckoutPage() {
     void init();
   }, []);
 
-  const shipping = cart.totalItems > 0 ? 12 : 0;
-  const taxes = useMemo(() => Number((cart.subtotal * 0.08).toFixed(2)), [cart.subtotal]);
-  const total = cart.subtotal + shipping + taxes;
+  const discountAmount = appliedCoupon?.discountAmount ?? 0;
+  const discountedSubtotal = useMemo(() => Number(Math.max(0, cart.subtotal - discountAmount).toFixed(2)), [cart.subtotal, discountAmount]);
+  const shipping = discountedSubtotal > 0 ? 12 : 0;
+  const taxes = useMemo(() => Number((discountedSubtotal * 0.08).toFixed(2)), [discountedSubtotal]);
+  const total = discountedSubtotal + shipping + taxes;
+
+  useEffect(() => {
+    setAppliedCoupon((current) => {
+      if (!current) {
+        return current;
+      }
+
+      const nextSubtotal = Number(Math.max(0, cart.subtotal - current.discountAmount).toFixed(2));
+      return {
+        ...current,
+        finalSubtotal: nextSubtotal,
+      };
+    });
+  }, [cart.subtotal]);
 
   const updateQuantity = async (productId: string, quantity: number) => {
     setActiveProductId(productId);
@@ -192,6 +218,7 @@ export default function CartCheckoutPage() {
         body: JSON.stringify({
           shippingAddress: shippingForm,
           paymentMethod,
+          couponCode: appliedCoupon?.code,
         }),
       });
 
@@ -208,12 +235,69 @@ export default function CartCheckoutPage() {
       }
 
       setMessage(`Order placed successfully (${payload.order.orderNumber}).`);
+      setAppliedCoupon(null);
+      setCouponCode("");
+      setCouponError(null);
       await loadCart();
       router.push(CUSTOMER_ROUTES.ORDER_TRACKING);
     } catch {
       setError("Unable to place order right now.");
     } finally {
       setPlacingOrder(false);
+    }
+  };
+
+  const applyCoupon = async () => {
+    setCouponError(null);
+    setError(null);
+
+    if (!couponCode.trim()) {
+      setCouponError("Enter a coupon code.");
+      return;
+    }
+
+    if (needsAuth) {
+      setCouponError("Please sign in before applying coupons.");
+      return;
+    }
+
+    if (cart.items.length === 0) {
+      setCouponError("Your cart is empty.");
+      return;
+    }
+
+    setApplyingCoupon(true);
+
+    try {
+      const response = await fetch("/api/coupons/apply", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          code: couponCode,
+          subtotal: cart.subtotal,
+        }),
+      });
+
+      const payload = (await response.json()) as {
+        error?: string;
+        coupon?: AppliedCoupon;
+      };
+
+      if (!response.ok || !payload.coupon) {
+        setAppliedCoupon(null);
+        setCouponError(payload.error ?? "Unable to apply coupon.");
+        return;
+      }
+
+      setAppliedCoupon(payload.coupon);
+      setCouponCode(payload.coupon.code);
+      setMessage(`Coupon ${payload.coupon.code} applied successfully.`);
+    } catch {
+      setCouponError("Unable to apply coupon right now.");
+    } finally {
+      setApplyingCoupon(false);
     }
   };
 
@@ -418,10 +502,35 @@ export default function CartCheckoutPage() {
 
             <section className="rounded-xl bg-black p-8 text-white shadow-[0px_20px_40px_rgba(20,27,43,0.06)]">
               <h2 className="mb-8 text-sm font-black uppercase tracking-widest">Order Summary</h2>
+              <div className="mb-6 rounded-lg border border-white/20 bg-white/5 p-4">
+                <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">Coupon</p>
+                <div className="flex gap-2">
+                  <input
+                    value={couponCode}
+                    onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
+                    placeholder="ENTER CODE"
+                    className="h-10 flex-1 rounded-md border border-white/20 bg-black/20 px-3 text-xs font-semibold uppercase tracking-[0.16em] text-white placeholder:text-white/40 focus:border-white/50 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={applyCoupon}
+                    disabled={applyingCoupon || loading || needsAuth}
+                    className="rounded-md border border-white/25 px-4 text-[10px] font-black uppercase tracking-[0.16em] transition hover:bg-white/10 disabled:opacity-40"
+                  >
+                    {applyingCoupon ? "Applying" : "Apply"}
+                  </button>
+                </div>
+                {couponError ? <p className="mt-2 text-xs font-semibold text-red-300">{couponError}</p> : null}
+                {appliedCoupon ? <p className="mt-2 text-xs font-semibold text-emerald-300">{appliedCoupon.code} active</p> : null}
+              </div>
               <div className="space-y-4 font-medium">
                 <div className="flex items-center justify-between opacity-70">
                   <span className="text-sm uppercase tracking-wide">Subtotal</span>
                   <span className="text-sm">${cart.subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between opacity-70">
+                  <span className="text-sm uppercase tracking-wide">Discount</span>
+                  <span className="text-sm">-${discountAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between opacity-70">
                   <span className="text-sm uppercase tracking-wide">Shipping</span>

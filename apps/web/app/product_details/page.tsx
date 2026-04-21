@@ -29,17 +29,15 @@ type ProductDetail = {
   categories: string[];
 };
 
-const galleryImages = [
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuAOxZYhTmNSexvgQ6GDh54igLjroBcQ7ioVBk6V4cw1VWP5L_A07-e8MKl8pt4jrETKY9Z-DCde7pecXAb-DFFz0tXmldwELRkd5DgizmRWPGX_xk0RlHaUWtdC56aBQmd8YRW45CgkqWay8pfR_X_aUdIJBpx4qXbSWjl5zC0rt-5LYt6i6v4bPVjzxo6eYEE-7NpQPwlq_TGCKzqydUc6v226wrKpbehfYbvAcO626HVe8aels6ez-mt3Xqa_6cJYLWz2Y1jzSolz',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuAqzBOVRs961H-JV4sKABbjnDcfGTcw-nhKnqT15XS7Ky6t9CushYMSMcrnP-e5iE-3cwDLds-060c2SdjiYDXA0qxk-3HvEPh6HgdIzEiwiKju-BT60ZGEYW8EvNfm8DAlCP8mgjpDuSVlG_Wo8SJACnva0IYh8jH2XG1GYusCAsI9SVeixoEC9vusy555YUVuBei0iF_UTrlaF6R-5XeTcB_K3-EAEiPkuXkNoJswHCVhvhow-ib4mYnm7lnOj5zMeEqsdRD3CD_6',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuANi6A0HugCdIAKHk9SyXx10b-5gYEURdntuDnoZtvo7OQ6OnVQG9529u3C6Bu_hiEIvx06rhrr3SMURHZO0k_oICjmd3lwepp3RXd55UpXG0EDAtRSfymaBio6dE4eS3vOGcSufZzQLgUVm2AqzQmJx0QcFqAX0xrI-Q8XlJOdMFKPJevvHGhdLarWbWPFEVbrkHSjaQroiJLgi-NiheChFgZoNFcGTrEpKVqU4SskuS_FikYIPgSFKrKAKaQDKbZlghRbfi2iAh-p',
-];
+const detailTones = [
+  "from-[#ececec] via-white to-[#dcdcdc]",
+  "from-[#f0ebe4] via-white to-[#d8d1c7]",
+  "from-[#e5ecef] via-white to-[#cfd8de]",
+] as const;
 
-const thumbImages = [
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuDTXCK3byKC19SgofEhINcytFHMnxlWAW1G-iD7NLK8V6gEq3ufPTk6eumDOUjYvve-yZUy1rqgdeFac06OYSSId8Ahc8zFwq2lOQCD3U6kh1nJUmp4BfDIvHfe6CC1NTSd4pW1uowKvChNBhdzT1sFpPtixiYggUwL1Ohe4U9XxPIrL_x0kkhCwRZgu6MP_BT9teyVlsfw0S6tsJYafFZ1f4HLwEEr2RydF7QYOc-DXZ9y_EDsG37eMQN_uBAz-LXO6KhUMIHfXR91',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuDXKur_C7NKAQgbdXvb-T2Zb6J9RzwxESaTxu6nALCgLR6Dd3ZtucwKopQWQ5ddNIhpZRNVSM7okjBoNdCZdbRUHPEy5vLDO1U_UwHth-opLGPMSpdl132FRovmAzyJYLa1AieffHMuial58bg1GsHQ5Ag3b7-jVlB1XKnT-j6lb3iNaRvDnUaBrZuYUfVnYi0_cCqftG0HQ2SCPpdZ0Z9ZoN9nhEwfYW7HXcw2cekb6NS6MLSjZHEcJn-wbEqoeNMbm1VykCUZmBMZ',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuDrtAM4T4eOTX4R9uf9ZhfaEDkCW67NbdhbDRnJrm3aPPXUs6lG66FcznHMBbVN8ceVkQt_o6IVmoJEa7WPCMEmVU0smQa9y2JLuMNZpnA99cepVQ5bq1oManB-8CRd-JE3TPoSATbUZIwHDJFvtGSvIBy3oxVnE0kPYg1CDHgRRbu_o7HcAVXfILQ7zr_arR3DP9Ax6msBskJv6_9hRhBSBoacrCfublXZJMuETcLL_GU8Yc2n0t5_RQv7H8ImwzlVoscSVzmMTAd9',
-];
+function getDetailTone(index: number) {
+  return detailTones[index % detailTones.length];
+}
 
 export default function ProductDetailsPage() {
   const searchParams = useSearchParams();
@@ -62,7 +60,7 @@ export default function ProductDetailsPage() {
   const [addToCartError, setAddToCartError] = useState<string | null>(null);
 
   const productIdOrSlug = useMemo(() => searchParams.get("product")?.trim() ?? "", [searchParams]);
-  const detailGallery = product?.images && product.images.length > 0 ? product.images : galleryImages;
+  const hasProductImages = Boolean(product?.images && product.images.length > 0);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -241,32 +239,54 @@ export default function ProductDetailsPage() {
         <div className="flex flex-col items-start gap-12 lg:flex-row lg:gap-20">
           <section className="w-full space-y-6 lg:w-3/5">
             <div className="relative">
-              <div className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto rounded-xl bg-[#f3f3f4]">
-                {detailGallery.map((image, idx) => (
-                  <div key={image} className="relative aspect-[4/5] w-full shrink-0 snap-center md:aspect-square">
-                    <img src={image} alt={`Gallery ${idx + 1}`} className="h-full w-full object-cover" />
+              {hasProductImages ? (
+                <div className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto rounded-xl bg-[#f3f3f4]">
+                  {product?.images?.map((image, idx) => (
+                    <div key={image} className="relative aspect-[4/5] w-full shrink-0 snap-center md:aspect-square">
+                      <img src={image} alt={`Gallery ${idx + 1}`} className="h-full w-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className={`flex aspect-[4/5] flex-col justify-between overflow-hidden rounded-xl bg-gradient-to-br ${getDetailTone(0)} p-8 md:aspect-square`}>
+                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.22em] text-neutral-500">
+                    <span>{product?.categories?.[0] || "Published product"}</span>
+                    <span>{product?.sku || "SKU pending"}</span>
                   </div>
-                ))}
-              </div>
-              <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-2">
-                <span className="h-2 w-2 rounded-full bg-black" />
-                <span className="h-2 w-2 rounded-full bg-black/20" />
-                <span className="h-2 w-2 rounded-full bg-black/20" />
-              </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Catalog preview</p>
+                    <h2 className="mt-3 max-w-md text-4xl font-black uppercase leading-[0.9] tracking-[-0.06em] md:text-5xl">
+                      {product?.title || "Product preview"}
+                    </h2>
+                    <p className="mt-4 max-w-lg text-sm leading-7 text-neutral-600">
+                      {product?.description || "Published products will show their actual imagery here once image assets are connected."}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="grid grid-cols-5 gap-3 md:gap-4">
-              {thumbImages.map((image, idx) => (
-                <button
-                  key={image}
-                  className={`aspect-square overflow-hidden rounded-lg transition hover:opacity-80 ${
-                    idx === 0 ? 'ring-1 ring-black ring-offset-2' : ''
-                  }`}
-                >
-                  <img src={image} alt={`Thumbnail ${idx + 1}`} className="h-full w-full object-cover" />
-                </button>
-              ))}
-            </div>
+            {hasProductImages ? (
+              <div className="grid grid-cols-5 gap-3 md:gap-4">
+                {product?.images?.slice(0, 5).map((image, idx) => (
+                  <button
+                    key={image}
+                    className={`aspect-square overflow-hidden rounded-lg transition hover:opacity-80 ${
+                      idx === 0 ? "ring-1 ring-black ring-offset-2" : ""
+                    }`}
+                    type="button"
+                  >
+                    <img src={image} alt={`Thumbnail ${idx + 1}`} className="h-full w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-3 text-[10px] font-bold uppercase tracking-[0.22em] text-neutral-500 md:grid-cols-3">
+                <div className={`rounded-lg border border-black/5 bg-gradient-to-br ${getDetailTone(1)} p-4`}>Ready to publish</div>
+                <div className={`rounded-lg border border-black/5 bg-gradient-to-br ${getDetailTone(2)} p-4`}>Data driven</div>
+                <div className="rounded-lg border border-black/5 bg-white p-4">No fake imagery</div>
+              </div>
+            )}
           </section>
 
           <section className="w-full lg:sticky lg:top-32 lg:w-2/5">
@@ -401,12 +421,19 @@ export default function ProductDetailsPage() {
                 href={`/product_detail_desktop?product=${encodeURIComponent(item.slug || item.id)}`}
                 className="group cursor-pointer space-y-4"
               >
-                <div className="aspect-[3/4] overflow-hidden rounded-lg bg-[#f3f3f4]">
-                  <img
-                    src={item.thumbnail || thumbImages[index % thumbImages.length]}
-                    alt={item.title}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                  />
+                <div className={`aspect-[3/4] overflow-hidden rounded-lg bg-gradient-to-br ${getDetailTone(index)} p-4`}>
+                  {item.thumbnail ? (
+                    <img
+                      src={item.thumbnail}
+                      alt={item.title}
+                      className="h-full w-full rounded-md object-cover transition duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full flex-col justify-end rounded-md border border-black/5 bg-white/35 p-4 backdrop-blur-sm">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-neutral-500">Published product</p>
+                      <h3 className="mt-2 text-lg font-black uppercase leading-[0.95] tracking-[-0.05em] text-[#1a1c1c]">{item.title}</h3>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-1">
                   <h3 className="text-xs font-bold uppercase tracking-wider">{item.title}</h3>
@@ -446,7 +473,7 @@ export default function ProductDetailsPage() {
         <div className="flex items-center gap-4">
           <div className="flex flex-col">
             <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Total</span>
-            <span className="text-lg font-black">$285.00</span>
+            <span className="text-lg font-black">{typeof product?.price === "number" ? `$${product.price.toFixed(2)}` : "$0.00"}</span>
           </div>
           <button
             type="button"

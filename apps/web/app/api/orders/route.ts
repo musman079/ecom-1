@@ -14,6 +14,7 @@ type OrderCreatePayload = {
   };
   paymentMethod?: "card" | "cod";
   notes?: string;
+  couponCode?: string;
 };
 
 export async function GET(request: Request) {
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
       },
       paymentMethod: payload.paymentMethod,
       notes: payload.notes,
+      couponCode: payload.couponCode,
     });
 
     if (!result) {

@@ -36,6 +36,16 @@ const lookItems = [
   },
 ];
 
+const desktopTones = [
+  "from-[#ececec] via-white to-[#dcdcdc]",
+  "from-[#f0ebe4] via-white to-[#d8d1c7]",
+  "from-[#e5ecef] via-white to-[#cfd8de]",
+] as const;
+
+function getDesktopTone(index: number) {
+  return desktopTones[index % desktopTones.length];
+}
+
 export default function ProductDetailDesktopPage() {
   const searchParams = useSearchParams();
   const [selectedColor, setSelectedColor] = useState("Black");
@@ -58,13 +68,7 @@ export default function ProductDetailDesktopPage() {
   } | null>(null);
 
   const productIdOrSlug = useMemo(() => searchParams.get("product")?.trim() ?? "", [searchParams]);
-  const desktopImages = product?.images && product.images.length > 0
-    ? product.images
-    : [
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuCuDny4SKGJzALRE-iBCUljuB6J14e_79v6rmOm-aKOvGN5ba95nlmi2t80un8qrFw5P1H_s-S35tS9XrALh0fozYfvG7eS86LCyo8rwdr3IHghH6PkU9qBrLHitSA4UBOdYtZYJApFJ5Wf_Lks_LPzY3cqD9kiZXEMzG0GSyEAKV1BYsRj2yl6hZ9wpEGREJRy97EO2woy5yqNYqtoaKuQzwWuqdUGwOQq3PleW4Z9SQhfFfknRczdZmwnuSVjdCSO0Mk0w9DapB8q",
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuAA9ShVaVLTG2YsQuVR0EprDeGe37jQdqq7Pf_zGGRK9_IbVwPPjur6zrPT3VzeN7lL1DZulT6WuxGnk1sAgqj2qzLpkZsHUJJMwndSu4KHZSObrc_T1nswnkER1FrlU81rHJX6bXAEKiOsKzYS3Z-WUZ-pVLNregowMb4xqGrRbu2VMct4LLcJMZmHAr6w2daV_5ghqCoZjnSLdJAcqfijo6NZ6hhbO_4AZ7edrTO7RZS00v4IFiHaE0oCYtWTeu1dNl5LjFT7YZyH",
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuDM3yobJAQ9iFc0l4NY8udyzkfIF4blCC2z0eW9tfbZO1sGAPk_mmUTP6mX3R3n_WXYNnwe-XbX3UdTD-loNuuDccacs7W0w0tNUaVcKMsryGRxTUttOsZvYP3yYNg6vnP1f0M-8_m5KL-Y1gcMZpWUoq52hDpIADxMam3Vw4qmUQrViLDh-0WX-Q0sDHiMtd8mpEIQAwj9h1MDOr7VMHtipZxzr8j82qxWvCOzO4BS25Dmf2eTrDXWeXOP8-xZVXqR0Pnz-gsKMViM",
-      ];
+  const hasDesktopImages = Boolean(product?.images && product.images.length > 0);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -154,9 +158,6 @@ export default function ProductDetailDesktopPage() {
             </a>
             <a href={CUSTOMER_ROUTES.CART_CHECKOUT} className="relative" aria-label="Shopping Bag">
               <span className="material-symbols-outlined">shopping_bag</span>
-              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#497cff] text-[8px] font-bold text-white">
-                2
-              </span>
             </a>
             <a href={CUSTOMER_ROUTES.PROFILE} aria-label="Profile">
               <span className="material-symbols-outlined">person</span>
@@ -178,29 +179,49 @@ export default function ProductDetailDesktopPage() {
 
         <section className="grid grid-cols-1 gap-0 px-0 pb-16 sm:pb-24 lg:grid-cols-12 lg:px-12">
           <div className="flex flex-col gap-4 lg:col-span-7">
-            <div className="group aspect-[3/4] w-full overflow-hidden bg-neutral-200">
-              <img
-                src={desktopImages[0]}
-                alt={product?.title || "Product image"}
-                className="h-full w-full object-cover transition duration-1000 group-hover:scale-105"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="aspect-[3/4] overflow-hidden bg-neutral-200">
-                <img
-                  src={desktopImages[1] || desktopImages[0]}
-                  alt="Detail View"
-                  className="h-full w-full object-cover transition duration-700 hover:scale-110"
-                />
+            {hasDesktopImages ? (
+              <>
+                <div className="group aspect-[3/4] w-full overflow-hidden bg-neutral-200">
+                  <img
+                    src={product?.images?.[0] || ""}
+                    alt={product?.title || "Product image"}
+                    className="h-full w-full object-cover transition duration-1000 group-hover:scale-105"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="aspect-[3/4] overflow-hidden bg-neutral-200">
+                    <img
+                      src={product?.images?.[1] || product?.images?.[0] || ""}
+                      alt="Detail View"
+                      className="h-full w-full object-cover transition duration-700 hover:scale-110"
+                    />
+                  </div>
+                  <div className="aspect-[3/4] overflow-hidden bg-neutral-200">
+                    <img
+                      src={product?.images?.[2] || product?.images?.[0] || ""}
+                      alt="Styling Shot"
+                      className="h-full w-full object-cover transition duration-700 hover:scale-110"
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className={`flex aspect-[4/5] flex-col justify-between overflow-hidden rounded-xl bg-gradient-to-br ${getDesktopTone(0)} p-8 lg:aspect-[3/4]`}>
+                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.22em] text-neutral-500">
+                  <span>{product?.categories?.[0] || "Published product"}</span>
+                  <span>{product?.sku || "SKU pending"}</span>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-neutral-500">Catalog preview</p>
+                  <h2 className="mt-3 max-w-xl text-4xl font-black uppercase leading-[0.9] tracking-[-0.06em] sm:text-5xl">
+                    {product?.title || "Product preview"}
+                  </h2>
+                  <p className="mt-4 max-w-lg text-sm leading-7 text-neutral-600">
+                    {product?.description || "Published product images will appear here once media assets are available."}
+                  </p>
+                </div>
               </div>
-              <div className="aspect-[3/4] overflow-hidden bg-neutral-200">
-                <img
-                  src={desktopImages[2] || desktopImages[0]}
-                  alt="Styling Shot"
-                  className="h-full w-full object-cover transition duration-700 hover:scale-110"
-                />
-              </div>
-            </div>
+            )}
           </div>
 
           <div className="px-4 pt-10 sm:px-6 sm:pt-12 lg:col-span-5 lg:px-0 lg:pl-20 lg:pt-0">
@@ -301,8 +322,12 @@ export default function ProductDetailDesktopPage() {
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3 lg:grid-cols-4">
             {lookItems.map((item) => (
               <article key={item.name} className="group cursor-pointer">
-                <div className="relative mb-6 aspect-[4/5] overflow-hidden rounded-xl bg-white">
-                  <img src={item.image} alt={item.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                <div className={`relative mb-6 flex aspect-[4/5] items-end overflow-hidden rounded-xl bg-gradient-to-br ${getDesktopTone(1)} p-5`}>
+                  <div className="rounded-[1.1rem] border border-black/5 bg-white/35 p-4 text-[#1a1c1c] backdrop-blur-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-neutral-500">{item.category}</p>
+                    <h4 className="mt-2 text-lg font-black uppercase leading-[0.95] tracking-[-0.05em]">{item.name}</h4>
+                    <p className="mt-3 text-sm font-medium text-neutral-600">{item.price}</p>
+                  </div>
                   <a href={CUSTOMER_ROUTES.CART_CHECKOUT} className="absolute bottom-4 right-4 translate-y-2 rounded-full bg-white p-3 opacity-0 shadow-lg transition-all group-hover:translate-y-0 group-hover:opacity-100" aria-label="Add To Cart">
                     <span className="material-symbols-outlined">add</span>
                   </a>

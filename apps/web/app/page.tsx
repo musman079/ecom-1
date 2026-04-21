@@ -18,72 +18,16 @@ type DisplayProductCard = {
   id?: string;
   slug?: string;
   label: string;
+  category: string;
   name: string;
   price: string;
-  image: string;
 };
-
-const fallbackNewArrivals: DisplayProductCard[] = [
-  {
-    label: "Kinetic Lab",
-    name: "Structured Wool Blazer",
-    price: "$495",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDYCbArsFOqPxGlq03JSdqhQIOoQU6vbuIAZ8YlyEadaXVRd7JPq56MexLgniTm5J0O1VbnwSD8wwGc_V91OEumnzsiCuQYU9uwpd2W87PjGvq1IX2e7ZSlz9OvlRNILGlLaMjWOYYy-X5WNwcFS3bys2n04uoveFQwri9I-aiPnwMYKgCdL1lHa2V3MgvB_Yc-jh6ZC8vkZqldFySMYZYYKKU3qryheXIg9GCeqtzkl-kR157bYdMTDUsn6yOurowgtYm2f6_ypZyt",
-  },
-  {
-    label: "Archive Series",
-    name: "Polished Chelsea Boots",
-    price: "$320",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDxyOv6DIo8zAm5VCuTWNPPCqt_67myzLrpo0181uyDcokg13jBTmPp2vkuSaTTV2M5nIOvOcM5RCzYt7UhjX_2oWs7qjM6KIFuBtTD0PqDTbsufqf-GjgFw2K-UM9KJMHNje9FnuSdfifPPdPrKGscOuzPNVnBv_VphdDqHKAOKHkcAk40mbCUHgtWXMOpi4O62ixACHEZU5dUTBndX5yzpale23YuW2gzB_nSK28LdU_LFNaoM-S2bAhyzH96pmEtqIKf7R8jJRqy",
-  },
-  {
-    label: "Sustainability First",
-    name: "Organic Cotton Knit",
-    price: "$185",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuASccMpb35t429bezXDi4EhKuOieCSpaAGu73_vPUkC2RVwr2aR5-7xTbA5lJxEaz9Db65gXA7dEA4irVM9Ni-v59XD1li0mMjhQI8LwF08cBgs4sC3OA43sV1EMCm46x_QqLZwDxuUD--fyxbhqIoKOhw1cdzxSjuTARqHxbGqdBhxF5K5kn_DaHImKeuXYRBwRyKFvEWpU8XQ18VJRhmG_YQKJha5hKVLvDqTIQFyYkaOFRCmuXVcQOlYtdlaY7WQvTqZLe6vOJsB",
-  },
-  {
-    label: "Kinetic Lab",
-    name: "Raw Indigo Selvedge",
-    price: "$210",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDr4tvf-0RRKrgc4NIRHUnTX9E1qyxH2RvrXJ9JQxFsGp8DluhrNdFIJgn3Twrh3N29nGcBIlKJp1NcVNeIsrq2cfY8nyreBmJ6N_pJACkSC_Lr16u8QF9Y2bEoe7Ya02MjnNvhcBhAlv8eIA23fPSWH2RRYzORGX6L_nFifEtEJ4Eblcq2L-6fL02Lo3bJhcV0f-2YWx4yAUQ6gPQdp2S3OTOxmjv7KT4OKKepFQ4-aYDpZQ6gwEgY7l-Iq8xNwhIrxf4apZT-ek2S",
-  },
-];
-
-const fallbackBestSellers: DisplayProductCard[] = [
-  {
-    label: "Best Seller",
-    name: "Heavy Box Tee",
-    price: "$85",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuD46zSzWfWyIFbs_U595J3GkOBwqYglYgB6BXQf0w2Ru-HKLQd-TVhQCBZHCqtZvkSeY5Bkl4wb1KTuROse_t2VhEetdB4kS74VJa4NvyKra4RBDTYtYnaAruB5mAO4iaGl3wiPNMwG-An1Sm0s2bEG22VaAisQyD98wEy_yGQm77avKkV5DzeBc5_O2D-UYzhtw_q2aonNmttEx7wDQgfUq8aaG3vBfsnDYpUlFWEbaZMqFVbbp9rN85cuEHye_BlAwKaADswV0atD",
-  },
-  {
-    label: "Best Seller",
-    name: "Orbital Frame",
-    price: "$240",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuA2WsTompm8zco7Euqews9CnE-lsEx6nw_7ouXE_pTL_dYRyZ5jFli2oT_OEtCEciX0GW7ih9xf-WbvNSxGX_ap6hC1cg3e2JdnZVpuoglvZhMtpEN_yBBhDwjdK-RCPpF79D6xsudLQMHaNPdKeAHsp7ZMIf0F_OhxbUAp-rNkt4oFpIE-OU1-nC2v7xND3bV7Xnud9Cs-Cw5nX3iI8Grcc8OOx3vJp_hMVd70v4AEXIGpQBRN7kMS-Y5lCGnkQJAnZiCCn1MxenVl",
-  },
-  {
-    label: "Best Seller",
-    name: "Shell L3 Jacket",
-    price: "$375",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCnZuQKFOihQYtVC2N0zM53U17J7M2KYMKRSWSVJIgFQfNssAM_M0lk5de2dfcPLqmGJthcmCyKsBBlI6iK8a6xxbR1j7IwOD2J0jRRmXd5hUfgTHBvA-fYcJbNfuyks2E5VLYyiGPLq9y1tq8wNEbE7XK-JVRaXR11fJ7S39oZf8I0lzcyqdAvOyi83Dacws4iCRC3qZnInWMDLT7LkF6zQkWdsEHwq_RluCiTVxI8ukFBgrE1tNE7yzviwBPnDd5pHyQD5vnrEeWC",
-  },
-];
-
-const fallbackImages = [
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuDYCbArsFOqPxGlq03JSdqhQIOoQU6vbuIAZ8YlyEadaXVRd7JPq56MexLgniTm5J0O1VbnwSD8wwGc_V91OEumnzsiCuQYU9uwpd2W87PjGvq1IX2e7ZSlz9OvlRNILGlLaMjWOYYy-X5WNwcFS3bys2n04uoveFQwri9I-aiPnwMYKgCdL1lHa2V3MgvB_Yc-jh6ZC8vkZqldFySMYZYYKKU3qryheXIg9GCeqtzkl-kR157bYdMTDUsn6yOurowgtYm2f6_ypZyt",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuDxyOv6DIo8zAm5VCuTWNPPCqt_67myzLrpo0181uyDcokg13jBTmPp2vkuSaTTV2M5nIOvOcM5RCzYt7UhjX_2oWs7qjM6KIFuBtTD0PqDTbsufqf-GjgFw2K-UM9KJMHNje9FnuSdfifPPdPrKGscOuzPNVnBv_VphdDqHKAOKHkcAk40mbCUHgtWXMOpi4O62ixACHEZU5dUTBndX5yzpale23YuW2gzB_nSK28LdU_LFNaoM-S2bAhyzH96pmEtqIKf7R8jJRqy",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuASccMpb35t429bezXDi4EhKuOieCSpaAGu73_vPUkC2RVwr2aR5-7xTbA5lJxEaz9Db65gXA7dEA4irVM9Ni-v59XD1li0mMjhQI8LwF08cBgs4sC3OA43sV1EMCm46x_QqLZwDxuUD--fyxbhqIoKOhw1cdzxSjuTARqHxbGqdBhxF5K5kn_DaHImKeuXYRBwRyKFvEWpU8XQ18VJRhmG_YQKJha5hKVLvDqTIQFyYkaOFRCmuXVcQOlYtdlaY7WQvTqZLe6vOJsB",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuDr4tvf-0RRKrgc4NIRHUnTX9E1qyxH2RvrXJ9JQxFsGp8DluhrNdFIJgn3Twrh3N29nGcBIlKJp1NcVNeIsrq2cfY8nyreBmJ6N_pJACkSC_Lr16u8QF9Y2bEoe7Ya02MjnNvhcBhAlv8eIA23fPSWH2RRYzORGX6L_nFifEtEJ4Eblcq2L-6fL02Lo3bJhcV0f-2YWx4yAUQ6gPQdp2S3OTOxmjv7KT4OKKepFQ4-aYDpZQ6gwEgY7l-Iq8xNwhIrxf4apZT-ek2S",
-];
+const cardTones = [
+  "from-[#ececec] via-white to-[#dcdcdc]",
+  "from-[#f0ebe4] via-white to-[#d8d1c7]",
+  "from-[#e5ecef] via-white to-[#cfd8de]",
+  "from-[#efedf4] via-white to-[#dad6e6]",
+] as const;
 
 function formatDashboardPrice(price: number) {
   return new Intl.NumberFormat("en-US", {
@@ -93,9 +37,8 @@ function formatDashboardPrice(price: number) {
   }).format(price);
 }
 
-function getCardImage(images: string[] | undefined, index: number) {
-  const fromProduct = Array.isArray(images) ? images[0] : null;
-  return fromProduct || fallbackImages[index % fallbackImages.length] || fallbackImages[0] || "";
+function getCardTone(index: number) {
+  return cardTones[index % cardTones.length];
 }
 
 export default async function Home() {
@@ -115,15 +58,15 @@ export default async function Home() {
         id: product.id,
         slug: product.slug,
         label: product.categories[0] || "Kinetic Catalog",
+        category: product.categories[0] || "Collection",
         name: product.title,
         price: formatDashboardPrice(product.price),
-        image: getCardImage(product.thumbnail ? [product.thumbnail] : undefined, index),
       }));
 
       newArrivals = mapped.slice(0, 4);
       bestSellers = (mapped.length > 4 ? mapped.slice(4, 7) : mapped.slice(0, 3)).map((item) => ({
         ...item,
-        label: "Best Seller",
+        label: "Featured",
       }));
     }
   } catch {
@@ -232,18 +175,25 @@ export default async function Home() {
               </div>
 
               <div className="grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 xl:grid-cols-4">
-                {newArrivals.map((item) => (
+                {newArrivals.map((item, idx) => (
                   <Link
                     key={item.id || item.name}
                     href={`/product_detail_desktop?product=${encodeURIComponent(item.slug || item.id || item.name)}`}
                     className="group cursor-pointer"
                   >
-                    <div className="mb-6 aspect-[3/4] overflow-hidden rounded-xl bg-neutral-200">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                      />
+                    <div className={`mb-6 flex aspect-[3/4] overflow-hidden rounded-xl bg-gradient-to-br ${getCardTone(idx)} p-6`}>
+                      <div className="flex h-full w-full flex-col justify-between rounded-[1.25rem] border border-black/5 bg-white/35 p-5 backdrop-blur-sm transition duration-500 group-hover:-translate-y-0.5">
+                        <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.22em] text-neutral-500">
+                          <span>{item.label}</span>
+                          <span>{item.price}</span>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-neutral-500">{item.category}</p>
+                          <h4 className="mt-3 text-2xl font-black uppercase leading-[0.95] tracking-[-0.05em] text-[#1a1c1c]">
+                            {item.name}
+                          </h4>
+                        </div>
+                      </div>
                     </div>
                     <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-neutral-400">{item.label}</p>
                     <h4 className="mb-2 text-base font-bold tracking-tight">{item.name}</h4>
@@ -251,7 +201,9 @@ export default async function Home() {
                   </Link>
                 ))}
                 {newArrivals.length === 0 ? (
-                  <p className="col-span-full text-sm text-neutral-500">No published products available right now.</p>
+                  <div className="col-span-full rounded-2xl border border-dashed border-neutral-300 bg-white/70 p-8 text-sm text-neutral-600">
+                    No published products available right now. Publish items in admin to populate this section.
+                  </div>
                 ) : null}
               </div>
             </section>
@@ -260,9 +212,9 @@ export default async function Home() {
               <div className="flex flex-col gap-12 lg:flex-row lg:items-center">
                 <div className="w-full lg:w-[34%]">
                   <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-neutral-500">Curated Selection</p>
-                  <h3 className="mt-4 text-6xl font-black uppercase leading-[0.9] tracking-[-0.06em]">Best Sellers</h3>
+                  <h3 className="mt-4 text-6xl font-black uppercase leading-[0.9] tracking-[-0.06em]">Featured Picks</h3>
                   <p className="mt-6 max-w-md text-sm leading-7 text-neutral-600">
-                    The foundation of the modern wardrobe. These pieces have defined our narrative this season, blending timeless silhouettes with technical mastery.
+                    The foundation of the modern wardrobe. These pieces are pulled directly from published catalog data, so the storefront feels aligned with the inventory behind it.
                   </p>
                   <Link href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="mt-8 inline-block rounded-full bg-gradient-to-br from-[#497cff] to-[#003ea8] px-8 py-3 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-xl shadow-blue-700/20">
                     View Favorites
@@ -276,15 +228,21 @@ export default async function Home() {
                       href={`/product_detail_desktop?product=${encodeURIComponent(item.slug || item.id || item.name)}`}
                       className={`min-w-[280px] ${idx === 2 ? "opacity-40" : ""}`}
                     >
-                      <div className="mb-4 aspect-[4/5] overflow-hidden rounded-xl bg-white">
-                        <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                        <div className={`mb-4 flex aspect-[4/5] items-end overflow-hidden rounded-xl bg-gradient-to-br ${getCardTone(idx + 1)} p-5`}>
+                          <div className="rounded-[1.1rem] border border-black/5 bg-white/35 p-4 text-[#1a1c1c] backdrop-blur-sm">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-neutral-500">{item.label}</p>
+                            <h4 className="mt-2 text-lg font-black uppercase leading-[0.95] tracking-[-0.05em]">{item.name}</h4>
+                            <p className="mt-3 text-sm font-medium">{item.price}</p>
+                          </div>
                       </div>
                       <h4 className="text-xs font-bold uppercase tracking-[0.15em]">{item.name}</h4>
                       <p className="text-xs text-neutral-500">{item.price}</p>
                     </Link>
                   ))}
                   {bestSellers.length === 0 ? (
-                    <p className="min-w-[280px] text-sm text-neutral-500">No best-seller data available yet.</p>
+                      <div className="min-w-[280px] rounded-xl border border-dashed border-neutral-300 bg-white/70 p-6 text-sm text-neutral-600">
+                        No featured products are live yet.
+                      </div>
                   ) : null}
                 </div>
               </div>

@@ -67,6 +67,8 @@ type OrderDocument = {
   status: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
   items: OrderItemSnapshot[];
   subtotal: number;
+  discountAmount?: number;
+  couponCode?: string;
   shippingCost: number;
   taxAmount: number;
   total: number;
@@ -647,6 +649,7 @@ export async function checkoutCart(userId: string, payload: {
   };
   paymentMethod: "card" | "cod";
   notes?: string;
+  couponCode?: string;
 }) {
   const userObjectId = toObjectId(userId);
   if (!userObjectId) {
@@ -709,9 +712,28 @@ export async function checkoutCart(userId: string, payload: {
   }
 
   const subtotal = orderItems.reduce((sum, item) => sum + item.lineTotal, 0);
-  const shippingCost = subtotal > 0 ? 12 : 0;
-  const taxAmount = Number((subtotal * 0.08).toFixed(2));
-  const total = subtotal + shippingCost + taxAmount;
+
+  let couponCode: string | undefined;
+  let discountAmount = 0;
+
+  if (payload.couponCode?.trim()) {
+    const couponResult = await applyCouponCode({
+      code: payload.couponCode,
+      subtotal,
+    });
+
+    if ("error" in couponResult) {
+      return { error: couponResult.error };
+    }
+
+    couponCode = couponResult.code;
+    discountAmount = couponResult.discountAmount;
+  }
+
+  const discountedSubtotal = Number(Math.max(0, subtotal - discountAmount).toFixed(2));
+  const shippingCost = discountedSubtotal > 0 ? 12 : 0;
+  const taxAmount = Number((discountedSubtotal * 0.08).toFixed(2));
+  const total = Number((discountedSubtotal + shippingCost + taxAmount).toFixed(2));
   const now = new Date();
 
   const order = {
@@ -720,6 +742,8 @@ export async function checkoutCart(userId: string, payload: {
     status: "processing",
     items: orderItems,
     subtotal,
+    discountAmount,
+    couponCode,
     shippingCost,
     taxAmount,
     total,
@@ -733,6 +757,17 @@ export async function checkoutCart(userId: string, payload: {
   };
 
   const orderResult = await orders.insertOne(order as OrderDocument);
+
+  if (couponCode) {
+    const coupons = await couponsCollection();
+    await coupons.updateOne(
+      { code: couponCode },
+      {
+        $inc: { usedCount: 1 },
+        $set: { updatedAt: new Date() },
+      },
+    );
+  }
 
   await carts.updateOne(
     { _id: cart._id },
@@ -749,6 +784,8 @@ export async function checkoutCart(userId: string, payload: {
     orderNumber: order.orderNumber,
     status: order.status,
     subtotal: order.subtotal,
+    discountAmount: order.discountAmount ?? 0,
+    couponCode: order.couponCode ?? null,
     shippingCost: order.shippingCost,
     taxAmount: order.taxAmount,
     total: order.total,
@@ -913,6 +950,8 @@ export async function getOrderByIdForUser(userId: string, orderId: string) {
     trackingNumber: order.trackingNumber ?? null,
     estimatedDelivery: order.estimatedDelivery ? order.estimatedDelivery.toISOString() : null,
     subtotal: order.subtotal,
+    discountAmount: order.discountAmount ?? 0,
+    couponCode: order.couponCode ?? null,
     shippingCost: order.shippingCost,
     taxAmount: order.taxAmount,
     total: order.total,
