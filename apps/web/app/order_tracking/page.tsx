@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 
@@ -13,6 +13,31 @@ type OrderSummary = {
   total: number;
   totalItems: number;
   leadItemTitle: string;
+  createdAt: string;
+  paymentStatus?: string;
+  trackingNumber?: string | null;
+};
+
+type TrackedOrderItem = {
+  title: string;
+  quantity: number;
+  unitPrice: number;
+};
+
+type TrackedOrder = {
+  id: string;
+  orderNumber: string;
+  status: string;
+  paymentStatus: string;
+  subtotal: number;
+  discountAmount?: number;
+  shippingFee: number;
+  taxAmount: number;
+  total: number;
+  notes: string;
+  couponCode?: string;
+  trackingNumber: string | null;
+  items: TrackedOrderItem[];
   createdAt: string;
 };
 
@@ -33,7 +58,15 @@ function getStatusSteps(status: string) {
   const steps = ["Processing", "Shipped", "Delivered"];
   const normalized = status.toLowerCase();
 
-  if (normalized === "pending") {
+  if (normalized === "cancelled") {
+    return steps.map((step) => ({
+      step,
+      active: false,
+      complete: false,
+    }));
+  }
+
+  if (normalized === "pending" || normalized === "processing" || normalized === "confirmed") {
     return steps.map((step, index) => ({
       step,
       active: index === 0,
@@ -41,7 +74,15 @@ function getStatusSteps(status: string) {
     }));
   }
 
-  if (normalized === "confirmed") {
+  if (normalized === "shipped") {
+    return steps.map((step) => ({
+      step,
+      active: step === "Shipped",
+      complete: step === "Processing",
+    }));
+  }
+
+  if (normalized === "delivered") {
     return steps.map((step) => ({
       step,
       active: step === "Delivered",
@@ -58,8 +99,16 @@ function getStatusSteps(status: string) {
 
 function getStatusPill(status: string) {
   const normalized = status.toLowerCase();
-  if (normalized === "confirmed") {
+  if (normalized === "delivered") {
     return "bg-emerald-50 text-emerald-700";
+  }
+
+  if (normalized === "shipped") {
+    return "bg-blue-50 text-blue-700";
+  }
+
+  if (normalized === "cancelled") {
+    return "bg-red-50 text-red-700";
   }
 
   if (normalized === "pending") {
@@ -71,7 +120,12 @@ function getStatusPill(status: string) {
 
 export default function OrderTrackingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [orders, setOrders] = useState<OrderSummary[]>([]);
+  const [orderNumber, setOrderNumber] = useState("");
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+  const [trackedOrder, setTrackedOrder] = useState<TrackedOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -114,6 +168,58 @@ export default function OrderTrackingPage() {
     };
   }, [orders]);
 
+  const lookupByOrderNumber = async (value?: string) => {
+    const normalized = (value ?? orderNumber).trim();
+    if (!normalized) {
+      setLookupError("Enter your order number.");
+      setTrackedOrder(null);
+      return;
+    }
+
+    if (value !== undefined) {
+      setOrderNumber(normalized);
+    }
+
+    setLookupLoading(true);
+    setLookupError(null);
+
+    try {
+      const response = await fetch(`/api/orders/track/${encodeURIComponent(normalized)}`, { cache: "no-store" });
+
+      if (response.status === 401) {
+        router.replace(CUSTOMER_ROUTES.AUTH);
+        return;
+      }
+
+      const payload = (await response.json()) as {
+        error?: string;
+        tracking?: TrackedOrder;
+      };
+
+      if (!response.ok || !payload.tracking) {
+        setLookupError(payload.error ?? "Unable to find this order.");
+        setTrackedOrder(null);
+        return;
+      }
+
+      setTrackedOrder(payload.tracking);
+    } catch {
+      setLookupError("Unable to track this order right now.");
+      setTrackedOrder(null);
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fromNotification = searchParams.get("orderNumber");
+    if (!fromNotification) {
+      return;
+    }
+
+    void lookupByOrderNumber(fromNotification);
+  }, [searchParams]);
+
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl px-6 py-12 sm:py-16">
       <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
@@ -142,6 +248,55 @@ export default function OrderTrackingPage() {
         </article>
       </section>
 
+      <section className="mb-8 rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6">
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="min-w-[240px] flex-1 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">
+            Track by Order Number
+            <input
+              value={orderNumber}
+              onChange={(event) => setOrderNumber(event.target.value)}
+              placeholder="e.g. ORD-1734567890"
+              className="mt-2 h-11 w-full rounded-lg border border-zinc-300 px-3 text-sm font-semibold tracking-normal text-zinc-900 outline-none focus:border-zinc-900"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => void lookupByOrderNumber()}
+            disabled={lookupLoading}
+            className="h-11 rounded-full bg-black px-6 text-xs font-black uppercase tracking-[0.16em] text-white transition hover:opacity-90 disabled:opacity-50"
+          >
+            {lookupLoading ? "Checking..." : "Track Order"}
+          </button>
+        </div>
+
+        {lookupError ? <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{lookupError}</p> : null}
+
+        {trackedOrder ? (
+          <article className="mt-4 rounded-xl border border-zinc-200 bg-zinc-50 p-4 sm:p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Matched Order</p>
+                <h2 className="mt-1 text-xl font-black tracking-tight">#{trackedOrder.orderNumber}</h2>
+                <p className="mt-1 text-xs text-zinc-600">Placed {formatOrderDate(trackedOrder.createdAt)} • {trackedOrder.items.length} product{trackedOrder.items.length > 1 ? "s" : ""}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-black">${trackedOrder.total.toFixed(2)}</p>
+                <span className={`mt-2 inline-block rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${getStatusPill(trackedOrder.status)}`}>
+                  {trackedOrder.status}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <p className="text-xs text-zinc-700">Payment: <span className="font-bold uppercase">{trackedOrder.paymentStatus}</span></p>
+              <p className="text-xs text-zinc-700">Tracking Number: <span className="font-bold">{trackedOrder.trackingNumber || "Not assigned"}</span></p>
+              <p className="text-xs text-zinc-700">Coupon: <span className="font-bold">{trackedOrder.couponCode || "None"}</span></p>
+              <p className="text-xs text-zinc-700">Discount: <span className="font-bold">${(trackedOrder.discountAmount ?? 0).toFixed(2)}</span></p>
+            </div>
+          </article>
+        ) : null}
+      </section>
+
       {loading ? <p className="rounded-2xl border border-zinc-200 bg-white p-6 text-sm text-zinc-500">Loading orders...</p> : null}
       {error ? <p className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm font-semibold text-red-700">{error}</p> : null}
 
@@ -168,6 +323,7 @@ export default function OrderTrackingPage() {
                     <span className={`mt-2 inline-block rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${getStatusPill(order.status)}`}>
                       {order.status}
                     </span>
+                    {order.trackingNumber ? <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Track #{order.trackingNumber}</p> : null}
                   </div>
                 </div>
 

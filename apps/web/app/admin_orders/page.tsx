@@ -212,6 +212,9 @@ export default function AdminOrdersPage() {
             <a href="/admin_products" className="rounded-full border border-zinc-200 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition hover:bg-zinc-50">
               Products
             </a>
+            <a href="/admin_returns" className="rounded-full border border-zinc-200 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition hover:bg-zinc-50">
+              Returns
+            </a>
             <AdminLogoutButton
               className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-zinc-600"
               iconClassName="material-symbols-outlined text-sm"

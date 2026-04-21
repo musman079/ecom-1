@@ -9,6 +9,11 @@ export type UserDocument = {
   passwordHash: string;
   fullName: string;
   phone?: string;
+  notificationPreferences?: {
+    orderUpdates: boolean;
+    returnUpdates: boolean;
+    emailEnabled: boolean;
+  };
   roles: string[];
   isActive: boolean;
   createdAt: Date;
@@ -119,6 +124,61 @@ type CouponDocument = {
   updatedAt: Date;
 };
 
+type ReturnRequestStatus = "requested" | "approved" | "in_transit" | "refunded" | "rejected";
+
+type ReturnRequestDocument = {
+  _id: ObjectId;
+  returnNumber: string;
+  userId: ObjectId;
+  orderId: ObjectId;
+  orderNumber: string;
+  reason: string;
+  notes?: string;
+  resolution: "refund" | "exchange";
+  status: ReturnRequestStatus;
+  adminNote?: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type NotificationKind =
+  | "order_created"
+  | "order_status_updated"
+  | "return_requested"
+  | "return_status_updated"
+  | "admin_return_requested";
+
+type NotificationPreferences = {
+  orderUpdates: boolean;
+  returnUpdates: boolean;
+  emailEnabled: boolean;
+};
+
+type NotificationDocument = {
+  _id: ObjectId;
+  userId: ObjectId;
+  audience: "customer" | "admin";
+  kind: NotificationKind;
+  title: string;
+  message: string;
+  metadata?: Record<string, string>;
+  isRead: boolean;
+  readAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type NotificationEmailQueueDocument = {
+  _id: ObjectId;
+  userId: ObjectId;
+  kind: NotificationKind;
+  subject: string;
+  body: string;
+  status: "pending" | "sent" | "failed";
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 type ProductQueryOptions = {
   publishedOnly?: boolean;
   category?: string;
@@ -170,6 +230,165 @@ async function couponsCollection() {
   return db.collection<CouponDocument>("coupons");
 }
 
+async function returnRequestsCollection() {
+  const db = await getMongoDb();
+  return db.collection<ReturnRequestDocument>("return_requests");
+}
+
+async function notificationsCollection() {
+  const db = await getMongoDb();
+  return db.collection<NotificationDocument>("notifications");
+}
+
+async function notificationEmailQueueCollection() {
+  const db = await getMongoDb();
+  return db.collection<NotificationEmailQueueDocument>("notification_email_queue");
+}
+
+async function createNotifications(input: Array<{
+  userId: ObjectId;
+  audience: "customer" | "admin";
+  kind: NotificationKind;
+  title: string;
+  message: string;
+  metadata?: Record<string, string>;
+}>) {
+  if (!input.length) {
+    return;
+  }
+
+  const users = await usersCollection();
+  const customerIds = Array.from(
+    new Set(
+      input
+        .filter((item) => item.audience === "customer")
+        .map((item) => item.userId.toHexString()),
+    ),
+  ).map((id) => new ObjectId(id));
+
+  const customerDocs = customerIds.length > 0 ? await users.find({ _id: { $in: customerIds } }).toArray() : [];
+  const customerPreferenceMap = new Map(
+    customerDocs.map((doc) => [
+      doc._id.toHexString(),
+      {
+        orderUpdates: doc.notificationPreferences?.orderUpdates ?? true,
+        returnUpdates: doc.notificationPreferences?.returnUpdates ?? true,
+        emailEnabled: doc.notificationPreferences?.emailEnabled ?? true,
+      } satisfies NotificationPreferences,
+    ]),
+  );
+
+  const kindPreferenceKey: Record<NotificationKind, keyof NotificationPreferences | null> = {
+    order_created: "orderUpdates",
+    order_status_updated: "orderUpdates",
+    return_requested: "returnUpdates",
+    return_status_updated: "returnUpdates",
+    admin_return_requested: null,
+  };
+
+  const filteredInput = input.filter((item) => {
+    if (item.audience === "admin") {
+      return true;
+    }
+
+    const preferences = customerPreferenceMap.get(item.userId.toHexString()) ?? {
+      orderUpdates: true,
+      returnUpdates: true,
+      emailEnabled: true,
+    };
+
+    const preferenceKey = kindPreferenceKey[item.kind];
+    if (!preferenceKey) {
+      return true;
+    }
+
+    return preferences[preferenceKey] === true;
+  });
+
+  if (!filteredInput.length) {
+    return;
+  }
+
+  const notifications = await notificationsCollection();
+  const emailQueue = await notificationEmailQueueCollection();
+  const now = new Date();
+
+  await notifications.insertMany(
+    filteredInput.map((item) => ({
+      userId: item.userId,
+      audience: item.audience,
+      kind: item.kind,
+      title: item.title,
+      message: item.message,
+      metadata: item.metadata,
+      isRead: false,
+      createdAt: now,
+      updatedAt: now,
+    }) as NotificationDocument),
+  );
+
+  const emailEligibleKinds: NotificationKind[] = ["order_created", "order_status_updated", "return_status_updated"];
+  const emailRows = filteredInput
+    .filter((item) => {
+      if (item.audience !== "customer" || !emailEligibleKinds.includes(item.kind)) {
+        return false;
+      }
+
+      const preferences = customerPreferenceMap.get(item.userId.toHexString()) ?? {
+        orderUpdates: true,
+        returnUpdates: true,
+        emailEnabled: true,
+      };
+
+      return preferences.emailEnabled;
+    })
+    .map((item) => {
+      const orderNumber = item.metadata?.orderNumber;
+      const returnNumber = item.metadata?.returnNumber;
+
+      let subject = item.title;
+      let body = item.message;
+
+      if (item.kind === "order_created") {
+        subject = `Your order ${orderNumber ?? ""} is confirmed`.trim();
+        body = `Thanks for shopping with us. Your order ${orderNumber ?? ""} has been placed and is now being processed.`.trim();
+      } else if (item.kind === "order_status_updated") {
+        subject = `Order ${orderNumber ?? ""} status update`.trim();
+        body = `There is an update on order ${orderNumber ?? ""}: ${item.message}`.trim();
+      } else if (item.kind === "return_status_updated") {
+        subject = `Return ${returnNumber ?? ""} status update`.trim();
+        body = `Your return request ${returnNumber ?? ""} has been updated. ${item.message}`.trim();
+      }
+
+      return {
+        userId: item.userId,
+        kind: item.kind,
+        subject,
+        body,
+        status: "pending",
+        createdAt: now,
+        updatedAt: now,
+      } as NotificationEmailQueueDocument;
+    });
+
+  if (emailRows.length) {
+    await emailQueue.insertMany(emailRows);
+  }
+}
+
+async function getAdminUserIds() {
+  const users = await usersCollection();
+  const docs = await users
+    .find({
+      isActive: true,
+      roles: { $in: ["ADMIN", "SUPER_ADMIN"] },
+    })
+    .project<{ _id: ObjectId }>({ _id: 1 })
+    .toArray();
+
+  return docs.map((item) => item._id);
+}
+
 export function mapProduct(document: ProductDocument) {
   return {
     id: document._id.toHexString(),
@@ -213,6 +432,11 @@ export async function createUser(input: {
     passwordHash: input.passwordHash,
     fullName: input.fullName.trim(),
     phone: input.phone?.trim() || undefined,
+    notificationPreferences: {
+      orderUpdates: true,
+      returnUpdates: true,
+      emailEnabled: true,
+    },
     roles: mapUserRoles(normalizedEmail, ["CUSTOMER"]),
     isActive: true,
     createdAt: now,
@@ -263,6 +487,59 @@ export async function updateUserProfile(userId: string, input: { fullName: strin
   );
 
   return users.findOne({ _id: objectId });
+}
+
+export async function getNotificationPreferencesByUserId(userId: string) {
+  const users = await usersCollection();
+  const objectId = toObjectId(userId);
+  if (!objectId) {
+    return null;
+  }
+
+  const user = await users.findOne({ _id: objectId });
+  if (!user) {
+    return null;
+  }
+
+  return {
+    orderUpdates: user.notificationPreferences?.orderUpdates ?? true,
+    returnUpdates: user.notificationPreferences?.returnUpdates ?? true,
+    emailEnabled: user.notificationPreferences?.emailEnabled ?? true,
+  } satisfies NotificationPreferences;
+}
+
+export async function updateNotificationPreferencesByUserId(
+  userId: string,
+  input: Partial<NotificationPreferences>,
+) {
+  const users = await usersCollection();
+  const objectId = toObjectId(userId);
+  if (!objectId) {
+    return null;
+  }
+
+  const current = await getNotificationPreferencesByUserId(userId);
+  if (!current) {
+    return null;
+  }
+
+  const nextPreferences: NotificationPreferences = {
+    orderUpdates: input.orderUpdates ?? current.orderUpdates,
+    returnUpdates: input.returnUpdates ?? current.returnUpdates,
+    emailEnabled: input.emailEnabled ?? current.emailEnabled,
+  };
+
+  await users.updateOne(
+    { _id: objectId },
+    {
+      $set: {
+        notificationPreferences: nextPreferences,
+        updatedAt: new Date(),
+      },
+    },
+  );
+
+  return nextPreferences;
 }
 
 export async function listProducts(options?: { publishedOnly?: boolean }) {
@@ -758,6 +1035,20 @@ export async function checkoutCart(userId: string, payload: {
 
   const orderResult = await orders.insertOne(order as OrderDocument);
 
+  await createNotifications([
+    {
+      userId: userObjectId,
+      audience: "customer",
+      kind: "order_created",
+      title: `Order ${order.orderNumber} confirmed`,
+      message: `Your order has been placed successfully. Current status: ${order.status}.`,
+      metadata: {
+        orderId: orderResult.insertedId.toHexString(),
+        orderNumber: order.orderNumber,
+      },
+    },
+  ]);
+
   if (couponCode) {
     const coupons = await couponsCollection();
     await coupons.updateOne(
@@ -882,6 +1173,10 @@ export async function updateOrderByAdmin(input: {
     return null;
   }
 
+  const previousStatus = existing.status;
+  const previousPaymentStatus = existing.paymentStatus ?? "pending";
+  const previousTrackingNumber = existing.trackingNumber ?? null;
+
   const updateSet: Record<string, unknown> = {
     updatedAt: new Date(),
   };
@@ -917,6 +1212,40 @@ export async function updateOrderByAdmin(input: {
   const updated = await orders.findOne({ _id: orderObjectId });
   if (!updated) {
     return null;
+  }
+
+  const statusChanged = updated.status !== previousStatus;
+  const paymentChanged = (updated.paymentStatus ?? "pending") !== previousPaymentStatus;
+  const trackingChanged = (updated.trackingNumber ?? null) !== previousTrackingNumber;
+
+  if (statusChanged || paymentChanged || trackingChanged) {
+    const changes: string[] = [];
+
+    if (statusChanged) {
+      changes.push(`status: ${previousStatus} -> ${updated.status}`);
+    }
+
+    if (paymentChanged) {
+      changes.push(`payment: ${previousPaymentStatus} -> ${updated.paymentStatus ?? "pending"}`);
+    }
+
+    if (trackingChanged && updated.trackingNumber) {
+      changes.push(`tracking #${updated.trackingNumber}`);
+    }
+
+    await createNotifications([
+      {
+        userId: updated.userId,
+        audience: "customer",
+        kind: "order_status_updated",
+        title: `Order ${updated.orderNumber} updated`,
+        message: changes.join(" | "),
+        metadata: {
+          orderId: updated._id.toHexString(),
+          orderNumber: updated.orderNumber,
+        },
+      },
+    ]);
   }
 
   return {
@@ -1022,6 +1351,363 @@ export async function cancelOrderForUser(userId: string, orderId: string) {
   );
 
   return { ok: true as const };
+}
+
+export async function createReturnRequestForUser(userId: string, payload: {
+  orderId: string;
+  reason: string;
+  notes?: string;
+  resolution: "refund" | "exchange";
+}) {
+  const userObjectId = toObjectId(userId);
+  const orderObjectId = toObjectId(payload.orderId);
+  if (!userObjectId || !orderObjectId) {
+    return null;
+  }
+
+  const reason = payload.reason.trim();
+  if (!reason) {
+    return { error: "Reason is required." as const };
+  }
+
+  const orders = await ordersCollection();
+  const order = await orders.findOne({ _id: orderObjectId, userId: userObjectId });
+  if (!order) {
+    return { error: "Order not found." as const };
+  }
+
+  if (!order.items.length) {
+    return { error: "Order has no items to return." as const };
+  }
+
+  if (order.status === "cancelled") {
+    return { error: "Cancelled orders cannot be returned." as const };
+  }
+
+  const returnRequests = await returnRequestsCollection();
+  const existing = await returnRequests.findOne({
+    userId: userObjectId,
+    orderId: orderObjectId,
+    status: { $in: ["requested", "approved", "in_transit"] },
+  });
+
+  if (existing) {
+    return { error: "An active return request already exists for this order." as const };
+  }
+
+  const now = new Date();
+  const returnNumber = `RET-${Date.now()}`;
+
+  const result = await returnRequests.insertOne({
+    returnNumber,
+    userId: userObjectId,
+    orderId: orderObjectId,
+    orderNumber: order.orderNumber,
+    reason,
+    notes: payload.notes?.trim() || undefined,
+    resolution: payload.resolution,
+    status: "requested",
+    createdAt: now,
+    updatedAt: now,
+  } as ReturnRequestDocument);
+
+  const created = await returnRequests.findOne({ _id: result.insertedId });
+  if (!created) {
+    return null;
+  }
+
+  const adminIds = await getAdminUserIds();
+
+  const notificationsToCreate: Array<{
+    userId: ObjectId;
+    audience: "customer" | "admin";
+    kind: NotificationKind;
+    title: string;
+    message: string;
+    metadata?: Record<string, string>;
+  }> = [
+    {
+      userId: userObjectId,
+      audience: "customer",
+      kind: "return_requested",
+      title: `Return ${created.returnNumber} submitted`,
+      message: `Request created for order ${created.orderNumber}. We will review it soon.`,
+      metadata: {
+        returnId: created._id.toHexString(),
+        returnNumber: created.returnNumber,
+        orderNumber: created.orderNumber,
+      },
+    },
+  ];
+
+  for (const adminId of adminIds) {
+    notificationsToCreate.push({
+      userId: adminId,
+      audience: "admin",
+      kind: "admin_return_requested",
+      title: `New return request ${created.returnNumber}`,
+      message: `Order ${created.orderNumber} requires return review.`,
+      metadata: {
+        returnId: created._id.toHexString(),
+        returnNumber: created.returnNumber,
+        orderNumber: created.orderNumber,
+      },
+    });
+  }
+
+  await createNotifications(notificationsToCreate);
+
+  return {
+    id: created._id.toHexString(),
+    returnNumber: created.returnNumber,
+    orderId: created.orderId.toHexString(),
+    orderNumber: created.orderNumber,
+    reason: created.reason,
+    notes: created.notes ?? "",
+    resolution: created.resolution,
+    status: created.status,
+    createdAt: created.createdAt.toISOString(),
+    updatedAt: created.updatedAt.toISOString(),
+  };
+}
+
+export async function listReturnRequestsByUser(userId: string, options?: { limit?: number }) {
+  const userObjectId = toObjectId(userId);
+  if (!userObjectId) {
+    return [];
+  }
+
+  const limit = Math.max(1, Math.min(options?.limit ?? 15, 50));
+  const returnRequests = await returnRequestsCollection();
+
+  const docs = await returnRequests
+    .find({ userId: userObjectId })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .toArray();
+
+  return docs.map((item) => ({
+    id: item._id.toHexString(),
+    returnNumber: item.returnNumber,
+    orderId: item.orderId.toHexString(),
+    orderNumber: item.orderNumber,
+    reason: item.reason,
+    notes: item.notes ?? "",
+    resolution: item.resolution,
+    status: item.status,
+    adminNote: item.adminNote ?? "",
+    createdAt: item.createdAt.toISOString(),
+    updatedAt: item.updatedAt.toISOString(),
+  }));
+}
+
+export async function listReturnRequestsForAdmin(options?: { limit?: number; status?: ReturnRequestStatus }) {
+  const limit = Math.max(1, Math.min(options?.limit ?? 50, 200));
+  const returnRequests = await returnRequestsCollection();
+
+  const filter: Record<string, unknown> = {};
+  if (options?.status) {
+    filter.status = options.status;
+  }
+
+  const docs = await returnRequests.find(filter).sort({ createdAt: -1 }).limit(limit).toArray();
+
+  const userIds = Array.from(new Set(docs.map((item) => item.userId.toHexString()))).map((id) => new ObjectId(id));
+  const users = await usersCollection();
+  const userDocs = userIds.length > 0 ? await users.find({ _id: { $in: userIds } }).toArray() : [];
+  const userMap = new Map(userDocs.map((user) => [user._id.toHexString(), user]));
+
+  return docs.map((item) => {
+    const user = userMap.get(item.userId.toHexString());
+    return {
+      id: item._id.toHexString(),
+      returnNumber: item.returnNumber,
+      orderId: item.orderId.toHexString(),
+      orderNumber: item.orderNumber,
+      customerName: user?.fullName ?? "Customer",
+      customerEmail: user?.email ?? "-",
+      reason: item.reason,
+      notes: item.notes ?? "",
+      resolution: item.resolution,
+      status: item.status,
+      adminNote: item.adminNote ?? "",
+      createdAt: item.createdAt.toISOString(),
+      updatedAt: item.updatedAt.toISOString(),
+    };
+  });
+}
+
+export async function updateReturnRequestByAdmin(input: {
+  returnId: string;
+  status?: ReturnRequestStatus;
+  adminNote?: string;
+}) {
+  const returnObjectId = toObjectId(input.returnId);
+  if (!returnObjectId) {
+    return null;
+  }
+
+  const returnRequests = await returnRequestsCollection();
+  const existing = await returnRequests.findOne({ _id: returnObjectId });
+  if (!existing) {
+    return null;
+  }
+
+  const previousStatus = existing.status;
+
+  const updateSet: Record<string, unknown> = {
+    updatedAt: new Date(),
+  };
+
+  if (input.status) {
+    updateSet.status = input.status;
+  }
+
+  if (input.adminNote !== undefined) {
+    const trimmed = input.adminNote.trim();
+    updateSet.adminNote = trimmed || undefined;
+  }
+
+  await returnRequests.updateOne(
+    { _id: returnObjectId },
+    {
+      $set: updateSet,
+    },
+  );
+
+  const updated = await returnRequests.findOne({ _id: returnObjectId });
+  if (!updated) {
+    return null;
+  }
+
+  if (updated.status !== previousStatus) {
+    await createNotifications([
+      {
+        userId: updated.userId,
+        audience: "customer",
+        kind: "return_status_updated",
+        title: `Return ${updated.returnNumber} updated`,
+        message: `Status changed: ${previousStatus} -> ${updated.status}.`,
+        metadata: {
+          returnId: updated._id.toHexString(),
+          returnNumber: updated.returnNumber,
+          orderNumber: updated.orderNumber,
+        },
+      },
+    ]);
+  }
+
+  return {
+    id: updated._id.toHexString(),
+    returnNumber: updated.returnNumber,
+    orderId: updated.orderId.toHexString(),
+    orderNumber: updated.orderNumber,
+    reason: updated.reason,
+    notes: updated.notes ?? "",
+    resolution: updated.resolution,
+    status: updated.status,
+    adminNote: updated.adminNote ?? "",
+    createdAt: updated.createdAt.toISOString(),
+    updatedAt: updated.updatedAt.toISOString(),
+  };
+}
+
+export async function listNotificationsByUser(
+  userId: string,
+  options?: { limit?: number; unreadOnly?: boolean; kind?: NotificationKind; audience?: "customer" | "admin" },
+) {
+  const userObjectId = toObjectId(userId);
+  if (!userObjectId) {
+    return { unreadCount: 0, notifications: [] };
+  }
+
+  const limit = Math.max(1, Math.min(options?.limit ?? 20, 100));
+  const notifications = await notificationsCollection();
+
+  const filter: Record<string, unknown> = {
+    userId: userObjectId,
+  };
+
+  if (options?.unreadOnly) {
+    filter.isRead = false;
+  }
+
+  if (options?.kind) {
+    filter.kind = options.kind;
+  }
+
+  if (options?.audience) {
+    filter.audience = options.audience;
+  }
+
+  const [docs, unreadCount] = await Promise.all([
+    notifications.find(filter).sort({ createdAt: -1 }).limit(limit).toArray(),
+    notifications.countDocuments({ userId: userObjectId, isRead: false }),
+  ]);
+
+  return {
+    unreadCount,
+    notifications: docs.map((item) => ({
+      id: item._id.toHexString(),
+      audience: item.audience,
+      kind: item.kind,
+      title: item.title,
+      message: item.message,
+      metadata: item.metadata ?? {},
+      isRead: item.isRead,
+      readAt: item.readAt ? item.readAt.toISOString() : null,
+      createdAt: item.createdAt.toISOString(),
+      updatedAt: item.updatedAt.toISOString(),
+    })),
+  };
+}
+
+export async function markNotificationsReadByUser(userId: string, input?: { ids?: string[]; markAll?: boolean }) {
+  const userObjectId = toObjectId(userId);
+  if (!userObjectId) {
+    return { updatedCount: 0 };
+  }
+
+  const notifications = await notificationsCollection();
+  const now = new Date();
+
+  if (input?.markAll) {
+    const result = await notifications.updateMany(
+      { userId: userObjectId, isRead: false },
+      {
+        $set: {
+          isRead: true,
+          readAt: now,
+          updatedAt: now,
+        },
+      },
+    );
+
+    return { updatedCount: result.modifiedCount };
+  }
+
+  const ids = Array.isArray(input?.ids) ? input?.ids : [];
+  const objectIds = ids.map((id) => toObjectId(id)).filter((id): id is ObjectId => Boolean(id));
+  if (!objectIds.length) {
+    return { updatedCount: 0 };
+  }
+
+  const result = await notifications.updateMany(
+    {
+      userId: userObjectId,
+      _id: { $in: objectIds },
+      isRead: false,
+    },
+    {
+      $set: {
+        isRead: true,
+        readAt: now,
+        updatedAt: now,
+      },
+    },
+  );
+
+  return { updatedCount: result.modifiedCount };
 }
 
 export async function getAdminDashboardMetrics() {
