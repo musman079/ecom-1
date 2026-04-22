@@ -1,3 +1,7 @@
+/**
+ * @deprecated Use POST /api/cart instead.
+ * This route is kept for backwards compatibility only.
+ */
 import { NextResponse } from "next/server";
 
 import { AuthError, requireSession } from "../../../../src/lib/auth-session";
@@ -27,7 +31,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Product not found or unavailable." }, { status: 404 });
     }
 
-    return NextResponse.json({ cart });
+    const response = NextResponse.json({ cart });
+    response.headers.set("X-Deprecated", "Use POST /api/cart instead");
+    return response;
   } catch (error) {
     if (error instanceof AuthError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

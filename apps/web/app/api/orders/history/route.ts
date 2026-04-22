@@ -1,3 +1,7 @@
+/**
+ * @deprecated Use GET /api/orders instead.
+ * This route is kept for backwards compatibility only.
+ */
 import { NextResponse } from "next/server";
 
 import { AuthError, requireSession } from "../../../../src/lib/auth-session";
@@ -15,7 +19,9 @@ export async function GET(request: Request) {
       limit: Number.isFinite(limit) ? limit : 20,
     });
 
-    return NextResponse.json({ orders });
+    const response = NextResponse.json({ orders });
+    response.headers.set("X-Deprecated", "Use GET /api/orders instead");
+    return response;
   } catch (error) {
     if (error instanceof AuthError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

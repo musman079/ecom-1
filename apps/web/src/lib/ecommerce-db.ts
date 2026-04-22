@@ -181,7 +181,11 @@ type NotificationEmailQueueDocument = {
   kind: NotificationKind;
   subject: string;
   body: string;
-  status: "pending" | "sent" | "failed";
+  recipientEmail?: string;
+  status: "pending" | "sent" | "failed" | "permanently_failed";
+  attemptCount: number;
+  failureReason?: string;
+  processedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -335,6 +339,15 @@ async function createNotifications(input: Array<{
   );
 
   const emailEligibleKinds: NotificationKind[] = ["order_created", "order_status_updated", "return_status_updated"];
+
+  // Build a map of userId → email for eligible customer notifications
+  const allCustomerIds = Array.from(
+    new Set(filteredInput.filter((i) => i.audience === "customer").map((i) => i.userId.toHexString())),
+  ).map((id) => new ObjectId(id));
+  const customerEmailDocs =
+    allCustomerIds.length > 0 ? await users.find({ _id: { $in: allCustomerIds } }).project<{ _id: ObjectId; email: string }>({ _id: 1, email: 1 }).toArray() : [];
+  const customerEmailMap = new Map(customerEmailDocs.map((doc) => [doc._id.toHexString(), doc.email]));
+
   const emailRows = filteredInput
     .filter((item) => {
       if (item.audience !== "customer" || !emailEligibleKinds.includes(item.kind)) {
@@ -367,12 +380,16 @@ async function createNotifications(input: Array<{
         body = `Your return request ${returnNumber ?? ""} has been updated. ${item.message}`.trim();
       }
 
+      const recipientEmail = customerEmailMap.get(item.userId.toHexString());
+
       return {
         userId: item.userId,
         kind: item.kind,
         subject,
         body,
+        recipientEmail,
         status: "pending",
+        attemptCount: 0,
         createdAt: now,
         updatedAt: now,
       } as NotificationEmailQueueDocument;

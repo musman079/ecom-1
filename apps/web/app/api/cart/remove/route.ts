@@ -1,3 +1,7 @@
+/**
+ * @deprecated Use DELETE /api/cart?productId=... instead.
+ * This route is kept for backwards compatibility only.
+ */
 import { NextResponse } from "next/server";
 
 import { AuthError, requireSession } from "../../../../src/lib/auth-session";
@@ -21,7 +25,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unable to remove item from cart." }, { status: 404 });
     }
 
-    return NextResponse.json({ cart });
+    const response = NextResponse.json({ cart });
+    response.headers.set("X-Deprecated", "Use DELETE /api/cart?productId=... instead");
+    return response;
   } catch (error) {
     if (error instanceof AuthError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

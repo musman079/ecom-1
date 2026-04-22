@@ -1,3 +1,7 @@
+/**
+ * @deprecated Use POST /api/checkout instead.
+ * This route is kept for backwards compatibility only.
+ */
 import { NextResponse } from "next/server";
 
 import { AuthError, requireSession } from "../../../../src/lib/auth-session";
@@ -61,7 +65,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
-    return NextResponse.json({ order: result }, { status: 201 });
+    const response = NextResponse.json({ order: result }, { status: 201 });
+    response.headers.set("X-Deprecated", "Use POST /api/checkout instead");
+    return response;
   } catch (error) {
     if (error instanceof AuthError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
