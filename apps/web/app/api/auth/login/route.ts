@@ -3,12 +3,12 @@ import { NextResponse } from "next/server";
 import {
   assertAuthEnvironment,
   AuthConfigError,
+  isAdminEmail,
   normalizeEmail,
   setAuthCookie,
   signAuthToken,
   verifyPassword,
 } from "../../../../src/lib/auth";
-import { ensureMongoCustomerUser } from "../../../../src/lib/auth-user-sync";
 import { sanitizeAuthUser } from "../../../../src/lib/get-current-user";
 import { prisma } from "../../../../src/lib/prisma";
 
@@ -16,6 +16,28 @@ type LoginPayload = {
   email?: string;
   password?: string;
 };
+
+async function ensureUserRole(userId: string, roleName: "CUSTOMER" | "ADMIN") {
+  const role = await prisma.role.upsert({
+    where: { name: roleName },
+    update: {},
+    create: { name: roleName },
+  });
+
+  await prisma.userRole.upsert({
+    where: {
+      userId_roleId: {
+        userId,
+        roleId: role.id,
+      },
+    },
+    update: {},
+    create: {
+      userId,
+      roleId: role.id,
+    },
+  });
+}
 
 function errorResponse(message: string, status: number) {
   return NextResponse.json(
@@ -72,22 +94,27 @@ export async function POST(request: Request) {
     }
 
     const roleNames = user.roles.map((entry) => entry.role.name);
+
+    if (isAdminEmail(user.email) && !roleNames.includes("ADMIN")) {
+      await ensureUserRole(user.id, "ADMIN");
+
+      roleNames.push("ADMIN");
+    }
+
+    if (roleNames.length === 0) {
+      await ensureUserRole(user.id, "CUSTOMER");
+
+      roleNames.push("CUSTOMER");
+    }
+
     const role = roleNames.includes("SUPER_ADMIN")
       ? "SUPER_ADMIN"
       : roleNames.includes("ADMIN")
         ? "ADMIN"
         : "CUSTOMER";
 
-    const mongoUser = await ensureMongoCustomerUser({
-      email: user.email,
-      fullName: user.fullName,
-      phone: user.phone,
-      passwordHash: user.passwordHash,
-      isActive: user.isActive,
-    });
-
     const token = await signAuthToken({
-      sub: mongoUser.mongoUserId,
+      sub: user.id,
       email: user.email,
       role,
     });
@@ -101,6 +128,7 @@ export async function POST(request: Request) {
         fullName: user.fullName,
         phone: user.phone,
         role,
+        roles: roleNames,
       }),
     });
 

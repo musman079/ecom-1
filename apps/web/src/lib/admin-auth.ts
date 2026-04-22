@@ -1,18 +1,9 @@
 import { AuthError, SessionUser, requireSession } from "./auth-session";
+import { getAdminEmails } from "./auth";
+
+export { AuthError };
 
 const ADMIN_ROLE = "ADMIN";
-
-function getAdminEmails() {
-  const raw = process.env.ADMIN_EMAILS;
-  if (!raw) {
-    return [];
-  }
-
-  return raw
-    .split(",")
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean);
-}
 
 export function isAdminSessionUser(user: SessionUser) {
   if (user.roles.includes(ADMIN_ROLE) || user.roles.includes("SUPER_ADMIN")) {

@@ -9,6 +9,7 @@ export type SanitizedAuthUser = {
   fullName: string;
   phone: string;
   role: AuthRole;
+  roles: string[];
 };
 
 function highestRole(roles: string[]): AuthRole {
@@ -29,13 +30,17 @@ export function sanitizeAuthUser(input: {
   fullName: string;
   phone: string | null;
   role: AuthRole;
+  roles?: string[];
 }): SanitizedAuthUser {
+  const normalizedRoles = Array.isArray(input.roles) ? input.roles : [input.role];
+
   return {
     id: input.id,
     email: input.email,
     fullName: input.fullName,
     phone: input.phone ?? "",
     role: input.role,
+    roles: normalizedRoles,
   };
 }
 
@@ -71,6 +76,7 @@ async function resolveUserByToken(token: string): Promise<SanitizedAuthUser | nu
     fullName: user.fullName,
     phone: user.phone,
     role: highestRole(roleNames.length > 0 ? roleNames : [decoded.role]),
+    roles: roleNames.length > 0 ? roleNames : [decoded.role],
   });
 }
 

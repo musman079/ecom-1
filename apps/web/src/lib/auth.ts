@@ -63,6 +63,23 @@ export function validatePasswordStrength(password: string) {
   return password.length >= MIN_PASSWORD_LENGTH;
 }
 
+export function getAdminEmails() {
+  const raw = process.env.ADMIN_EMAILS;
+  if (!raw) {
+    return [];
+  }
+
+  return raw
+    .split(",")
+    .map((email) => normalizeEmail(email))
+    .filter(Boolean);
+}
+
+export function isAdminEmail(email: string) {
+  const normalizedEmail = normalizeEmail(email);
+  return getAdminEmails().includes(normalizedEmail);
+}
+
 export async function hashPassword(plain: string): Promise<string> {
   return hash(plain, SALT_ROUNDS);
 }

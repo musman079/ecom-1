@@ -1,17 +1,17 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, RoleType } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import {
   assertAuthEnvironment,
   AuthConfigError,
   hashPassword,
+  isAdminEmail,
   normalizeEmail,
   signAuthToken,
   setAuthCookie,
   validateEmailFormat,
   validatePasswordStrength,
 } from "../../../../src/lib/auth";
-import { ensureMongoCustomerUser } from "../../../../src/lib/auth-user-sync";
 import { sanitizeAuthUser } from "../../../../src/lib/get-current-user";
 import { prisma } from "../../../../src/lib/prisma";
 
@@ -52,9 +52,11 @@ export async function POST(request: Request) {
   const email = normalizeEmail(payload.email ?? "");
   const password = payload.password ?? "";
   const phone = payload.phone?.trim() || null;
+  const derivedName = email.includes("@") ? (email.split("@")[0] ?? "Customer") : "Customer";
+  const resolvedFullName = fullName || derivedName;
 
-  if (!fullName || !email || !password) {
-    return errorResponse("fullName, email and password are required.", 400);
+  if (!email || !password) {
+    return errorResponse("email and password are required.", 400);
   }
 
   if (!validateEmailFormat(email)) {
@@ -77,29 +79,37 @@ export async function POST(request: Request) {
 
     const passwordHash = await hashPassword(password);
 
-    await prisma.role.upsert({
-      where: { name: "CUSTOMER" },
-      update: {},
-      create: { name: "CUSTOMER" },
-    });
+    const roleNames: RoleType[] = isAdminEmail(email) ? ["CUSTOMER", "ADMIN"] : ["CUSTOMER"];
+
+    await Promise.all(
+      roleNames.map((name) =>
+        prisma.role.upsert({
+          where: { name },
+          update: {},
+          create: { name },
+        }),
+      ),
+    );
 
     const user = await prisma.user.create({
       data: {
-        fullName,
+        fullName: resolvedFullName,
         email,
         passwordHash,
         phone,
         isActive: true,
         roles: {
-          create: [
-            {
-              role: {
-                connect: { name: "CUSTOMER" },
-              },
+          create: roleNames.map((name) => ({
+            role: {
+              connect: { name },
             },
-          ],
+          })),
         },
       },
+    });
+
+    const userWithRoles = await prisma.user.findUnique({
+      where: { id: user.id },
       include: {
         roles: {
           include: {
@@ -109,24 +119,20 @@ export async function POST(request: Request) {
       },
     });
 
-    const roleNames = user.roles.map((entry) => entry.role.name);
-    const role = roleNames.includes("SUPER_ADMIN")
+    if (!userWithRoles) {
+      return errorResponse("Failed to load created user.", 500);
+    }
+
+    const userRoleNames = userWithRoles.roles.map((entry) => entry.role.name);
+    const role = userRoleNames.includes("SUPER_ADMIN")
       ? "SUPER_ADMIN"
-      : roleNames.includes("ADMIN")
+      : userRoleNames.includes("ADMIN")
         ? "ADMIN"
         : "CUSTOMER";
 
-    const mongoUser = await ensureMongoCustomerUser({
-      email: user.email,
-      fullName: user.fullName,
-      phone: user.phone,
-      passwordHash: user.passwordHash,
-      isActive: user.isActive,
-    });
-
     const token = await signAuthToken({
-      sub: mongoUser.mongoUserId,
-      email: user.email,
+      sub: user.id,
+      email: userWithRoles.email,
       role,
     });
 
@@ -136,10 +142,11 @@ export async function POST(request: Request) {
         message: "Registration successful.",
         user: sanitizeAuthUser({
           id: user.id,
-          email: user.email,
-          fullName: user.fullName,
-          phone: user.phone,
+          email: userWithRoles.email,
+          fullName: userWithRoles.fullName,
+          phone: userWithRoles.phone,
           role,
+          roles: userRoleNames,
         }),
       },
       { status: 201 },
