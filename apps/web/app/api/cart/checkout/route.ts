@@ -4,8 +4,7 @@
  */
 import { NextResponse } from "next/server";
 
-import { AuthError, requireSession } from "../../../../src/lib/auth-session";
-import { checkoutCart } from "../../../../src/lib/ecommerce-db";
+import { POST as canonicalCheckoutPost } from "../../checkout/route";
 
 type CheckoutPayload = {
   address?: {
@@ -30,49 +29,27 @@ type CheckoutPayload = {
 };
 
 export async function POST(request: Request) {
+  let payload: CheckoutPayload;
   try {
-    const session = await requireSession(request);
-    const payload = (await request.json()) as CheckoutPayload;
-
-    const address = payload.shippingAddress ?? payload.address;
-    if (!address || !address.fullName || !address.phone || !address.line1 || !address.city || !address.postalCode || !address.country) {
-      return NextResponse.json({ error: "Complete address is required." }, { status: 400 });
-    }
-
-    if (payload.paymentMethod !== "card" && payload.paymentMethod !== "cod") {
-      return NextResponse.json({ error: "paymentMethod must be 'card' or 'cod'." }, { status: 400 });
-    }
-
-    const result = await checkoutCart(session.userId, {
-      shippingAddress: {
-        fullName: address.fullName,
-        phone: address.phone,
-        line1: address.line1,
-        city: address.city,
-        postalCode: address.postalCode,
-        country: address.country,
-      },
-      paymentMethod: payload.paymentMethod,
-      notes: payload.notes,
-      couponCode: payload.couponCode,
-    });
-
-    if (!result) {
-      return NextResponse.json({ error: "Failed to place order." }, { status: 500 });
-    }
-
-    if ("error" in result) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
-    }
-
-    const response = NextResponse.json({ order: result }, { status: 201 });
+    payload = (await request.clone().json()) as CheckoutPayload;
+  } catch {
+    const response = await canonicalCheckoutPost(request);
     response.headers.set("X-Deprecated", "Use POST /api/checkout instead");
     return response;
-  } catch (error) {
-    if (error instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json({ error: "Failed to place order." }, { status: 500 });
   }
+
+  const canonicalPayload = {
+    ...payload,
+    shippingAddress: payload.shippingAddress ?? payload.address,
+  };
+
+  const canonicalRequest = new Request(request.url, {
+    method: "POST",
+    headers: request.headers,
+    body: JSON.stringify(canonicalPayload),
+  });
+
+  const response = await canonicalCheckoutPost(canonicalRequest);
+  response.headers.set("X-Deprecated", "Use POST /api/checkout instead");
+  return response;
 }

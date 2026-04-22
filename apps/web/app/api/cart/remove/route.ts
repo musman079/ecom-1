@@ -4,35 +4,28 @@
  */
 import { NextResponse } from "next/server";
 
-import { AuthError, requireSession } from "../../../../src/lib/auth-session";
-import { removeFromCart } from "../../../../src/lib/ecommerce-db";
-
-type RemovePayload = {
-  productId?: string;
-};
+import { DELETE as canonicalCartDelete } from "../route";
 
 export async function POST(request: Request) {
+  let productId: string | undefined;
   try {
-    const session = await requireSession(request);
-    const payload = (await request.json()) as RemovePayload;
-
-    if (!payload.productId) {
-      return NextResponse.json({ error: "productId is required." }, { status: 400 });
-    }
-
-    const cart = await removeFromCart(session.userId, payload.productId);
-    if (!cart) {
-      return NextResponse.json({ error: "Unable to remove item from cart." }, { status: 404 });
-    }
-
-    const response = NextResponse.json({ cart });
-    response.headers.set("X-Deprecated", "Use DELETE /api/cart?productId=... instead");
-    return response;
-  } catch (error) {
-    if (error instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json({ error: "Failed to update cart." }, { status: 500 });
+    const payload = (await request.json()) as { productId?: string };
+    productId = payload.productId;
+  } catch {
+    productId = undefined;
   }
+
+  const url = new URL(request.url);
+  if (productId) {
+    url.searchParams.set("productId", productId);
+  }
+
+  const canonicalRequest = new Request(url, {
+    method: "DELETE",
+    headers: request.headers,
+  });
+
+  const response = await canonicalCartDelete(canonicalRequest);
+  response.headers.set("X-Deprecated", "Use DELETE /api/cart?productId=... instead");
+  return response;
 }
