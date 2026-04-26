@@ -56,6 +56,24 @@ function statusTone(status: AdminOrder["status"]) {
   return "bg-zinc-100 text-zinc-700";
 }
 
+const navItems = [
+  { icon: "dashboard", label: "Overview" },
+  { icon: "inventory_2", label: "Products" },
+  { icon: "shopping_cart", label: "Orders", active: true },
+  { icon: "assignment_return", label: "Returns" },
+  { icon: "group", label: "Customers" },
+  { icon: "leaderboard", label: "Analytics" },
+  { icon: "settings", label: "Settings" },
+];
+
+const getAdminNavHref = (label: string) => {
+  if (label === "Overview") return "/admin_overview_dashboard";
+  if (label === "Products") return "/admin_products";
+  if (label === "Orders") return "/admin_orders";
+  if (label === "Returns") return "/admin_returns";
+  return "/admin_overview_dashboard";
+};
+
 export default function AdminOrdersPage() {
   const router = useRouter();
   const [allowed, setAllowed] = useState(false);
@@ -199,41 +217,61 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="min-h-screen bg-[#f4f4f5] text-zinc-900">
-      <header className="sticky top-0 z-40 border-b border-zinc-200 bg-white/85 backdrop-blur-xl">
+      <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-zinc-200 bg-zinc-100/90 p-4 lg:flex">
+        <div className="mb-8 px-3 py-2">
+          <h1 className="text-2xl font-black uppercase tracking-[-0.05em]">Editorial</h1>
+          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-500">Super Admin</p>
+        </div>
+
+        <nav className="space-y-1 flex-1">
+          {navItems.map((item) => (
+            <a
+              key={item.label}
+              href={getAdminNavHref(item.label)}
+              className={`mx-2 flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition ${
+                item.active ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-200/70"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+              <span>{item.label}</span>
+            </a>
+          ))}
+        </nav>
+
+        <div className="mt-auto border-t border-zinc-200 pt-4">
+          <AdminLogoutButton
+            className="mx-2 flex w-full items-center gap-3 rounded-full px-4 py-3 text-sm font-medium text-zinc-500 transition hover:bg-zinc-200/70"
+            iconClassName="material-symbols-outlined text-[20px]"
+          />
+        </div>
+      </aside>
+
+      <header className="sticky top-0 z-40 border-b border-zinc-200 bg-[#ffffff]/85 backdrop-blur-xl lg:ml-64">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">Admin</p>
             <h1 className="text-3xl font-black uppercase tracking-[-0.05em]">Orders</h1>
           </div>
           <div className="flex items-center gap-3">
-            <a href="/admin_overview_dashboard" className="rounded-full border border-zinc-200 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition hover:bg-zinc-50">
-              Overview
-            </a>
-            <a href="/admin_products" className="rounded-full border border-zinc-200 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition hover:bg-zinc-50">
-              Products
-            </a>
-            <a href="/admin_returns" className="rounded-full border border-zinc-200 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition hover:bg-zinc-50">
-              Returns
-            </a>
             <AdminLogoutButton
-              className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-zinc-600"
+              className="flex items-center gap-2 rounded-full border border-zinc-200 bg-[#ffffff] px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-zinc-600"
               iconClassName="material-symbols-outlined text-sm"
             />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:ml-64">
         <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <article className="rounded-2xl bg-white p-5 shadow-sm">
+          <article className="rounded-2xl bg-[#ffffff] p-5 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Total Orders</p>
             <h2 className="mt-2 text-3xl font-black">{orders.length}</h2>
           </article>
-          <article className="rounded-2xl bg-white p-5 shadow-sm">
+          <article className="rounded-2xl bg-[#ffffff] p-5 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Revenue</p>
             <h2 className="mt-2 text-3xl font-black">${totalRevenue.toFixed(2)}</h2>
           </article>
-          <article className="rounded-2xl bg-white p-5 shadow-sm">
+          <article className="rounded-2xl bg-[#ffffff] p-5 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Processing</p>
             <h2 className="mt-2 text-3xl font-black">{orders.filter((order) => order.status === "processing").length}</h2>
           </article>
@@ -242,7 +280,7 @@ export default function AdminOrdersPage() {
         {error ? <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p> : null}
         {message ? <p className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">{message}</p> : null}
 
-        <section className="overflow-hidden rounded-2xl bg-white shadow-sm">
+        <section className="overflow-hidden rounded-2xl bg-[#ffffff] shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1100px] text-left">
               <thead>
@@ -297,7 +335,7 @@ export default function AdminOrdersPage() {
                                 },
                               }))
                             }
-                            className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs font-bold capitalize"
+                            className="rounded-lg border border-zinc-200 bg-[#ffffff] px-2 py-1 text-xs font-bold capitalize"
                           >
                             {statusOptions.map((status) => (
                               <option key={status} value={status}>
@@ -325,7 +363,7 @@ export default function AdminOrdersPage() {
                                 },
                               }))
                             }
-                            className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs font-bold"
+                            className="rounded-lg border border-zinc-200 bg-[#ffffff] px-2 py-1 text-xs font-bold"
                           >
                             {paymentStatusOptions.map((status) => (
                               <option key={status} value={status}>
@@ -352,7 +390,7 @@ export default function AdminOrdersPage() {
                               }))
                             }
                             placeholder="Tracking #"
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs outline-none focus:border-blue-500"
+                            className="w-full rounded-lg border border-zinc-200 bg-[#ffffff] px-2 py-1 text-xs outline-none focus:border-blue-500"
                           />
                         </td>
                         <td className="px-4 py-4 text-xs font-black">${order.total.toFixed(2)}</td>
@@ -361,7 +399,7 @@ export default function AdminOrdersPage() {
                             type="button"
                             onClick={() => void onSave(order.id)}
                             disabled={savingId === order.id}
-                            className="rounded-full bg-black px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white disabled:opacity-50"
+                            className="rounded-full bg-[#000000] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white disabled:opacity-50"
                           >
                             {savingId === order.id ? "Saving..." : "Save"}
                           </button>
@@ -375,6 +413,24 @@ export default function AdminOrdersPage() {
           </div>
         </section>
       </main>
+
+      <nav className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-zinc-200 bg-[#ffffff] p-2 shadow-xl lg:hidden">
+        <ul className="grid grid-cols-5 gap-1">
+          {navItems.slice(0, 5).map((item) => (
+            <li key={`mobile-${item.label}`}>
+              <a
+                href={getAdminNavHref(item.label)}
+                className={`flex flex-col items-center justify-center rounded-xl px-1 py-2 text-[10px] font-semibold ${
+                  item.active ? "bg-zinc-900 text-white" : "text-zinc-500"
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                <span className="mt-1 truncate">{item.label}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </div>
   );
 }

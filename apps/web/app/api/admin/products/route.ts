@@ -19,6 +19,7 @@ type RequestPayload = {
   stockQuantity?: string | number;
   lowStockAlert?: boolean;
   status?: "draft" | "published";
+  images?: string[];
 };
 
 export async function GET(request: Request) {
@@ -90,6 +91,7 @@ export async function POST(request: Request) {
       stockQuantity,
       lowStockAlert: payload.lowStockAlert ?? false,
       status: payload.status ?? "draft",
+      images: Array.isArray(payload.images) ? payload.images : [],
     });
 
     return NextResponse.json({ product }, { status: 201 });

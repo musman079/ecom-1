@@ -140,6 +140,7 @@ model Product {
   description      String
   taxCategory      String?
   collection       String?
+  images           String[]             @default([])
   lowStockAlert    Boolean?
   status           ProductStatus        @default(DRAFT)
   createdById      String?

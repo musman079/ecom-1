@@ -20,6 +20,7 @@ type RequestPayload = {
   stockQuantity?: string | number;
   lowStockAlert?: boolean;
   status?: "draft" | "published";
+  images?: string[];
 };
 
 type RouteContext = {
@@ -104,6 +105,7 @@ export async function PUT(request: Request, context: RouteContext) {
       stockQuantity,
       lowStockAlert: payload.lowStockAlert ?? false,
       status: payload.status ?? "draft",
+      images: Array.isArray(payload.images) ? payload.images : [],
     });
   } catch (error) {
     if (error instanceof ProductConflictError) {

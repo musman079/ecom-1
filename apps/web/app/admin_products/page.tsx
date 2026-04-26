@@ -17,6 +17,7 @@ type AdminProduct = {
   stockQuantity: number;
   lowStockAlert: boolean;
   status: ProductStatus;
+  images: string[];
   createdAt: string;
   updatedAt: string;
 };
@@ -35,6 +36,25 @@ const initialFormState = {
   stockQuantity: "0",
   lowStockAlert: true,
   status: "published" as ProductStatus,
+  images: [] as string[]
+};
+
+const navItems = [
+  { icon: "dashboard", label: "Overview" },
+  { icon: "inventory_2", label: "Products", active: true },
+  { icon: "shopping_cart", label: "Orders" },
+  { icon: "assignment_return", label: "Returns" },
+  { icon: "group", label: "Customers" },
+  { icon: "leaderboard", label: "Analytics" },
+  { icon: "settings", label: "Settings" },
+];
+
+const getAdminNavHref = (label: string) => {
+  if (label === "Overview") return "/admin_overview_dashboard";
+  if (label === "Products") return "/admin_products";
+  if (label === "Orders") return "/admin_orders";
+  if (label === "Returns") return "/admin_returns";
+  return "/admin_overview_dashboard";
 };
 
 export default function AdminProductsPage() {
@@ -140,6 +160,7 @@ export default function AdminProductsPage() {
           stockQuantity: Number(form.stockQuantity),
           lowStockAlert: form.lowStockAlert,
           status,
+          images: form.images
         }),
       });
 
@@ -181,6 +202,7 @@ export default function AdminProductsPage() {
       stockQuantity: String(product.stockQuantity),
       lowStockAlert: product.lowStockAlert,
       status: product.status,
+      images: product.images || []
     });
   };
 
@@ -222,33 +244,56 @@ export default function AdminProductsPage() {
 
   return (
     <div className="min-h-screen bg-[#f4f4f5] text-zinc-900">
-      <header className="sticky top-0 z-40 border-b border-zinc-200 bg-white/85 backdrop-blur-xl">
+      <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-zinc-200 bg-zinc-100/90 p-4 lg:flex">
+        <div className="mb-8 px-3 py-2">
+          <h1 className="text-2xl font-black uppercase tracking-[-0.05em]">Editorial</h1>
+          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-500">Super Admin</p>
+        </div>
+
+        <nav className="space-y-1 flex-1">
+          {navItems.map((item) => (
+            <a
+              key={item.label}
+              href={getAdminNavHref(item.label)}
+              className={`mx-2 flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition ${
+                item.active ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-200/70"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+              <span>{item.label}</span>
+            </a>
+          ))}
+        </nav>
+
+        <div className="mt-auto border-t border-zinc-200 pt-4">
+          <AdminLogoutButton
+            className="mx-2 flex w-full items-center gap-3 rounded-full px-4 py-3 text-sm font-medium text-zinc-500 transition hover:bg-zinc-200/70"
+            iconClassName="material-symbols-outlined text-[20px]"
+          />
+        </div>
+      </aside>
+
+      <header className="sticky top-0 z-40 border-b border-zinc-200 bg-[#ffffff]/85 backdrop-blur-xl lg:ml-64">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">Admin</p>
             <h1 className="text-3xl font-black uppercase tracking-[-0.05em]">Products</h1>
           </div>
           <div className="flex items-center gap-3">
-            <a href="/admin_overview_dashboard" className="rounded-full border border-zinc-200 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition hover:bg-zinc-50">
-              Overview
-            </a>
-            <a href="/admin_orders" className="rounded-full border border-zinc-200 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition hover:bg-zinc-50">
-              Orders
-            </a>
-            <a href="/admin_post_edit_product" className="rounded-full bg-black px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white">
+            <a href="/admin_post_edit_product" className="rounded-full bg-[#000000] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white">
               Editor
             </a>
             <AdminLogoutButton
-              className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-zinc-600"
+              className="flex items-center gap-2 rounded-full border border-zinc-200 bg-[#ffffff] px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-zinc-600"
               iconClassName="material-symbols-outlined text-sm"
             />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 py-8 sm:px-6 lg:grid-cols-12 lg:px-8">
+      <main className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 py-8 sm:px-6 lg:grid-cols-12 lg:px-8 lg:ml-64">
         <section className="space-y-6 lg:col-span-5">
-          <div className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
+          <div className="rounded-3xl bg-[#ffffff] p-6 shadow-sm sm:p-8">
             <div className="mb-6 flex items-end justify-between gap-4">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">Create</p>
@@ -279,13 +324,13 @@ export default function AdminProductsPage() {
                   placeholder="Price"
                   type="number"
                   step="0.01"
-                  className="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500"
+                  className="rounded-xl border border-zinc-200 bg-[#ffffff] px-4 py-3 text-sm outline-none focus:border-blue-500"
                 />
                 <input
                   value={form.sku}
                   onChange={(event) => setForm((current) => ({ ...current, sku: event.target.value }))}
                   placeholder="SKU"
-                  className="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500"
+                  className="rounded-xl border border-zinc-200 bg-[#ffffff] px-4 py-3 text-sm outline-none focus:border-blue-500"
                 />
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -294,9 +339,9 @@ export default function AdminProductsPage() {
                   onChange={(event) => setForm((current) => ({ ...current, stockQuantity: event.target.value }))}
                   placeholder="Stock"
                   type="number"
-                  className="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500"
+                  className="rounded-xl border border-zinc-200 bg-[#ffffff] px-4 py-3 text-sm outline-none focus:border-blue-500"
                 />
-                <label className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm">
+                <label className="flex items-center justify-between rounded-xl border border-zinc-200 bg-[#ffffff] px-4 py-3 text-sm">
                   <span className="font-medium text-zinc-600">Low stock alert</span>
                   <input
                     type="checkbox"
@@ -310,7 +355,7 @@ export default function AdminProductsPage() {
                 <select
                   value={form.taxCategory}
                   onChange={(event) => setForm((current) => ({ ...current, taxCategory: event.target.value }))}
-                  className="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500"
+                  className="rounded-xl border border-zinc-200 bg-[#ffffff] px-4 py-3 text-sm outline-none focus:border-blue-500"
                 >
                   <option>Standard Goods (20%)</option>
                   <option>Luxury Surcharge (25%)</option>
@@ -319,7 +364,7 @@ export default function AdminProductsPage() {
                 <select
                   value={form.collection}
                   onChange={(event) => setForm((current) => ({ ...current, collection: event.target.value }))}
-                  className="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500"
+                  className="rounded-xl border border-zinc-200 bg-[#ffffff] px-4 py-3 text-sm outline-none focus:border-blue-500"
                 >
                   <option>FW24 Editorial</option>
                   <option>Permanent Collection</option>
@@ -340,7 +385,7 @@ export default function AdminProductsPage() {
                   type="button"
                   onClick={() => void submitProduct("published")}
                   disabled={saving}
-                  className="rounded-full bg-black px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-full bg-[#000000] px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {editingId ? "Update Product" : "Publish Product"}
                 </button>
@@ -375,12 +420,12 @@ export default function AdminProductsPage() {
 
           <div className="space-y-4">
             {loading ? (
-              <div className="rounded-3xl bg-white p-8 text-sm text-zinc-500 shadow-sm">Loading products...</div>
+              <div className="rounded-3xl bg-[#ffffff] p-8 text-sm text-zinc-500 shadow-sm">Loading products...</div>
             ) : products.length === 0 ? (
-              <div className="rounded-3xl bg-white p-8 text-sm text-zinc-500 shadow-sm">No products saved yet. Publish one to begin.</div>
+              <div className="rounded-3xl bg-[#ffffff] p-8 text-sm text-zinc-500 shadow-sm">No products saved yet. Publish one to begin.</div>
             ) : (
               products.map((product) => (
-                <article key={product.id} className="rounded-3xl bg-white p-6 shadow-sm transition hover:-translate-y-0.5">
+                <article key={product.id} className="rounded-3xl bg-[#ffffff] p-6 shadow-sm transition hover:-translate-y-0.5">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <div className="mb-2 flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">
@@ -392,6 +437,14 @@ export default function AdminProductsPage() {
                       </div>
                       <h3 className="text-2xl font-black uppercase tracking-[-0.04em]">{product.title}</h3>
                       <p className="mt-2 text-sm leading-relaxed text-zinc-600">{product.description}</p>
+                      
+                      {product.images && product.images.length > 0 && (
+                        <div className="mt-4 flex gap-2">
+                          {product.images.map((img, idx) => (
+                            <img key={idx} src={img} alt="Product img" className="h-16 w-16 object-cover rounded-lg border border-zinc-200" />
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <div className="text-left sm:text-right">
@@ -424,6 +477,24 @@ export default function AdminProductsPage() {
           </div>
         </section>
       </main>
+
+      <nav className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-zinc-200 bg-[#ffffff] p-2 shadow-xl lg:hidden">
+        <ul className="grid grid-cols-5 gap-1">
+          {navItems.slice(0, 5).map((item) => (
+            <li key={`mobile-${item.label}`}>
+              <a
+                href={getAdminNavHref(item.label)}
+                className={`flex flex-col items-center justify-center rounded-xl px-1 py-2 text-[10px] font-semibold ${
+                  item.active ? "bg-zinc-900 text-white" : "text-zinc-500"
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                <span className="mt-1 truncate">{item.label}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </div>
   );
 }

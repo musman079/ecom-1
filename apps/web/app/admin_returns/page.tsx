@@ -102,6 +102,24 @@ function nextAllowedStatuses(status: AdminReturn["status"]) {
   return transitionMap[status];
 }
 
+const navItems = [
+  { icon: "dashboard", label: "Overview" },
+  { icon: "inventory_2", label: "Products" },
+  { icon: "shopping_cart", label: "Orders" },
+  { icon: "assignment_return", label: "Returns", active: true },
+  { icon: "group", label: "Customers" },
+  { icon: "leaderboard", label: "Analytics" },
+  { icon: "settings", label: "Settings" },
+];
+
+const getAdminNavHref = (label: string) => {
+  if (label === "Overview") return "/admin_overview_dashboard";
+  if (label === "Products") return "/admin_products";
+  if (label === "Orders") return "/admin_orders";
+  if (label === "Returns") return "/admin_returns";
+  return "/admin_overview_dashboard";
+};
+
 export default function AdminReturnsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -347,47 +365,67 @@ export default function AdminReturnsPage() {
 
   return (
     <div className="min-h-screen bg-[#f4f4f5] text-zinc-900">
-      <header className="sticky top-0 z-40 border-b border-zinc-200 bg-white/85 backdrop-blur-xl">
+      <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-zinc-200 bg-zinc-100/90 p-4 lg:flex">
+        <div className="mb-8 px-3 py-2">
+          <h1 className="text-2xl font-black uppercase tracking-[-0.05em]">Editorial</h1>
+          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-500">Super Admin</p>
+        </div>
+
+        <nav className="space-y-1 flex-1">
+          {navItems.map((item) => (
+            <a
+              key={item.label}
+              href={getAdminNavHref(item.label)}
+              className={`mx-2 flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition ${
+                item.active ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-200/70"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+              <span>{item.label}</span>
+            </a>
+          ))}
+        </nav>
+
+        <div className="mt-auto border-t border-zinc-200 pt-4">
+          <AdminLogoutButton
+            className="mx-2 flex w-full items-center gap-3 rounded-full px-4 py-3 text-sm font-medium text-zinc-500 transition hover:bg-zinc-200/70"
+            iconClassName="material-symbols-outlined text-[20px]"
+          />
+        </div>
+      </aside>
+
+      <header className="sticky top-0 z-40 border-b border-zinc-200 bg-[#ffffff]/85 backdrop-blur-xl lg:ml-64">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">Admin</p>
             <h1 className="text-3xl font-black uppercase tracking-[-0.05em]">Returns</h1>
           </div>
           <div className="flex items-center gap-3">
-            <a href="/admin_overview_dashboard" className="rounded-full border border-zinc-200 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition hover:bg-zinc-50">
-              Overview
-            </a>
-            <a href="/admin_orders" className="rounded-full border border-zinc-200 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition hover:bg-zinc-50">
-              Orders
-            </a>
-            <a href="/admin_products" className="rounded-full border border-zinc-200 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition hover:bg-zinc-50">
-              Products
-            </a>
             <AdminLogoutButton
-              className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-zinc-600"
+              className="flex items-center gap-2 rounded-full border border-zinc-200 bg-[#ffffff] px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-zinc-600"
               iconClassName="material-symbols-outlined text-sm"
             />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:ml-64">
         <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <article className="rounded-2xl bg-white p-5 shadow-sm">
+          <article className="rounded-2xl bg-[#ffffff] p-5 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Total Requests</p>
             <h2 className="mt-2 text-3xl font-black">{totals.total}</h2>
           </article>
-          <article className="rounded-2xl bg-white p-5 shadow-sm">
+          <article className="rounded-2xl bg-[#ffffff] p-5 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Active Cases</p>
             <h2 className="mt-2 text-3xl font-black">{totals.active}</h2>
           </article>
-          <article className="rounded-2xl bg-white p-5 shadow-sm">
+          <article className="rounded-2xl bg-[#ffffff] p-5 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Refunded</p>
             <h2 className="mt-2 text-3xl font-black">{totals.refunded}</h2>
           </article>
         </section>
 
-        <section className="mb-6 rounded-2xl bg-white p-5 shadow-sm">
+        <section className="mb-6 rounded-2xl bg-[#ffffff] p-5 shadow-sm">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-black uppercase tracking-tight">Admin Notifications</h2>
@@ -407,7 +445,7 @@ export default function AdminReturnsPage() {
                       | "return_status_updated",
                   )
                 }
-                className="rounded-full border border-zinc-300 bg-white px-3 py-2 text-xs font-bold uppercase tracking-[0.12em]"
+                className="rounded-full border border-zinc-300 bg-[#ffffff] px-3 py-2 text-xs font-bold uppercase tracking-[0.12em]"
               >
                 <option value="all">All Types</option>
                 <option value="admin_return_requested">Return Queue</option>
@@ -458,7 +496,7 @@ export default function AdminReturnsPage() {
         {error ? <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p> : null}
         {message ? <p className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">{message}</p> : null}
 
-        <section className="overflow-hidden rounded-2xl bg-white shadow-sm">
+        <section className="overflow-hidden rounded-2xl bg-[#ffffff] shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1200px] text-left">
               <thead>
@@ -536,7 +574,7 @@ export default function AdminReturnsPage() {
                                 },
                               }))
                             }
-                            className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs font-bold"
+                            className="rounded-lg border border-zinc-200 bg-[#ffffff] px-2 py-1 text-xs font-bold"
                             disabled={isFinalStatus}
                           >
                             {statusOptions
@@ -569,7 +607,7 @@ export default function AdminReturnsPage() {
                               }))
                             }
                             rows={2}
-                            className="w-full min-w-[220px] rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs outline-none focus:border-blue-500"
+                            className="w-full min-w-[220px] rounded-lg border border-zinc-200 bg-[#ffffff] px-2 py-1 text-xs outline-none focus:border-blue-500"
                             placeholder="Internal processing note"
                           />
                         </td>
@@ -579,7 +617,7 @@ export default function AdminReturnsPage() {
                             type="button"
                             onClick={() => void onSave(row.id)}
                             disabled={savingId === row.id}
-                            className="rounded-full bg-black px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white disabled:opacity-50"
+                            className="rounded-full bg-[#000000] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white disabled:opacity-50"
                           >
                             {savingId === row.id ? "Saving..." : "Save"}
                           </button>
@@ -593,6 +631,24 @@ export default function AdminReturnsPage() {
           </div>
         </section>
       </main>
+
+      <nav className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-zinc-200 bg-[#ffffff] p-2 shadow-xl lg:hidden">
+        <ul className="grid grid-cols-5 gap-1">
+          {navItems.slice(0, 5).map((item) => (
+            <li key={`mobile-${item.label}`}>
+              <a
+                href={getAdminNavHref(item.label)}
+                className={`flex flex-col items-center justify-center rounded-xl px-1 py-2 text-[10px] font-semibold ${
+                  item.active ? "bg-zinc-900 text-white" : "text-zinc-500"
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                <span className="mt-1 truncate">{item.label}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </div>
   );
 }

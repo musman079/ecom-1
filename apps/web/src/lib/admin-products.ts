@@ -15,6 +15,7 @@ export type AdminProduct = {
   stockQuantity: number;
   lowStockAlert: boolean;
   status: ProductStatus;
+  images: string[];
   createdAt: string;
   updatedAt: string;
 };
@@ -29,6 +30,7 @@ export type ProductInput = {
   stockQuantity: number;
   lowStockAlert: boolean;
   status: ProductStatus;
+  images?: string[];
 };
 
 export class ProductValidationError extends Error {
@@ -63,6 +65,7 @@ function mapProduct(document: {
   status: PrismaProductStatus;
   taxCategory?: string | null;
   collection?: string | null;
+  images: string[];
   lowStockAlert?: boolean | null;
   createdAt: Date;
   updatedAt: Date;
@@ -91,6 +94,7 @@ function mapProduct(document: {
     stockQuantity: primaryVariant.stockQuantity,
     lowStockAlert: document.lowStockAlert ?? false,
     status: toAdminStatus(document.status),
+    images: document.images || [],
     createdAt: document.createdAt.toISOString(),
     updatedAt: document.updatedAt.toISOString(),
   };
@@ -238,6 +242,7 @@ export async function createAdminProduct(input: ProductInput) {
       status: toPrismaStatus(input.status),
       taxCategory,
       collection,
+      images: input.images || [],
       lowStockAlert: input.lowStockAlert,
       variants: {
         create: [
@@ -307,6 +312,7 @@ export async function updateAdminProduct(id: string, input: ProductInput) {
         status: toPrismaStatus(input.status),
         taxCategory,
         collection,
+        images: input.images || [],
         lowStockAlert: input.lowStockAlert,
       },
     });

@@ -17,21 +17,17 @@ const navItems = [
   { icon: "dashboard", label: "Overview", active: true },
   { icon: "inventory_2", label: "Products" },
   { icon: "shopping_cart", label: "Orders" },
+  { icon: "assignment_return", label: "Returns" },
   { icon: "group", label: "Customers" },
   { icon: "leaderboard", label: "Analytics" },
   { icon: "settings", label: "Settings" },
 ];
 
 const getAdminNavHref = (label: string) => {
-  if (label === "Overview") {
-    return "/admin_overview_dashboard";
-  }
-  if (label === "Products") {
-    return "/admin_products";
-  }
-  if (label === "Orders") {
-    return "/admin_orders";
-  }
+  if (label === "Overview") return "/admin_overview_dashboard";
+  if (label === "Products") return "/admin_products";
+  if (label === "Orders") return "/admin_orders";
+  if (label === "Returns") return "/admin_returns";
   return "/admin_overview_dashboard";
 };
 
@@ -113,7 +109,7 @@ export default async function AdminOverviewDashboardPage() {
         </div>
       </aside>
 
-      <header className="sticky top-0 z-40 border-b border-zinc-200 bg-white/85 backdrop-blur-xl lg:ml-64">
+      <header className="sticky top-0 z-40 border-b border-zinc-200 bg-[#ffffff]/85 backdrop-blur-xl lg:ml-64">
         <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <div className="relative w-full max-w-md">
             <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-400">search</span>
@@ -146,7 +142,7 @@ export default async function AdminOverviewDashboardPage() {
           </div>
 
           <AdminLogoutButton
-            className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-600"
+            className="flex items-center gap-2 rounded-full border border-zinc-200 bg-[#ffffff] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-600"
             iconClassName="material-symbols-outlined text-sm"
           />
         </div>
@@ -162,11 +158,11 @@ export default async function AdminOverviewDashboardPage() {
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <a href="/admin_overview_dashboard" className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold tracking-tight">
+              <a href="/admin_overview_dashboard" className="flex items-center gap-2 rounded-full border border-zinc-200 bg-[#ffffff] px-4 py-2.5 text-xs font-bold tracking-tight">
                 <span className="material-symbols-outlined text-sm">calendar_today</span>
                 <span>Last 30 Days</span>
               </a>
-              <a href="/api/admin/products" className="flex items-center gap-2 rounded-full bg-black px-4 py-2.5 text-xs font-bold tracking-tight text-white">
+              <a href="/api/admin/products" className="flex items-center gap-2 rounded-full bg-[#000000] px-4 py-2.5 text-xs font-bold tracking-tight text-white">
                 <span className="material-symbols-outlined text-sm">download</span>
                 <span>Export Report</span>
               </a>
@@ -175,7 +171,7 @@ export default async function AdminOverviewDashboardPage() {
 
           <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {kpiCards.map((card, index) => (
-              <article key={card.label} className="rounded-2xl bg-white p-5 shadow-sm transition hover:-translate-y-0.5">
+              <article key={card.label} className="rounded-2xl bg-[#ffffff] p-5 shadow-sm transition hover:-translate-y-0.5">
                 <div className="mb-3 flex items-start justify-between">
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">{card.label}</p>
                   <div className="flex h-6 w-10 items-end gap-1">
@@ -194,7 +190,7 @@ export default async function AdminOverviewDashboardPage() {
           </section>
 
           <section className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
-            <article className="rounded-2xl bg-white p-6 shadow-sm xl:col-span-2">
+            <article className="rounded-2xl bg-[#ffffff] p-6 shadow-sm xl:col-span-2">
               <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h4 className="text-xl font-bold">Sales Velocity</h4>
@@ -235,14 +231,18 @@ export default async function AdminOverviewDashboardPage() {
               </div>
             </article>
 
-            <article className="rounded-2xl bg-white p-6 shadow-sm">
+            <article className="rounded-2xl bg-[#ffffff] p-6 shadow-sm">
               <h4 className="mb-5 text-xl font-bold">Top Products</h4>
               <div className="space-y-4">
                 {topProducts.length > 0 ? (
                   topProducts.map((product) => (
                     <div key={product.id} className="flex items-center gap-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-900 text-xs font-black uppercase text-white">
-                        {product.title.slice(0, 2)}
+                        {product.images && product.images.length > 0 ? (
+                          <img src={product.images[0]} alt="Product" className="h-full w-full object-cover rounded-lg" />
+                        ) : (
+                          product.title.slice(0, 2)
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-bold">{product.title}</p>
@@ -261,7 +261,7 @@ export default async function AdminOverviewDashboardPage() {
             </article>
           </section>
 
-          <section className="overflow-hidden rounded-2xl bg-white shadow-sm">
+          <section className="overflow-hidden rounded-2xl bg-[#ffffff] shadow-sm">
             <div className="flex items-center justify-between border-b border-zinc-100 p-5 sm:p-6">
               <h4 className="text-xl font-bold">Recent Orders</h4>
               <a href="/admin_orders" className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">View All Orders</a>
@@ -306,7 +306,7 @@ export default async function AdminOverviewDashboardPage() {
             </div>
           </section>
 
-          <section className="mt-8 rounded-2xl bg-white p-6 shadow-sm sm:p-8">
+          <section className="mt-8 rounded-2xl bg-[#ffffff] p-6 shadow-sm sm:p-8">
             <div className="mb-6 flex items-center justify-between">
               <h4 className="text-xl font-bold">Admin Modules (Basic Setup)</h4>
               <span className="rounded-full bg-zinc-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-600">Phase 1</span>
@@ -330,11 +330,11 @@ export default async function AdminOverviewDashboardPage() {
         </div>
       </main>
 
-      <a href="/admin_post_edit_product" className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-black text-white shadow-xl transition hover:rotate-90" aria-label="Add Product">
+      <a href="/admin_post_edit_product" className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[#000000] text-white shadow-xl transition hover:rotate-90" aria-label="Add Product">
         <span className="material-symbols-outlined">add</span>
       </a>
 
-      <nav className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-zinc-200 bg-white p-2 shadow-xl lg:hidden">
+      <nav className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-zinc-200 bg-[#ffffff] p-2 shadow-xl lg:hidden">
         <ul className="grid grid-cols-5 gap-1">
           {navItems.slice(0, 5).map((item) => (
             <li key={`mobile-${item.label}`}>
