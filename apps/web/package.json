@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint --max-warnings 0",
     "check-types": "next typegen && tsc --noEmit",
+    "test": "vitest run",
     "db:create-admin": "node ./scripts/create-admin.mjs",
     "db:products:reset": "node ./scripts/products-reset.mjs",
     "db:products:import": "node ./scripts/import-admin-products-to-prisma.mjs",
@@ -40,6 +41,7 @@
     "postcss": "^8.5.9",
     "prisma": "^6.7.0",
     "tailwindcss": "3.4.17",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "vitest": "^4.1.5"
   }
 }

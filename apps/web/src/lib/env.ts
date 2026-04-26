@@ -46,7 +46,6 @@ export function getMongoDatabaseName() {
 }
 
 export function assertRuntimeEnvironment() {
-  getMongoUrl();
   requireEnv("JWT_SECRET");
   requireEnv("JWT_EXPIRY");
 }

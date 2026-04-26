@@ -7,19 +7,23 @@ declare global {
   var mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
-const resolvedMongoUri = getMongoUrl();
+function getMongoClientPromise() {
+  if (globalThis.mongoClientPromise) {
+    return globalThis.mongoClientPromise;
+  }
 
-const clientPromise =
-  globalThis.mongoClientPromise ??
-  new MongoClient(resolvedMongoUri, {
+  const clientPromise = new MongoClient(getMongoUrl(), {
     maxPoolSize: 10,
   }).connect();
 
-if (process.env.NODE_ENV !== "production") {
-  globalThis.mongoClientPromise = clientPromise;
+  if (process.env.NODE_ENV !== "production") {
+    globalThis.mongoClientPromise = clientPromise;
+  }
+
+  return clientPromise;
 }
 
 export async function getMongoDb() {
-  const client = await clientPromise;
+  const client = await getMongoClientPromise();
   return client.db(getMongoDatabaseName());
 }
