@@ -1072,7 +1072,8 @@ export async function checkoutCart(userId: string, payload: {
     total,
     shippingAddress: payload.shippingAddress,
     paymentMethod: payload.paymentMethod,
-    paymentStatus: payload.paymentMethod === "cod" ? "pending" : "paid",
+    // Payment is finalized later by admin/manual confirmation flow.
+    paymentStatus: "pending",
     estimatedDelivery: new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000),
     notes: payload.notes,
     createdAt: now,

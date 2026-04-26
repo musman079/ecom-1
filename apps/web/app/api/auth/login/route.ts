@@ -4,6 +4,7 @@ import {
   assertAuthEnvironment,
   AuthConfigError,
   isAdminEmail,
+  normalizeAuthRoles,
   normalizeEmail,
   setAuthCookie,
   signAuthToken,
@@ -117,6 +118,7 @@ export async function POST(request: Request) {
       sub: user.id,
       email: user.email,
       role,
+      roles: normalizeAuthRoles(roleNames, role),
     });
 
     const response = NextResponse.json({

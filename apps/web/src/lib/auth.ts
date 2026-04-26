@@ -10,7 +10,24 @@ export type AuthTokenPayload = {
   sub: string;
   email: string;
   role: AuthRole;
+  roles?: AuthRole[];
 };
+
+const AUTH_ROLES = ["CUSTOMER", "ADMIN", "SUPER_ADMIN"] as const;
+
+export function isAuthRole(value: string): value is AuthRole {
+  return AUTH_ROLES.includes(value as AuthRole);
+}
+
+export function normalizeAuthRoles(roles: readonly string[] | undefined, fallbackRole: AuthRole): AuthRole[] {
+  const normalized = Array.isArray(roles) ? roles.filter(isAuthRole) : [];
+
+  if (!normalized.includes(fallbackRole)) {
+    normalized.push(fallbackRole);
+  }
+
+  return Array.from(new Set(normalized));
+}
 
 export class AuthConfigError extends Error {
   constructor(message: string) {
@@ -92,7 +109,14 @@ export async function signAuthToken(payload: AuthTokenPayload): Promise<string> 
   const secretKey = getJwtSecretKey();
   const expiry = getJwtExpiry();
 
-  return new SignJWT(payload)
+  const tokenPayload = {
+    sub: payload.sub,
+    email: payload.email,
+    role: payload.role,
+    roles: normalizeAuthRoles(payload.roles, payload.role),
+  };
+
+  return new SignJWT(tokenPayload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(expiry)
@@ -107,14 +131,19 @@ export async function verifyAuthToken(token: string): Promise<AuthTokenPayload |
       return null;
     }
 
-    if (payload.role !== "CUSTOMER" && payload.role !== "ADMIN" && payload.role !== "SUPER_ADMIN") {
+    if (!isAuthRole(payload.role)) {
       return null;
     }
+
+    const rawRoles = Array.isArray(payload.roles)
+      ? payload.roles.filter((value): value is string => typeof value === "string")
+      : undefined;
 
     return {
       sub: payload.sub,
       email: payload.email,
       role: payload.role,
+      roles: normalizeAuthRoles(rawRoles, payload.role),
     };
   } catch {
     return null;

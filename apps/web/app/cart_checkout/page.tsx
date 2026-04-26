@@ -43,7 +43,7 @@ export default function CartCheckoutPage() {
   const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "cod">("card");
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "cod">("cod");
   const [cart, setCart] = useState<ApiCart>({
     items: [],
     subtotal: 0,
@@ -302,24 +302,30 @@ export default function CartCheckoutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f9f9f9] text-[#1a1c1c]">
-      <header className="fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur-xl">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#0b1220] text-[#f2f4f8]">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-28 -top-24 h-80 w-80 rounded-full bg-[#3f7dff]/30 blur-3xl" />
+        <div className="absolute right-[-120px] top-44 h-[24rem] w-[24rem] rounded-full bg-[#17c4b3]/20 blur-3xl" />
+        <div className="absolute bottom-[-170px] left-1/3 h-[26rem] w-[26rem] rounded-full bg-[#d7a8ff]/20 blur-3xl" />
+      </div>
+
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#0d1627]/70 backdrop-blur-2xl">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-4">
             <a href={CUSTOMER_ROUTES.HOME} className="active:scale-95 transition" aria-label="Menu">
               <span className="material-symbols-outlined">menu</span>
             </a>
-            <span className="text-xl font-black uppercase tracking-tight">KINETIC</span>
+            <span className="text-xl font-black uppercase tracking-[0.08em] text-white">KINETIC</span>
           </div>
 
           <div className="flex items-center gap-6">
             <nav className="hidden gap-8 md:flex">
-              <a href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="text-xs font-bold uppercase tracking-tight text-neutral-500">Explore</a>
-              <a href={CUSTOMER_ROUTES.CART_CHECKOUT} className="text-xs font-bold uppercase tracking-tight">Cart</a>
+              <a href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="text-xs font-bold uppercase tracking-[0.18em] text-white/60">Explore</a>
+              <a href={CUSTOMER_ROUTES.CART_CHECKOUT} className="text-xs font-bold uppercase tracking-[0.18em] text-white">Cart</a>
             </nav>
             <a href={CUSTOMER_ROUTES.CART_CHECKOUT} className="relative active:scale-95 transition" aria-label="Cart">
-              <span className="material-symbols-outlined">shopping_bag</span>
-              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#497cff] text-[8px] font-bold text-white">
+              <span className="material-symbols-outlined text-white">shopping_bag</span>
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-[#65f3de] to-[#3f7dff] text-[8px] font-bold text-[#0c1220]">
                 {cart.totalItems}
               </span>
             </a>
@@ -327,32 +333,32 @@ export default function CartCheckoutPage() {
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-7xl grid-cols-1 gap-12 px-6 pb-32 pt-24 lg:grid-cols-12">
+      <main className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 gap-12 px-6 pb-32 pt-24 lg:grid-cols-12">
         <section className="lg:col-span-7">
           <div className="mb-12">
-            <h1 className="mb-2 text-5xl font-black uppercase tracking-[-0.05em] md:text-6xl">My Cart</h1>
-            <p className="text-sm font-medium uppercase tracking-wide text-neutral-600">{cart.totalItems} Items Selected</p>
+            <h1 className="mb-2 text-5xl font-black uppercase tracking-[-0.05em] text-white md:text-6xl">Checkout Studio</h1>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/65">{cart.totalItems} Items Curated</p>
           </div>
 
-          {error ? <p className="mb-4 text-sm font-semibold text-red-600">{error}</p> : null}
-          {message ? <p className="mb-4 text-sm font-semibold text-emerald-700">{message}</p> : null}
+          {error ? <p className="mb-4 rounded-lg border border-red-300/30 bg-red-400/10 px-4 py-3 text-sm font-semibold text-red-200">{error}</p> : null}
+          {message ? <p className="mb-4 rounded-lg border border-emerald-300/20 bg-emerald-400/10 px-4 py-3 text-sm font-semibold text-emerald-200">{message}</p> : null}
 
           <div className="space-y-12">
             {loading ? (
-              <div className="rounded-xl bg-white p-8 text-sm text-neutral-500">Loading cart...</div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-sm text-white/70 backdrop-blur-xl">Loading cart...</div>
             ) : needsAuth ? (
-              <div className="rounded-xl bg-white p-8 text-sm text-neutral-600">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-sm text-white/70 backdrop-blur-xl">
                 <p className="mb-4">Please sign in to access your cart.</p>
-                <a href={CUSTOMER_ROUTES.AUTH} className="inline-flex rounded-full bg-black px-6 py-3 text-xs font-bold uppercase tracking-[0.16em] text-white">
+                <a href={CUSTOMER_ROUTES.AUTH} className="inline-flex rounded-full bg-gradient-to-br from-[#65f3de] to-[#3f7dff] px-6 py-3 text-xs font-bold uppercase tracking-[0.16em] text-[#0c1220]">
                   Go to Login
                 </a>
               </div>
             ) : cart.items.length === 0 ? (
-              <div className="rounded-xl bg-white p-8 text-sm text-neutral-500">No items in cart yet.</div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-sm text-white/70 backdrop-blur-xl">No items in cart yet.</div>
             ) : (
               cart.items.map((item) => (
-              <article key={item.productId} className="group flex items-start gap-6">
-                <div className="h-40 w-32 shrink-0 overflow-hidden rounded-xl bg-[#f3f3f4]">
+              <article key={item.productId} className="group flex items-start gap-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl transition hover:border-white/20 hover:bg-white/[0.05]">
+                <div className="h-40 w-32 shrink-0 overflow-hidden rounded-xl bg-white/5">
                   <img
                     src={`https://picsum.photos/seed/${encodeURIComponent(item.productId)}/320/400`}
                     alt={item.title}
@@ -363,15 +369,15 @@ export default function CartCheckoutPage() {
                 <div className="flex h-40 flex-grow flex-col py-2">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.15em] text-[#497cff]">In Cart</span>
-                      <h3 className="text-4xl font-bold tracking-tight leading-[1.05] sm:text-3xl">{item.title}</h3>
-                      <p className="text-sm text-neutral-600">SKU: {item.sku}</p>
+                      <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.15em] text-[#65f3de]">In Cart</span>
+                      <h3 className="text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-3xl">{item.title}</h3>
+                      <p className="text-sm text-white/60">SKU: {item.sku}</p>
                     </div>
-                    <span className="text-3xl font-bold sm:text-lg">${item.price.toFixed(2)}</span>
+                    <span className="text-3xl font-bold text-white sm:text-lg">${item.price.toFixed(2)}</span>
                   </div>
 
                   <div className="mt-auto flex items-center justify-between">
-                    <div className="flex items-center gap-6 rounded-full bg-[#f3f3f4] px-4 py-2">
+                    <div className="flex items-center gap-6 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-white">
                       <button
                         type="button"
                         disabled={activeProductId === item.productId || item.quantity <= 1}
@@ -394,7 +400,7 @@ export default function CartCheckoutPage() {
                       type="button"
                       disabled={activeProductId === item.productId}
                       onClick={() => removeItem(item.productId)}
-                      className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 disabled:opacity-40"
+                      className="text-[10px] font-bold uppercase tracking-widest text-white/65 transition hover:text-[#ff9b9b] disabled:opacity-40"
                     >
                       Remove
                     </button>
@@ -404,46 +410,46 @@ export default function CartCheckoutPage() {
             )))}
           </div>
 
-          <section className="mt-20 rounded-xl bg-[#f3f3f4] p-8">
-            <h2 className="mb-8 text-2xl font-black uppercase tracking-tight">Shipping Detail</h2>
+          <section className="mt-20 rounded-2xl border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl">
+            <h2 className="mb-8 text-2xl font-black uppercase tracking-tight text-white">Shipping Detail</h2>
             <form className="space-y-8">
               <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 <input
                   value={shippingForm.fullName}
                   onChange={(event) => onShippingChange("fullName", event.target.value)}
-                  className="w-full border-0 border-b-2 border-[#c6c6cd] bg-transparent px-0 py-3 font-medium focus:border-[#497cff] focus:ring-0"
+                  className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0"
                   placeholder="Full Name"
                 />
                 <input
                   value={shippingForm.phone}
                   onChange={(event) => onShippingChange("phone", event.target.value)}
-                  className="w-full border-0 border-b-2 border-[#c6c6cd] bg-transparent px-0 py-3 font-medium focus:border-[#497cff] focus:ring-0"
+                  className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0"
                   placeholder="Phone Number"
                 />
               </div>
               <input
                 value={shippingForm.line1}
                 onChange={(event) => onShippingChange("line1", event.target.value)}
-                className="w-full border-0 border-b-2 border-[#c6c6cd] bg-transparent px-0 py-3 font-medium focus:border-[#497cff] focus:ring-0"
+                className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0"
                 placeholder="Street Address"
               />
               <div className="grid grid-cols-2 gap-8 md:grid-cols-3">
                 <input
                   value={shippingForm.city}
                   onChange={(event) => onShippingChange("city", event.target.value)}
-                  className="w-full border-0 border-b-2 border-[#c6c6cd] bg-transparent px-0 py-3 font-medium focus:border-[#497cff] focus:ring-0"
+                  className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0"
                   placeholder="City"
                 />
                 <input
                   value={shippingForm.postalCode}
                   onChange={(event) => onShippingChange("postalCode", event.target.value)}
-                  className="w-full border-0 border-b-2 border-[#c6c6cd] bg-transparent px-0 py-3 font-medium focus:border-[#497cff] focus:ring-0"
+                  className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0"
                   placeholder="Postal Code"
                 />
                 <input
                   value={shippingForm.country}
                   onChange={(event) => onShippingChange("country", event.target.value)}
-                  className="col-span-2 w-full border-0 border-b-2 border-[#c6c6cd] bg-transparent px-0 py-3 font-medium focus:border-[#497cff] focus:ring-0 md:col-span-1"
+                  className="col-span-2 w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0 md:col-span-1"
                   placeholder="Country"
                 />
               </div>
@@ -453,18 +459,19 @@ export default function CartCheckoutPage() {
 
         <aside className="lg:col-span-5">
           <div className="space-y-8 lg:sticky lg:top-28">
-            <section className="rounded-xl bg-white p-8 shadow-[0px_20px_40px_rgba(20,27,43,0.06)]">
-              <h2 className="mb-6 text-sm font-black uppercase tracking-widest">Payment Method</h2>
+            <section className="rounded-2xl border border-white/10 bg-white/[0.05] p-8 shadow-[0px_20px_50px_rgba(5,8,16,0.45)] backdrop-blur-2xl">
+              <h2 className="mb-6 text-sm font-black uppercase tracking-widest text-white">Payment Method</h2>
               <div className="space-y-4">
-                <label className="block cursor-pointer">
+                <label className="block cursor-not-allowed opacity-70">
                   <input
                     type="radio"
                     name="payment"
                     checked={paymentMethod === "card"}
                     onChange={() => setPaymentMethod("card")}
+                    disabled
                     className="peer hidden"
                   />
-                  <div className="flex items-center justify-between rounded-lg border border-[#c6c6cd] bg-[#141b2b] p-4 text-white transition-all">
+                  <div className="flex items-center justify-between rounded-xl border border-white/15 bg-[#121b31] p-4 text-white transition-all">
                     <div className="flex items-center gap-4">
                       <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
                         credit_card
@@ -474,7 +481,9 @@ export default function CartCheckoutPage() {
                         <p className="text-[10px] uppercase tracking-wider opacity-70">Visa, Mastercard, Amex</p>
                       </div>
                     </div>
-                    <span className="material-symbols-outlined text-sm">check_circle</span>
+                    <span className="rounded-full border border-white/35 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white/85">
+                      Coming Soon
+                    </span>
                   </div>
                 </label>
 
@@ -486,7 +495,7 @@ export default function CartCheckoutPage() {
                     onChange={() => setPaymentMethod("cod")}
                     className="peer hidden"
                   />
-                  <div className="flex items-center justify-between rounded-lg border border-[#c6c6cd] p-4 transition-all peer-checked:border-[#141b2b] peer-checked:bg-[#141b2b] peer-checked:text-white">
+                  <div className="flex items-center justify-between rounded-xl border border-white/20 bg-[#0f192d] p-4 text-white/80 transition-all peer-checked:border-[#65f3de]/50 peer-checked:bg-[#141f36] peer-checked:text-white">
                     <div className="flex items-center gap-4">
                       <span className="material-symbols-outlined">payments</span>
                       <div>
@@ -498,9 +507,10 @@ export default function CartCheckoutPage() {
                   </div>
                 </label>
               </div>
+              <p className="mt-4 text-xs font-semibold text-white/60">Online card payments are coming soon. Cash on Delivery is currently available.</p>
             </section>
 
-            <section className="rounded-xl bg-black p-8 text-white shadow-[0px_20px_40px_rgba(20,27,43,0.06)]">
+            <section className="rounded-2xl border border-white/10 bg-[linear-gradient(145deg,#111b32_0%,#0a1324_100%)] p-8 text-white shadow-[0px_20px_50px_rgba(8,11,22,0.5)]">
               <h2 className="mb-8 text-sm font-black uppercase tracking-widest">Order Summary</h2>
               <div className="mb-6 rounded-lg border border-white/20 bg-white/5 p-4">
                 <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">Coupon</p>
@@ -550,7 +560,7 @@ export default function CartCheckoutPage() {
                 type="button"
                 disabled={placingOrder || loading || needsAuth}
                 onClick={placeOrder}
-                className="mt-10 block w-full rounded-full bg-gradient-to-br from-[#497cff] to-[#003ea8] py-5 text-center text-xs font-black uppercase tracking-[0.2em] text-white transition hover:scale-[1.02] active:scale-95 disabled:opacity-40"
+                className="mt-10 block w-full rounded-full bg-gradient-to-br from-[#65f3de] via-[#4a8dff] to-[#3f7dff] py-5 text-center text-xs font-black uppercase tracking-[0.2em] text-[#081224] transition hover:scale-[1.02] hover:shadow-[0_10px_35px_rgba(74,141,255,0.35)] active:scale-95 disabled:opacity-40"
               >
                 {placingOrder ? "Placing Order..." : "Place Order"}
               </button>
@@ -563,26 +573,26 @@ export default function CartCheckoutPage() {
         </aside>
       </main>
 
-      <nav className="fixed bottom-0 left-0 z-50 flex w-full items-center justify-around rounded-t-2xl bg-white/90 px-4 pb-6 pt-3 shadow-[0_-10px_30px_rgba(0,0,0,0.03)] backdrop-blur-xl md:hidden">
-        <a href={CUSTOMER_ROUTES.HOME} className="flex flex-col items-center text-neutral-400">
+      <nav className="fixed bottom-0 left-0 z-50 flex w-full items-center justify-around rounded-t-2xl border-t border-white/10 bg-[#0d1627]/90 px-4 pb-6 pt-3 shadow-[0_-10px_30px_rgba(0,0,0,0.25)] backdrop-blur-2xl md:hidden">
+        <a href={CUSTOMER_ROUTES.HOME} className="flex flex-col items-center text-white/50">
           <span className="material-symbols-outlined">home</span>
           <span className="mt-1 text-[10px] font-medium uppercase tracking-widest">Home</span>
         </a>
-        <a href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="flex flex-col items-center text-neutral-400">
+        <a href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="flex flex-col items-center text-white/50">
           <span className="material-symbols-outlined">search</span>
           <span className="mt-1 text-[10px] font-medium uppercase tracking-widest">Search</span>
         </a>
-        <a href={CUSTOMER_ROUTES.REVIEWS} className="flex flex-col items-center text-neutral-400">
+        <a href={CUSTOMER_ROUTES.REVIEWS} className="flex flex-col items-center text-white/50">
           <span className="material-symbols-outlined">favorite</span>
           <span className="mt-1 text-[10px] font-medium uppercase tracking-widest">Reviews</span>
         </a>
-        <a href={CUSTOMER_ROUTES.ORDER_TRACKING} className="flex scale-110 flex-col items-center text-black">
+        <a href={CUSTOMER_ROUTES.ORDER_TRACKING} className="flex scale-110 flex-col items-center text-[#65f3de]">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
             package_2
           </span>
           <span className="mt-1 text-[10px] font-medium uppercase tracking-widest">Orders</span>
         </a>
-        <a href={CUSTOMER_ROUTES.PROFILE} className="flex flex-col items-center text-neutral-400">
+        <a href={CUSTOMER_ROUTES.PROFILE} className="flex flex-col items-center text-white/50">
           <span className="material-symbols-outlined">person</span>
           <span className="mt-1 text-[10px] font-medium uppercase tracking-widest">Profile</span>
         </a>

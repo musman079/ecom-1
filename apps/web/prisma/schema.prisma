@@ -68,6 +68,9 @@ model User {
   passwordHash         String
   fullName             String
   phone                String?
+  notificationOrderUpdates Boolean        @default(true)
+  notificationReturnUpdates Boolean       @default(true)
+  notificationEmailEnabled Boolean        @default(true)
   isActive             Boolean            @default(true)
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt

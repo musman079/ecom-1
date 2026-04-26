@@ -4,6 +4,7 @@ import {
   AUTH_COOKIE_NAME,
   getAdminEmails,
   isAdminEmail,
+  normalizeAuthRoles,
   normalizeEmail,
   readAuthTokenFromCookieHeader,
   validateEmailFormat,
@@ -38,6 +39,11 @@ describe("auth helpers", () => {
     expect(getAdminEmails()).toEqual(["admin@one.com", "second@example.com"]);
     expect(isAdminEmail("admin@ONE.com")).toBe(true);
     expect(isAdminEmail("customer@example.com")).toBe(false);
+  });
+
+  it("normalizes role arrays with fallback role", () => {
+    expect(normalizeAuthRoles(["ADMIN", "ADMIN", "INVALID"], "CUSTOMER")).toEqual(["ADMIN", "CUSTOMER"]);
+    expect(normalizeAuthRoles(undefined, "SUPER_ADMIN")).toEqual(["SUPER_ADMIN"]);
   });
 
   it("reads auth cookies from the cookie header", () => {

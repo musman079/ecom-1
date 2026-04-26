@@ -6,6 +6,7 @@ import {
   AuthConfigError,
   hashPassword,
   isAdminEmail,
+  normalizeAuthRoles,
   normalizeEmail,
   signAuthToken,
   setAuthCookie,
@@ -134,6 +135,7 @@ export async function POST(request: Request) {
       sub: user.id,
       email: userWithRoles.email,
       role,
+      roles: normalizeAuthRoles(userRoleNames, role),
     });
 
     const response = NextResponse.json(

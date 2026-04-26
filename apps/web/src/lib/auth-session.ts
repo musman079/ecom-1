@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import {
   clearAuthCookie,
+  normalizeAuthRoles,
   readAuthTokenFromRequest,
   signAuthToken,
   type AuthRole,
@@ -35,10 +36,13 @@ function primaryRoleFromRoles(roles: string[]): AuthRole {
 }
 
 export async function createSessionToken(payload: SessionUser) {
+  const role = primaryRoleFromRoles(payload.roles);
+
   return signAuthToken({
     sub: payload.userId,
     email: payload.email,
-    role: primaryRoleFromRoles(payload.roles),
+    role,
+    roles: normalizeAuthRoles(payload.roles, role),
   });
 }
 
@@ -57,7 +61,7 @@ export async function getSessionFromRequest(request: Request) {
   return {
     userId: payload.sub,
     email: payload.email,
-    roles: [payload.role],
+    roles: normalizeAuthRoles(payload.roles, payload.role),
   } satisfies SessionUser;
 }
 

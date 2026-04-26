@@ -35,8 +35,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Complete shippingAddress is required." }, { status: 400 });
     }
 
-    if (payload.paymentMethod !== "card" && payload.paymentMethod !== "cod") {
-      return NextResponse.json({ error: "paymentMethod must be 'card' or 'cod'." }, { status: 400 });
+    if (payload.paymentMethod !== "cod") {
+      return NextResponse.json({ error: "Card payments are coming soon. Please use Cash on Delivery for now." }, { status: 400 });
     }
 
     const result = await checkoutCart(session.userId, {

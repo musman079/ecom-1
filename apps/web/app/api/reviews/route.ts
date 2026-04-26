@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { AuthError, requireSession } from "../../../src/lib/auth-session";
-import { createReview, findUserById, listReviewsByProduct } from "../../../src/lib/ecommerce-db";
+import { createReview, listReviewsByProduct } from "../../../src/lib/ecommerce-db";
+import { prisma } from "../../../src/lib/prisma";
 
 type ReviewPayload = {
   productId?: string;
@@ -46,8 +47,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "comment is required." }, { status: 400 });
     }
 
-    const user = await findUserById(session.userId);
-    if (!user) {
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: {
+        fullName: true,
+        isActive: true,
+      },
+    });
+
+    if (!user || !user.isActive) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 

@@ -33,7 +33,8 @@ export async function middleware(request: NextRequest) {
   }
 
   const normalizedEmail = payload.email.trim().toLowerCase();
-  const adminByRole = payload.role === "ADMIN" || payload.role === "SUPER_ADMIN";
+  const tokenRoles = Array.isArray(payload.roles) ? payload.roles : [payload.role];
+  const adminByRole = tokenRoles.includes("ADMIN") || tokenRoles.includes("SUPER_ADMIN");
   const adminByEmail = getAdminEmails().includes(normalizedEmail);
 
   if (!adminByRole && !adminByEmail) {
