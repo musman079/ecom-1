@@ -147,17 +147,17 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#f9f9f9] text-[#1a1c1c]">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#070d17] text-[#eaf2ff]">
       <div className="fixed inset-0 pointer-events-none -z-10">
         <div className="absolute -left-44 -top-44 h-[500px] w-[500px] rounded-full bg-blue-500/10 blur-[120px]" />
         <div className="absolute -bottom-24 -right-24 h-[400px] w-[400px] rounded-full bg-black/5 blur-[100px]" />
       </div>
 
-      <main className="flex items-center justify-center w-full max-w-6xl min-h-screen px-6 py-12 mx-auto lg:px-0">
-        <div className="w-full max-w-[440px]">
+      <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-6 py-12 lg:px-0">
+        <div className="w-full max-w-[440px] rounded-2xl border border-white/10 bg-white/[0.04] p-7 backdrop-blur-xl sm:p-8">
           <header className="mb-12 text-center">
-            <h1 className="mb-2 text-5xl font-black uppercase tracking-[-0.06em]">KINETIC</h1>
-            <p className="text-sm text-neutral-500">
+            <h1 className="mb-2 text-5xl font-black uppercase tracking-[-0.06em] text-white">KINETIC</h1>
+            <p className="text-sm text-white/65">
               {mode === "login"
                 ? "Enter your credentials to access the editorial gallery."
                 : "Create your account to start shopping the collection."}
@@ -171,7 +171,7 @@ export default function AuthPage() {
                   <div>
                     <label
                       htmlFor="fullName"
-                      className="mb-1 ml-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-neutral-500"
+                      className="mb-1 ml-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-white/60"
                     >
                       Full Name
                     </label>
@@ -181,14 +181,14 @@ export default function AuthPage() {
                       value={form.fullName}
                       onChange={(event) => onInputChange("fullName", event.target.value)}
                       placeholder="Usman Kousar"
-                      className="w-full border-0 border-b border-neutral-300 bg-transparent px-0 py-4 text-sm text-[#1a1c1c] placeholder:text-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-0"
+                      className="w-full border-0 border-b border-white/20 bg-transparent px-0 py-4 text-sm text-white placeholder:text-white/40 focus:border-[#65f3de] focus:outline-none focus:ring-0"
                     />
                   </div>
 
                   <div>
                     <label
                       htmlFor="phone"
-                      className="mb-1 ml-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-neutral-500"
+                      className="mb-1 ml-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-white/60"
                     >
                       Phone (Optional)
                     </label>
@@ -198,7 +198,7 @@ export default function AuthPage() {
                       value={form.phone}
                       onChange={(event) => onInputChange("phone", event.target.value)}
                       placeholder="+92 300 1234567"
-                      className="w-full border-0 border-b border-neutral-300 bg-transparent px-0 py-4 text-sm text-[#1a1c1c] placeholder:text-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-0"
+                      className="w-full border-0 border-b border-white/20 bg-transparent px-0 py-4 text-sm text-white placeholder:text-white/40 focus:border-[#65f3de] focus:outline-none focus:ring-0"
                     />
                   </div>
                 </>
@@ -207,7 +207,7 @@ export default function AuthPage() {
               <div>
                 <label
                   htmlFor="email"
-                  className="mb-1 ml-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-neutral-500"
+                  className="mb-1 ml-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-white/60"
                 >
                   Email Address
                 </label>
@@ -217,14 +217,14 @@ export default function AuthPage() {
                   value={form.email}
                   onChange={(event) => onInputChange("email", event.target.value)}
                   placeholder="name@kinetic.com"
-                  className="w-full border-0 border-b border-neutral-300 bg-transparent px-0 py-4 text-sm text-[#1a1c1c] placeholder:text-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-0"
+                  className="w-full border-0 border-b border-white/20 bg-transparent px-0 py-4 text-sm text-white placeholder:text-white/40 focus:border-[#65f3de] focus:outline-none focus:ring-0"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="password"
-                  className="mb-1 ml-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-neutral-500"
+                  className="mb-1 ml-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-white/60"
                 >
                   Password
                 </label>
@@ -234,18 +234,18 @@ export default function AuthPage() {
                   value={form.password}
                   onChange={(event) => onInputChange("password", event.target.value)}
                   placeholder="••••••••"
-                  className="w-full border-0 border-b border-neutral-300 bg-transparent px-0 py-4 text-sm text-[#1a1c1c] placeholder:text-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-0"
+                  className="w-full border-0 border-b border-white/20 bg-transparent px-0 py-4 text-sm text-white placeholder:text-white/40 focus:border-[#65f3de] focus:outline-none focus:ring-0"
                 />
               </div>
             </div>
 
-            {error ? <p className="text-xs font-bold tracking-wide text-red-600">{error}</p> : null}
-            {message ? <p className="text-xs font-bold tracking-wide text-emerald-700">{message}</p> : null}
+            {error ? <p className="rounded-lg border border-red-300/25 bg-red-400/10 px-3 py-2 text-xs font-bold tracking-wide text-red-200">{error}</p> : null}
+            {message ? <p className="rounded-lg border border-emerald-300/25 bg-emerald-400/10 px-3 py-2 text-xs font-bold tracking-wide text-emerald-200">{message}</p> : null}
 
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-full bg-black py-5 text-xs font-bold uppercase tracking-[0.2em] text-white transition hover:bg-neutral-800 active:scale-[0.98]"
+              className="w-full rounded-full bg-gradient-to-br from-[#65f3de] via-[#4f8cff] to-[#3f7dff] py-5 text-xs font-bold uppercase tracking-[0.2em] text-[#081224] transition hover:brightness-110 active:scale-[0.98]"
             >
               {submitting ? "Please wait..." : mode === "login" ? "Login" : "Create Account"}
             </button>
@@ -254,14 +254,14 @@ export default function AuthPage() {
               <button
                 type="button"
                 onClick={() => setMessage("Password reset flow can be added next.")}
-                className="text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500 transition hover:text-black"
+                className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/60 transition hover:text-white"
               >
                 Forgot Password?
               </button>
               <button
                 type="button"
                 onClick={toggleMode}
-                className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-600 transition hover:underline"
+                className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#65f3de] transition hover:underline"
               >
                 {mode === "login" ? "Create Account" : "Back to Login"}
               </button>
@@ -269,38 +269,38 @@ export default function AuthPage() {
           </form>
 
           <div className="flex items-center gap-4 my-10">
-            <div className="flex-1 h-px bg-neutral-300/60" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400">
+            <div className="flex-1 h-px bg-white/20" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">
               Or Continue With
             </span>
-            <div className="flex-1 h-px bg-neutral-300/60" />
+            <div className="flex-1 h-px bg-white/20" />
           </div>
 
           <div className="space-y-3">
-            <button onClick={() => router.push("/")} className="flex w-full items-center justify-center gap-3 rounded-full border border-neutral-300/70 py-4 text-[11px] font-bold uppercase tracking-[0.16em] transition hover:bg-neutral-100 active:scale-[0.98]">
+            <button onClick={() => router.push("/")} className="flex w-full items-center justify-center gap-3 rounded-full border border-white/20 bg-white/[0.04] py-4 text-[11px] font-bold uppercase tracking-[0.16em] transition hover:bg-white/[0.08] active:scale-[0.98]">
               <span className="text-base">G</span>
               <span>Google</span>
             </button>
-            <button onClick={() => router.push("/")} className="flex w-full items-center justify-center gap-3 rounded-full border border-neutral-300/70 py-4 text-[11px] font-bold uppercase tracking-[0.16em] transition hover:bg-neutral-100 active:scale-[0.98]">
+            <button onClick={() => router.push("/")} className="flex w-full items-center justify-center gap-3 rounded-full border border-white/20 bg-white/[0.04] py-4 text-[11px] font-bold uppercase tracking-[0.16em] transition hover:bg-white/[0.08] active:scale-[0.98]">
               <span className="text-base"></span>
               <span>Apple</span>
             </button>
           </div>
 
           <footer className="mt-16 text-center">
-            <p className="mx-auto max-w-[280px] text-[10px] leading-loose text-neutral-500">
-              By continuing, you agree to our <span className="font-bold text-black underline">Terms of Service</span> and <span className="font-bold text-black underline">Privacy Policy</span>.
+            <p className="mx-auto max-w-[280px] text-[10px] leading-loose text-white/55">
+              By continuing, you agree to our <span className="font-bold text-white underline">Terms of Service</span> and <span className="font-bold text-white underline">Privacy Policy</span>.
             </p>
           </footer>
         </div>
       </main>
 
       <aside className="fixed top-0 right-0 hidden w-1/3 h-full overflow-hidden pointer-events-none lg:block">
-        <div className="absolute inset-0 z-10 bg-gradient-to-l from-white via-transparent to-transparent" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-l from-[#070d17] via-transparent to-transparent" />
         <img
           src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLGFVnXIMmcw4x4Uf7eYTU5frePTneM24seipjrW5wgwHe-T6vCBilasl6-m3oo_pEq3oCrq047gG37VnJeagYmRF1zdUSBTyJrThDw-pulfl8wg_Pkiyhb0UkbgA2UvcLuGj5tXLeGe3viLwt-LVh8WLrC4WH6zF2NT9H_zAi_GlV7PzeLqrs0K6vlwHQvViwMLgP3mgLC-FLKcSdTcbF_apz6OeSltk6wMjDc1NrZXP9xHlw900QYw_clLm5Zwm8ahG3TmkzCdtn"
           alt="Editorial"
-          className="object-cover w-full h-full grayscale opacity-10"
+          className="object-cover w-full h-full grayscale opacity-20"
         />
         <div className="absolute z-20 origin-bottom-right rotate-90 translate-x-full bottom-24 right-12">
           <span className="select-none whitespace-nowrap text-[80px] font-black uppercase leading-none tracking-[-0.05em] text-neutral-300/30">

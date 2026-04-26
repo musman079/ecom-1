@@ -262,49 +262,49 @@ export default function OrderTrackingPage() {
   }, [searchParams]);
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-5xl px-6 py-12 sm:py-16">
+    <main className="mx-auto min-h-screen w-full max-w-5xl px-6 py-12 text-[#eaf2ff] sm:py-16">
       <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Post Purchase</p>
-          <h1 className="mt-1 text-4xl font-black uppercase tracking-tight sm:text-5xl">Order Tracking</h1>
-          <p className="mt-2 text-sm text-zinc-600">Track your order progress from processing to delivery.</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">Post Purchase</p>
+          <h1 className="mt-1 text-4xl font-black uppercase tracking-tight text-white sm:text-5xl">Order Tracking</h1>
+          <p className="mt-2 text-sm text-white/65">Track your order progress from processing to delivery.</p>
         </div>
-        <Link href={CUSTOMER_ROUTES.PROFILE} className="rounded-full border border-zinc-300 px-5 py-2 text-xs font-bold uppercase tracking-[0.18em]">
+        <Link href={CUSTOMER_ROUTES.PROFILE} className="rounded-full border border-white/20 bg-white/[0.03] px-5 py-2 text-xs font-bold uppercase tracking-[0.18em] hover:bg-white/[0.08]">
           Back to Profile
         </Link>
       </div>
 
       <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <article className="rounded-2xl border border-zinc-200 bg-white p-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Total Orders</p>
-          <p className="mt-2 text-3xl font-black">{totals.ordersCount}</p>
+        <article className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">Total Orders</p>
+          <p className="mt-2 text-3xl font-black text-white">{totals.ordersCount}</p>
         </article>
-        <article className="rounded-2xl border border-zinc-200 bg-white p-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Total Items</p>
-          <p className="mt-2 text-3xl font-black">{totals.unitsCount}</p>
+        <article className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">Total Items</p>
+          <p className="mt-2 text-3xl font-black text-white">{totals.unitsCount}</p>
         </article>
-        <article className="rounded-2xl border border-zinc-200 bg-white p-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Total Spend</p>
-          <p className="mt-2 text-3xl font-black">${totals.spend.toFixed(2)}</p>
+        <article className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">Total Spend</p>
+          <p className="mt-2 text-3xl font-black text-white">${totals.spend.toFixed(2)}</p>
         </article>
       </section>
 
-      <section className="mb-8 rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6">
+      <section className="mb-8 rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl sm:p-6">
         <div className="flex flex-wrap items-end gap-3">
-          <label className="min-w-[240px] flex-1 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">
+          <label className="min-w-[240px] flex-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">
             Track by Order Number
             <input
               value={orderNumber}
               onChange={(event) => setOrderNumber(event.target.value)}
               placeholder="e.g. ORD-1734567890"
-              className="mt-2 h-11 w-full rounded-lg border border-zinc-300 px-3 text-sm font-semibold tracking-normal text-zinc-900 outline-none focus:border-zinc-900"
+              className="mt-2 h-11 w-full rounded-lg border border-white/20 bg-[#0d1627] px-3 text-sm font-semibold tracking-normal text-white outline-none focus:border-[#65f3de]"
             />
           </label>
           <button
             type="button"
             onClick={() => void lookupByOrderNumber()}
             disabled={lookupLoading}
-            className="h-11 rounded-full bg-black px-6 text-xs font-black uppercase tracking-[0.16em] text-white transition hover:opacity-90 disabled:opacity-50"
+            className="h-11 rounded-full bg-gradient-to-br from-[#65f3de] via-[#4f8cff] to-[#3f7dff] px-6 text-xs font-black uppercase tracking-[0.16em] text-[#081224] transition hover:brightness-110 disabled:opacity-50"
           >
             {lookupLoading ? "Checking..." : "Track Order"}
           </button>
@@ -313,15 +313,15 @@ export default function OrderTrackingPage() {
         {lookupError ? <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{lookupError}</p> : null}
 
         {trackedOrder ? (
-          <article className="mt-4 rounded-xl border border-zinc-200 bg-zinc-50 p-4 sm:p-5">
+          <article className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Matched Order</p>
-                <h2 className="mt-1 text-xl font-black tracking-tight">#{trackedOrder.orderNumber}</h2>
-                <p className="mt-1 text-xs text-zinc-600">Placed {formatOrderDate(trackedOrder.createdAt)} • {trackedOrder.items.length} product{trackedOrder.items.length > 1 ? "s" : ""}</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">Matched Order</p>
+                <h2 className="mt-1 text-xl font-black tracking-tight text-white">#{trackedOrder.orderNumber}</h2>
+                <p className="mt-1 text-xs text-white/65">Placed {formatOrderDate(trackedOrder.createdAt)} • {trackedOrder.items.length} product{trackedOrder.items.length > 1 ? "s" : ""}</p>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-black">${trackedOrder.total.toFixed(2)}</p>
+                <p className="text-2xl font-black text-white">${trackedOrder.total.toFixed(2)}</p>
                 <span className={`mt-2 inline-block rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${getStatusPill(trackedOrder.status)}`}>
                   {trackedOrder.status}
                 </span>
@@ -329,21 +329,21 @@ export default function OrderTrackingPage() {
             </div>
 
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              <p className="text-xs text-zinc-700">Payment: <span className="font-bold uppercase">{trackedOrder.paymentStatus}</span></p>
-              <p className="text-xs text-zinc-700">Tracking Number: <span className="font-bold">{trackedOrder.trackingNumber || "Not assigned"}</span></p>
-              <p className="text-xs text-zinc-700">Coupon: <span className="font-bold">{trackedOrder.couponCode || "None"}</span></p>
-              <p className="text-xs text-zinc-700">Discount: <span className="font-bold">${(trackedOrder.discountAmount ?? 0).toFixed(2)}</span></p>
+              <p className="text-xs text-white/75">Payment: <span className="font-bold uppercase">{trackedOrder.paymentStatus}</span></p>
+              <p className="text-xs text-white/75">Tracking Number: <span className="font-bold">{trackedOrder.trackingNumber || "Not assigned"}</span></p>
+              <p className="text-xs text-white/75">Coupon: <span className="font-bold">{trackedOrder.couponCode || "None"}</span></p>
+              <p className="text-xs text-white/75">Discount: <span className="font-bold">${(trackedOrder.discountAmount ?? 0).toFixed(2)}</span></p>
             </div>
           </article>
         ) : null}
       </section>
 
-      {loading ? <p className="rounded-2xl border border-zinc-200 bg-white p-6 text-sm text-zinc-500">Loading orders...</p> : null}
+      {loading ? <p className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-sm text-white/60">Loading orders...</p> : null}
       {message ? <p className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-700">{message}</p> : null}
       {error ? <p className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm font-semibold text-red-700">{error}</p> : null}
 
       {!loading && !error && orders.length === 0 ? (
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 text-sm text-zinc-500">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-sm text-white/60">
           No orders found yet. Place an order from checkout to start tracking.
         </div>
       ) : null}
@@ -353,19 +353,19 @@ export default function OrderTrackingPage() {
           {orders.map((order) => {
             const steps = getStatusSteps(order.status);
             return (
-              <article key={order.id} className="rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6">
+              <article key={order.id} className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl sm:p-6">
                 <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Order #{order.orderNumber}</p>
-                    <h2 className="mt-1 text-xl font-black tracking-tight sm:text-2xl">{order.leadItemTitle}</h2>
-                    <p className="mt-1 text-sm text-zinc-600">{formatOrderDate(order.createdAt)} - {order.totalItems} Item{order.totalItems > 1 ? "s" : ""}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">Order #{order.orderNumber}</p>
+                    <h2 className="mt-1 text-xl font-black tracking-tight text-white sm:text-2xl">{order.leadItemTitle}</h2>
+                    <p className="mt-1 text-sm text-white/65">{formatOrderDate(order.createdAt)} - {order.totalItems} Item{order.totalItems > 1 ? "s" : ""}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-black">${order.total.toFixed(2)}</p>
+                    <p className="text-2xl font-black text-white">${order.total.toFixed(2)}</p>
                     <span className={`mt-2 inline-block rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${getStatusPill(order.status)}`}>
                       {order.status}
                     </span>
-                    {order.trackingNumber ? <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Track #{order.trackingNumber}</p> : null}
+                    {order.trackingNumber ? <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60">Track #{order.trackingNumber}</p> : null}
                   </div>
                 </div>
 

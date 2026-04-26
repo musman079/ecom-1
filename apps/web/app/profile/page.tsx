@@ -344,97 +344,97 @@ export default function ProfilePage() {
   };
 
   return (
-    <main className="min-h-screen bg-neutral-100 px-6 py-10 text-neutral-900 sm:py-12">
+    <main className="min-h-screen bg-[#070d17] px-6 py-10 text-[#eaf2ff] sm:py-12">
       <section className="mx-auto w-full max-w-6xl space-y-6">
-        <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-xl sm:p-8">
           <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">Customer Account</p>
-              <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">My Profile</h1>
-              <p className="mt-2 text-sm text-neutral-600">Manage your personal details and review recent order activity.</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">Customer Account</p>
+              <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">My Profile</h1>
+              <p className="mt-2 text-sm text-white/65">Manage your personal details and review recent order activity.</p>
             </div>
             <AdminLogoutButton
-              className="inline-flex items-center gap-2 rounded-full border border-neutral-300 px-4 py-2 text-sm font-semibold transition hover:bg-neutral-100"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-sm font-semibold transition hover:bg-white/[0.08]"
               label="Logout"
             />
           </div>
 
-          {loading ? <p className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-500">Loading account...</p> : null}
+          {loading ? <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/60">Loading account...</p> : null}
           {error ? <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</p> : null}
           {message ? <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-700">{message}</p> : null}
 
           {!loading && profile ? (
             <div className="grid gap-6 lg:grid-cols-12">
-              <section className="space-y-4 rounded-xl border border-neutral-200 bg-neutral-50 p-5 lg:col-span-7">
-                <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Personal Info</h2>
+              <section className="space-y-4 rounded-xl border border-white/10 bg-white/[0.03] p-5 lg:col-span-7">
+                <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-white/60">Personal Info</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">
+                  <label className="text-xs font-bold uppercase tracking-[0.14em] text-white/60">
                     Full Name
                     <input
                       value={form.fullName}
                       onChange={(event) => setForm((current) => ({ ...current, fullName: event.target.value }))}
-                      className="mt-2 h-11 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm font-semibold text-neutral-900 outline-none focus:border-neutral-900"
+                      className="mt-2 h-11 w-full rounded-lg border border-white/20 bg-[#0d1627] px-3 text-sm font-semibold text-white outline-none focus:border-[#65f3de]"
                     />
                   </label>
-                  <label className="text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">
+                  <label className="text-xs font-bold uppercase tracking-[0.14em] text-white/60">
                     Phone
                     <input
                       value={form.phone}
                       onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
-                      className="mt-2 h-11 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm font-semibold text-neutral-900 outline-none focus:border-neutral-900"
+                      className="mt-2 h-11 w-full rounded-lg border border-white/20 bg-[#0d1627] px-3 text-sm font-semibold text-white outline-none focus:border-[#65f3de]"
                       placeholder="+92 300 0000000"
                     />
                   </label>
                 </div>
 
-                <div className="rounded-lg border border-neutral-200 bg-white p-4 text-sm">
-                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">Email</p>
-                  <p className="mt-1 font-semibold text-neutral-900">{profile.email}</p>
+                <div className="rounded-lg border border-white/10 bg-[#0d1627] p-4 text-sm">
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/60">Email</p>
+                  <p className="mt-1 font-semibold text-white">{profile.email}</p>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => void saveProfile()}
                   disabled={saving}
-                  className="rounded-full bg-black px-6 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:opacity-90 disabled:opacity-50"
+                  className="rounded-full bg-gradient-to-br from-[#65f3de] via-[#4f8cff] to-[#3f7dff] px-6 py-3 text-xs font-bold uppercase tracking-[0.18em] text-[#081224] transition hover:brightness-110 disabled:opacity-50"
                 >
                   {saving ? "Saving..." : "Save Profile"}
                 </button>
               </section>
 
               <section className="grid gap-4 sm:grid-cols-3 lg:col-span-5 lg:grid-cols-1">
-                <article className="rounded-xl border border-neutral-200 bg-white p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">Recent Orders</p>
-                  <p className="mt-2 text-3xl font-black">{summary.totalOrders}</p>
+                <article className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">Recent Orders</p>
+                  <p className="mt-2 text-3xl font-black text-white">{summary.totalOrders}</p>
                 </article>
-                <article className="rounded-xl border border-neutral-200 bg-white p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">In Transit</p>
-                  <p className="mt-2 text-3xl font-black">{summary.inTransit}</p>
+                <article className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">In Transit</p>
+                  <p className="mt-2 text-3xl font-black text-white">{summary.inTransit}</p>
                 </article>
-                <article className="rounded-xl border border-neutral-200 bg-white p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">Recent Spend</p>
-                  <p className="mt-2 text-3xl font-black">${summary.totalSpend.toFixed(2)}</p>
+                <article className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">Recent Spend</p>
+                  <p className="mt-2 text-3xl font-black text-white">${summary.totalSpend.toFixed(2)}</p>
                 </article>
               </section>
             </div>
           ) : null}
         </div>
 
-        <section className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
+        <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-xl sm:p-8">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xl font-black tracking-tight">Notification Preferences</h2>
             <button
               type="button"
               onClick={() => void saveNotificationPreferences()}
               disabled={savingPreferences}
-              className="rounded-full border border-neutral-300 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] hover:bg-neutral-100 disabled:opacity-50"
+              className="rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] hover:bg-white/[0.08] disabled:opacity-50"
             >
               {savingPreferences ? "Saving..." : "Save Preferences"}
             </button>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <label className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm font-semibold text-neutral-800">
+            <label className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm font-semibold text-white/85">
               <input
                 type="checkbox"
                 checked={preferences.orderUpdates}
@@ -447,7 +447,7 @@ export default function ProfilePage() {
               />
               Order Updates
             </label>
-            <label className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm font-semibold text-neutral-800">
+            <label className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm font-semibold text-white/85">
               <input
                 type="checkbox"
                 checked={preferences.returnUpdates}
@@ -460,7 +460,7 @@ export default function ProfilePage() {
               />
               Return Updates
             </label>
-            <label className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm font-semibold text-neutral-800">
+            <label className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm font-semibold text-white/85">
               <input
                 type="checkbox"
                 checked={preferences.emailEnabled}
@@ -476,34 +476,34 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
+        <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-xl sm:p-8">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-black tracking-tight">Notifications</h2>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">Unread: {unreadCount}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/60">Unread: {unreadCount}</p>
             </div>
             <button
               type="button"
               onClick={() => void markAllNotificationsRead()}
               disabled={markingAllRead || unreadCount === 0}
-              className="rounded-full border border-neutral-300 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] hover:bg-neutral-100 disabled:opacity-50"
+              className="rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] hover:bg-white/[0.08] disabled:opacity-50"
             >
               {markingAllRead ? "Updating..." : "Mark All Read"}
             </button>
           </div>
 
           {notifications.length === 0 ? (
-            <p className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-600">No notifications yet.</p>
+            <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/60">No notifications yet.</p>
           ) : (
             <div className="space-y-3">
               {notifications.map((item) => (
-                <article key={item.id} className={`rounded-xl border p-4 ${item.isRead ? "border-neutral-200 bg-neutral-50" : "border-blue-200 bg-blue-50"}`}>
+                <article key={item.id} className={`rounded-xl border p-4 ${item.isRead ? "border-white/10 bg-white/[0.03]" : "border-[#4f8cff]/40 bg-[#4f8cff]/10"}`}>
                   <div className="flex flex-wrap items-start justify-between gap-2">
-                    <h3 className="text-sm font-bold text-neutral-900">{item.title}</h3>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-500">{formatProfileDate(item.createdAt)}</span>
+                    <h3 className="text-sm font-bold text-white">{item.title}</h3>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/60">{formatProfileDate(item.createdAt)}</span>
                   </div>
-                  <p className="mt-1 text-sm text-neutral-700">{item.message}</p>
-                  <Link href={getNotificationHref(item)} className="mt-2 inline-block text-xs font-bold uppercase tracking-[0.14em] text-blue-700 hover:underline">
+                  <p className="mt-1 text-sm text-white/75">{item.message}</p>
+                  <Link href={getNotificationHref(item)} className="mt-2 inline-block text-xs font-bold uppercase tracking-[0.14em] text-[#65f3de] hover:underline">
                     View Details
                   </Link>
                 </article>
@@ -512,39 +512,39 @@ export default function ProfilePage() {
           )}
         </section>
 
-        <section className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
+        <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-xl sm:p-8">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xl font-black tracking-tight">Recent Orders</h2>
             <div className="flex gap-2">
-              <Link href={CUSTOMER_ROUTES.ORDER_TRACKING} className="rounded-full border border-neutral-300 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] hover:bg-neutral-100">
+              <Link href={CUSTOMER_ROUTES.ORDER_TRACKING} className="rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] hover:bg-white/[0.08]">
                 Track Orders
               </Link>
-              <Link href={CUSTOMER_ROUTES.RETURNS_REFUNDS} className="rounded-full border border-neutral-300 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] hover:bg-neutral-100">
+              <Link href={CUSTOMER_ROUTES.RETURNS_REFUNDS} className="rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] hover:bg-white/[0.08]">
                 Returns
               </Link>
             </div>
           </div>
 
           {recentOrders.length === 0 ? (
-            <p className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-600">No orders yet. Your latest purchases will appear here.</p>
+            <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/60">No orders yet. Your latest purchases will appear here.</p>
           ) : (
             <div className="space-y-3">
               {recentOrders.map((order) => (
-                <article key={order.id} className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+                <article key={order.id} className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-neutral-500">Order #{order.orderNumber}</p>
-                    <h3 className="mt-1 text-sm font-bold text-neutral-900">{order.leadItemTitle}</h3>
-                    <p className="mt-1 text-xs text-neutral-600">{formatProfileDate(order.createdAt)} • {order.totalItems} Item{order.totalItems > 1 ? "s" : ""}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/60">Order #{order.orderNumber}</p>
+                    <h3 className="mt-1 text-sm font-bold text-white">{order.leadItemTitle}</h3>
+                    <p className="mt-1 text-xs text-white/60">{formatProfileDate(order.createdAt)} • {order.totalItems} Item{order.totalItems > 1 ? "s" : ""}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-black">${order.total.toFixed(2)}</p>
+                    <p className="text-lg font-black text-white">${order.total.toFixed(2)}</p>
                     <span className={`mt-1 inline-block rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${getStatusBadge(order.status)}`}>
                       {order.status}
                     </span>
                     {canCreateReturn(order.status) ? (
                       <Link
                         href={`${CUSTOMER_ROUTES.RETURNS_REFUNDS}?orderNumber=${encodeURIComponent(order.orderNumber)}`}
-                        className="mt-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-blue-700 hover:underline"
+                        className="mt-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-[#65f3de] hover:underline"
                       >
                         Start Return
                       </Link>
@@ -556,7 +556,7 @@ export default function ProfilePage() {
           )}
 
           <div className="mt-6 flex items-center justify-between">
-            <Link href={CUSTOMER_ROUTES.HOME} className="text-sm font-semibold text-blue-700 hover:underline">
+            <Link href={CUSTOMER_ROUTES.HOME} className="text-sm font-semibold text-[#65f3de] hover:underline">
               Back to home
             </Link>
           </div>
