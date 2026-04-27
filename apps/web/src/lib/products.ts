@@ -153,7 +153,8 @@ function mapListItem(product: {
   }>;
 }): PublicProductListItem {
   const primaryVariant = pickPrimaryVariant(product.variants);
-  const primaryImage = product.images[0] ?? null;
+  const imageArray = Array.isArray(product.images) ? product.images : [];
+  const primaryImage = imageArray.length > 0 ? imageArray[0] : null;
 
   return {
     id: product.id,
@@ -193,6 +194,7 @@ function mapDetail(product: {
   }>;
 }): PublicProductDetail {
   const primaryVariant = pickPrimaryVariant(product.variants);
+  const imageArray = Array.isArray(product.images) ? product.images : [];
 
   return {
     id: product.id,
@@ -204,7 +206,7 @@ function mapDetail(product: {
     sku: primaryVariant?.sku ?? "",
     stockQuantity: primaryVariant?.stockQuantity ?? 0,
     inStock: (primaryVariant?.stockQuantity ?? 0) > 0,
-    images: product.images,
+    images: imageArray,
     categories: product.categories.map((entry) => entry.category.name),
     status: "published",
     variantInfo: product.variants.map((variant) => ({

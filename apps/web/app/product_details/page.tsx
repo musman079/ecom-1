@@ -105,7 +105,12 @@ export default function ProductDetailsPage() {
           product?: ProductDetail;
         };
 
-        setProduct(payload.product ?? null);
+        const product = payload.product;
+        if (product) {
+          // Ensure images is always an array
+          product.images = Array.isArray(product.images) ? product.images : [];
+        }
+        setProduct(product ?? null);
       } catch {
         setProduct(null);
         setDetailError("Failed to load product details.");
