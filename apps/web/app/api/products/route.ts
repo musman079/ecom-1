@@ -17,6 +17,7 @@ type CreateProductPayload = {
   collection?: string;
   taxCategory?: string;
   status?: "draft" | "published";
+  images?: string[];
 };
 
 export async function GET(request: Request) {
@@ -123,6 +124,7 @@ export async function POST(request: Request) {
       stockQuantity,
       lowStockAlert: stockQuantity <= 5,
       status: payload.status ?? "published",
+      images: Array.isArray(payload.images) ? payload.images : [],
     });
 
     return NextResponse.json({ product }, { status: 201 });

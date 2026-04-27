@@ -34,7 +34,7 @@ const getAdminNavHref = (label: string) => {
 const barHeights = [40, 60, 75, 55, 85, 45, 30, 65, 95, 50, 40, 70];
 
 const managementModules = [
-  { title: "Products Management", items: ["Add/Edit/Delete products", "Multi-image support (next)", "Category and SKU controls"] },
+  { title: "Products Management", items: ["Add/Edit/Delete products", "Multi-image support", "Category and SKU controls"] },
   { title: "Inventory Management", items: ["Track stock levels", "Low stock alerts", "Bulk stock updates (next)"] },
   { title: "Orders Management", items: ["View all orders", "Update order statuses", "Returns/refunds (next)"] },
   { title: "Customers Management", items: ["Customer listing", "Customer profile details", "Purchase history"] },

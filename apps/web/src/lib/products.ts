@@ -138,6 +138,7 @@ function mapListItem(product: {
   slug: string;
   description: string;
   status: ProductStatus;
+  images: string[];
   categories: Array<{ category: { name: string } }>;
   variants: Array<{
     id: string;
@@ -152,6 +153,7 @@ function mapListItem(product: {
   }>;
 }): PublicProductListItem {
   const primaryVariant = pickPrimaryVariant(product.variants);
+  const primaryImage = product.images[0] ?? null;
 
   return {
     id: product.id,
@@ -164,8 +166,8 @@ function mapListItem(product: {
     stockQuantity: primaryVariant?.stockQuantity ?? 0,
     inStock: (primaryVariant?.stockQuantity ?? 0) > 0,
     status: "published",
-    thumbnail: null,
-    image: null,
+    thumbnail: primaryImage,
+    image: primaryImage,
     categories: product.categories.map((entry) => entry.category.name),
   };
 }
@@ -176,6 +178,7 @@ function mapDetail(product: {
   slug: string;
   description: string;
   status: ProductStatus;
+  images: string[];
   categories: Array<{ category: { name: string; slug: string } }>;
   variants: Array<{
     id: string;
@@ -201,7 +204,7 @@ function mapDetail(product: {
     sku: primaryVariant?.sku ?? "",
     stockQuantity: primaryVariant?.stockQuantity ?? 0,
     inStock: (primaryVariant?.stockQuantity ?? 0) > 0,
-    images: [],
+    images: product.images,
     categories: product.categories.map((entry) => entry.category.name),
     status: "published",
     variantInfo: product.variants.map((variant) => ({
@@ -278,6 +281,7 @@ export async function listPublicProducts(rawInput: ListPublicProductsInput): Pro
         slug: true,
         description: true,
         status: true,
+        images: true,
         categories: {
           select: {
             category: {
@@ -358,6 +362,7 @@ export async function getPublicProductByIdOrSlug(value: string): Promise<PublicP
       slug: true,
       description: true,
       status: true,
+      images: true,
       categories: {
         select: {
           category: {

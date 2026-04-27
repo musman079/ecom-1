@@ -68,6 +68,7 @@ export default function AdminProductsPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [form, setForm] = useState(initialFormState);
+  const [imageUrlInput, setImageUrlInput] = useState("");
 
   useEffect(() => {
     const verifyAdmin = async () => {
@@ -181,6 +182,7 @@ export default function AdminProductsPage() {
 
       setEditingId(null);
       setForm(initialFormState);
+      setImageUrlInput("");
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Unable to save product.");
     } finally {
@@ -190,6 +192,7 @@ export default function AdminProductsPage() {
 
   const beginEdit = (product: AdminProduct) => {
     setEditingId(product.id);
+    setImageUrlInput("");
     setError(null);
     setMessage(null);
     setForm({
@@ -209,8 +212,36 @@ export default function AdminProductsPage() {
   const cancelEdit = () => {
     setEditingId(null);
     setForm(initialFormState);
+    setImageUrlInput("");
     setError(null);
     setMessage(null);
+  };
+
+  const addImageUrl = () => {
+    const normalized = imageUrlInput.trim();
+    if (!normalized) {
+      return;
+    }
+
+    setForm((current) => {
+      if (current.images.includes(normalized)) {
+        return current;
+      }
+
+      return {
+        ...current,
+        images: [...current.images, normalized],
+      };
+    });
+
+    setImageUrlInput("");
+  };
+
+  const removeImageUrl = (indexToRemove: number) => {
+    setForm((current) => ({
+      ...current,
+      images: current.images.filter((_, index) => index !== indexToRemove),
+    }));
   };
 
   const removeProduct = async (id: string) => {
@@ -243,7 +274,7 @@ export default function AdminProductsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f4f4f5] text-zinc-900">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#f7f7f8_0%,#ececf0_45%,#e8e8eb_100%)] text-zinc-900">
       <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-zinc-200 bg-zinc-100/90 p-4 lg:flex">
         <div className="mb-8 px-3 py-2">
           <h1 className="text-2xl font-black uppercase tracking-[-0.05em]">Editorial</h1>
@@ -293,7 +324,7 @@ export default function AdminProductsPage() {
 
       <main className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 py-8 sm:px-6 lg:grid-cols-12 lg:px-8 lg:ml-64">
         <section className="space-y-6 lg:col-span-5">
-          <div className="rounded-3xl bg-[#ffffff] p-6 shadow-sm sm:p-8">
+          <div className="rounded-3xl border border-white/80 bg-[#ffffff]/95 p-6 shadow-[0_18px_50px_-28px_rgba(2,6,23,0.45)] backdrop-blur sm:p-8">
             <div className="mb-6 flex items-end justify-between gap-4">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">Create</p>
@@ -372,6 +403,48 @@ export default function AdminProductsPage() {
                 </select>
               </div>
 
+              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Product Images</p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    value={imageUrlInput}
+                    onChange={(event) => setImageUrlInput(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        addImageUrl();
+                      }
+                    }}
+                    placeholder="Paste image URL e.g. /uploads/product-123.webp"
+                    className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={addImageUrl}
+                    className="rounded-xl bg-zinc-900 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-white transition hover:bg-zinc-800"
+                  >
+                    Add
+                  </button>
+                </div>
+                {form.images.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {form.images.map((image, index) => (
+                      <button
+                        type="button"
+                        key={`${image}-${index}`}
+                        onClick={() => removeImageUrl(index)}
+                        className="rounded-full border border-zinc-300 bg-white px-3 py-1 text-[10px] font-semibold tracking-[0.14em] text-zinc-600 transition hover:border-red-300 hover:text-red-600"
+                        title="Remove image"
+                      >
+                        IMG {index + 1}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-2 text-xs text-zinc-500">No images added yet.</p>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <button
                   type="button"
@@ -401,6 +474,23 @@ export default function AdminProductsPage() {
                 </button>
               ) : null}
 
+              {form.images.length > 0 ? (
+                <div className="grid grid-cols-4 gap-2 rounded-2xl border border-zinc-200 bg-white p-3">
+                  {form.images.map((image, index) => (
+                    <div key={`${image}-preview-${index}`} className="group relative aspect-square overflow-hidden rounded-lg border border-zinc-200">
+                      <img src={image} alt={`Preview ${index + 1}`} className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeImageUrl(index)}
+                        className="absolute right-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white opacity-0 transition group-hover:opacity-100"
+                      >
+                        X
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
               {error ? <p className="text-sm text-red-600">{error}</p> : null}
               {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
             </div>
@@ -425,7 +515,7 @@ export default function AdminProductsPage() {
               <div className="rounded-3xl bg-[#ffffff] p-8 text-sm text-zinc-500 shadow-sm">No products saved yet. Publish one to begin.</div>
             ) : (
               products.map((product) => (
-                <article key={product.id} className="rounded-3xl bg-[#ffffff] p-6 shadow-sm transition hover:-translate-y-0.5">
+                <article key={product.id} className="rounded-3xl border border-white/80 bg-[#ffffff]/95 p-6 shadow-[0_16px_42px_-28px_rgba(2,6,23,0.45)] transition hover:-translate-y-0.5">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <div className="mb-2 flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">

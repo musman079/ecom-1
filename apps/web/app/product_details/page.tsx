@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
+import LoginRequiredPopup from "../../src/components/login-required-popup";
 
 type ProductCard = {
   id: string;
@@ -40,6 +41,7 @@ function getDetailTone(index: number) {
 }
 
 export default function ProductDetailsPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [selectedColor, setSelectedColor] = useState("Black");
   const [selectedSize, setSelectedSize] = useState("M");
@@ -58,6 +60,7 @@ export default function ProductDetailsPage() {
   const [addToCartLoading, setAddToCartLoading] = useState(false);
   const [addToCartMessage, setAddToCartMessage] = useState<string | null>(null);
   const [addToCartError, setAddToCartError] = useState<string | null>(null);
+  const [showLoginPopup, setShowLoginPopup] = useState(false);
 
   const productIdOrSlug = useMemo(() => searchParams.get("product")?.trim() ?? "", [searchParams]);
   const hasProductImages = Boolean(product?.images && product.images.length > 0);
@@ -194,6 +197,7 @@ export default function ProductDetailsPage() {
       };
 
       if (response.status === 401) {
+        setShowLoginPopup(true);
         setAddToCartError("Please login first to add products into cart.");
         return;
       }
@@ -533,6 +537,15 @@ export default function ProductDetailsPage() {
           </div>
         </div>
       </footer>
+
+      <LoginRequiredPopup
+        isOpen={showLoginPopup}
+        onClose={() => setShowLoginPopup(false)}
+        onLogin={() => {
+          setShowLoginPopup(false);
+          router.push(CUSTOMER_ROUTES.AUTH);
+        }}
+      />
     </div>
   );
 }

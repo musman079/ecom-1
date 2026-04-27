@@ -25,6 +25,7 @@ type UpdateProductPayload = {
   collection?: string;
   taxCategory?: string;
   status?: "draft" | "published";
+  images?: string[];
 };
 
 export async function GET(_: Request, context: RouteContext) {
@@ -81,6 +82,7 @@ export async function PUT(request: Request, context: RouteContext) {
       stockQuantity,
       lowStockAlert: stockQuantity <= 5,
       status: payload.status ?? "published",
+      images: Array.isArray(payload.images) ? payload.images : [],
     });
 
     if (!product) {

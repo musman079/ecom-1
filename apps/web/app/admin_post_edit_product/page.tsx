@@ -32,6 +32,7 @@ export default function AdminPostEditProductPage() {
   const [allowed, setAllowed] = useState(false);
   const [actionMessage, setActionMessage] = useState("Ready to post new product.");
   const [saving, setSaving] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
@@ -47,23 +48,46 @@ export default function AdminPostEditProductPage() {
   });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    setActionMessage("Uploading image...");
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+
+    setUploadingImages(true);
+    setActionMessage(`Uploading ${files.length} image${files.length > 1 ? "s" : ""}...`);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/admin/upload", {
-        method: "POST",
-        body: formData,
-      });
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json();
-      setForm(prev => ({ ...prev, images: [...prev.images, data.url] }));
-      setActionMessage("Image uploaded successfully.");
+      const uploadedUrls: string[] = [];
+
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/admin/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const payload = (await res.json()) as { error?: string };
+          throw new Error(payload.error ?? "Upload failed");
+        }
+
+        const data = (await res.json()) as { url?: string; urls?: string[] };
+        if (Array.isArray(data.urls) && data.urls.length > 0) {
+          uploadedUrls.push(...data.urls);
+        } else if (typeof data.url === "string" && data.url.trim()) {
+          uploadedUrls.push(data.url);
+        }
+      }
+
+      if (uploadedUrls.length > 0) {
+        setForm((prev) => ({ ...prev, images: [...prev.images, ...uploadedUrls] }));
+      }
+
+      setActionMessage(`${uploadedUrls.length} image${uploadedUrls.length > 1 ? "s" : ""} uploaded successfully.`);
     } catch (err) {
-      setActionMessage("Error uploading image.");
+      setActionMessage(err instanceof Error ? err.message : "Error uploading images.");
+    } finally {
+      e.target.value = "";
+      setUploadingImages(false);
     }
   };
 
@@ -110,6 +134,7 @@ export default function AdminPostEditProductPage() {
 
         const payload = (await response.json()) as {
           user?: {
+            role?: "CUSTOMER" | "ADMIN" | "SUPER_ADMIN";
             roles?: string[];
           } | null;
         };
@@ -120,7 +145,9 @@ export default function AdminPostEditProductPage() {
         }
 
         const roles = Array.isArray(payload.user.roles) ? payload.user.roles : [];
-        if (!roles.includes("ADMIN")) {
+        const role = payload.user.role;
+        const isAdmin = roles.includes("ADMIN") || role === "ADMIN" || role === "SUPER_ADMIN";
+        if (!isAdmin) {
           router.replace("/");
           return;
         }
@@ -204,7 +231,7 @@ export default function AdminPostEditProductPage() {
         <div className="mx-auto max-w-5xl">
           <div className="mb-10">
             <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">Editor Suite</p>
-            <h2 className="text-4xl font-black tracking-[-0.05em] sm:text-5xl">Post Product</h2>
+            <h2 className="bg-gradient-to-r from-zinc-950 via-zinc-700 to-zinc-400 bg-clip-text text-4xl font-black tracking-[-0.05em] text-transparent sm:text-5xl">Post Product</h2>
             <p className="mt-2 text-xs font-medium uppercase tracking-[0.14em] text-blue-600">{actionMessage}</p>
           </div>
 
@@ -247,15 +274,16 @@ export default function AdminPostEditProductPage() {
                 <label className="mb-4 block text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">Media Portfolio</label>
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:grid-rows-2 min-h-[400px]">
                   
-                  <input type="file" className="hidden" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" />
+                  <input type="file" className="hidden" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" multiple />
                   
                   <div 
                     onClick={() => fileInputRef.current?.click()}
                     className="cursor-pointer flex min-h-48 items-center justify-center rounded-2xl border-2 border-dashed border-zinc-300 bg-zinc-200/50 p-6 text-center transition hover:border-blue-500/50 hover:bg-zinc-100 sm:col-span-2 sm:row-span-2">
                     <div>
                       <span className="material-symbols-outlined mb-3 text-4xl text-zinc-300">cloud_upload</span>
-                      <p className="text-sm font-semibold text-zinc-500">Drop High-Res Hero Image</p>
-                      <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-zinc-400">Min 2400x3000px</p>
+                      <p className="text-sm font-semibold text-zinc-500">Upload Product Gallery</p>
+                      <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-zinc-400">Select one or multiple images</p>
+                      <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-zinc-500">{uploadingImages ? "Uploading..." : `${form.images.length} image(s) selected`}</p>
                     </div>
                   </div>
 
@@ -273,6 +301,16 @@ export default function AdminPostEditProductPage() {
                       </button>
                     </div>
                   ))}
+
+                  {form.images.length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, images: [] }))}
+                      className="col-span-full rounded-xl border border-zinc-300 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-600 transition hover:bg-zinc-50"
+                    >
+                      Clear All Images
+                    </button>
+                  ) : null}
 
                 </div>
               </section>

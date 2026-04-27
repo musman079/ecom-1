@@ -3,20 +3,49 @@ import { writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
 
+import { requireAdminSession } from "../../../../src/lib/admin-auth";
+import { AuthError } from "../../../../src/lib/auth-session";
+
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+
 export async function POST(request: Request) {
   try {
-    const formData = await request.formData();
-    const file = formData.get("file") as File | null;
+    await requireAdminSession(request);
+  } catch (error) {
+    if (error instanceof AuthError) {
+      const status = error.message === "Forbidden" ? 403 : 401;
+      return NextResponse.json({ error: error.message }, { status });
+    }
 
-    if (!file) {
+    return NextResponse.json({ error: "Failed to authorize request." }, { status: 500 });
+  }
+
+  try {
+    const formData = await request.formData();
+    const fileEntries = formData
+      .getAll("files")
+      .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+    const singleEntry = formData.get("file");
+    const singleFile = singleEntry instanceof File && singleEntry.size > 0 ? [singleEntry] : [];
+    const files = [...fileEntries, ...singleFile];
+
+    if (files.length === 0) {
       return NextResponse.json(
         { error: "No file uploaded." },
         { status: 400 }
       );
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    for (const file of files) {
+      if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+        return NextResponse.json({ error: "Only JPG, PNG, WEBP or GIF images are allowed." }, { status: 400 });
+      }
+
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        return NextResponse.json({ error: "Each file must be 5MB or smaller." }, { status: 400 });
+      }
+    }
 
     // ==========================================
     // LOCAL STORAGE UPLOAD (CURRENTLY ACTIVE)
@@ -29,17 +58,24 @@ export async function POST(request: Request) {
       await mkdir(uploadDir, { recursive: true });
     }
 
-    // Create a unique filename
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const originalExt = file.name.split('.').pop() || "png";
-    const filename = `product-${uniqueSuffix}.${originalExt}`;
-    const filePath = join(uploadDir, filename);
+    const uploadedUrls: string[] = [];
 
-    // Save the file
-    await writeFile(filePath, buffer);
+    for (const file of files) {
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
 
-    // The URL where the file can be accessed
-    const fileUrl = `/uploads/${filename}`;
+      // Create a unique filename
+      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+      const originalExt = file.name.split(".").pop() || "png";
+      const filename = `product-${uniqueSuffix}.${originalExt}`;
+      const filePath = join(uploadDir, filename);
+
+      // Save the file
+      await writeFile(filePath, buffer);
+
+      // The URL where the file can be accessed
+      uploadedUrls.push(`/uploads/${filename}`);
+    }
 
     // ==========================================
     // CLOUDINARY UPLOAD (FOR FUTURE USE)
@@ -63,7 +99,10 @@ export async function POST(request: Request) {
        const fileUrl = uploadResponse.secure_url;
     */
 
-    return NextResponse.json({ url: fileUrl });
+    return NextResponse.json({
+      url: uploadedUrls[0],
+      urls: uploadedUrls,
+    });
   } catch (error) {
     console.error("Upload Error:", error);
     return NextResponse.json(
