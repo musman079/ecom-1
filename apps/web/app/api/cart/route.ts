@@ -17,6 +17,7 @@ type ApiCartItem = {
   quantity: number;
   stockQuantity: number;
   lineTotal: number;
+  thumbnail: string | null;
 };
 
 type ApiCart = {
@@ -38,6 +39,7 @@ async function readUserCart(userId: string): Promise<ApiCart> {
                   id: true,
                   title: true,
                   status: true,
+                    images: true,
                 },
               },
             },
@@ -69,6 +71,7 @@ async function readUserCart(userId: string): Promise<ApiCart> {
         quantity: item.quantity,
         stockQuantity: item.variant.stockQuantity,
         lineTotal,
+        thumbnail: Array.isArray(item.variant.product.images) && item.variant.product.images.length > 0 ? item.variant.product.images[0] : null,
       };
     });
 

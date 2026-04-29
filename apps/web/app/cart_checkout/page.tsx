@@ -12,6 +12,7 @@ type ApiCartItem = {
   quantity: number;
   stockQuantity: number;
   lineTotal: number;
+  thumbnail: string | null;
 };
 
 type ApiCart = {
@@ -359,11 +360,17 @@ export default function CartCheckoutPage() {
               cart.items.map((item) => (
               <article key={item.productId} className="group flex items-start gap-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl transition hover:border-white/20 hover:bg-white/[0.05]">
                 <div className="h-40 w-32 shrink-0 overflow-hidden rounded-xl bg-white/5">
-                  <img
-                    src={`https://picsum.photos/seed/${encodeURIComponent(item.productId)}/320/400`}
-                    alt={item.title}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                  />
+                  {item.thumbnail ? (
+                    <img
+                      src={item.thumbnail}
+                      alt={item.title}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#1d2940] to-[#0d1627] text-[10px] font-bold uppercase tracking-[0.18em] text-white/45">
+                      No Image
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex h-40 flex-grow flex-col py-2">
@@ -410,8 +417,7 @@ export default function CartCheckoutPage() {
             )))}
           </div>
 
-          <section className="mt-20 rounded-2xl border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl">
-            <h2 className="mb-8 text-2xl font-black uppercase tracking-tight text-white">Shipping Detail</h2>
+            <section className="mt-20 rounded-2xl border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl">
             <form className="space-y-8">
               <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 <input
@@ -462,16 +468,15 @@ export default function CartCheckoutPage() {
             <section className="rounded-2xl border border-white/10 bg-white/[0.05] p-8 shadow-[0px_20px_50px_rgba(5,8,16,0.45)] backdrop-blur-2xl">
               <h2 className="mb-6 text-sm font-black uppercase tracking-widest text-white">Payment Method</h2>
               <div className="space-y-4">
-                <label className="block cursor-not-allowed opacity-70">
+                <label className="block cursor-pointer">
                   <input
                     type="radio"
                     name="payment"
                     checked={paymentMethod === "card"}
                     onChange={() => setPaymentMethod("card")}
-                    disabled
                     className="peer hidden"
                   />
-                  <div className="flex items-center justify-between rounded-xl border border-white/15 bg-[#121b31] p-4 text-white transition-all">
+                  <div className="flex items-center justify-between rounded-xl border border-white/15 bg-[#121b31] p-4 text-white transition-all peer-checked:border-[#65f3de]/50 peer-checked:bg-[#141f36] peer-checked:text-white">
                     <div className="flex items-center gap-4">
                       <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
                         credit_card
@@ -481,8 +486,9 @@ export default function CartCheckoutPage() {
                         <p className="text-[10px] uppercase tracking-wider opacity-70">Visa, Mastercard, Amex</p>
                       </div>
                     </div>
-                    <span className="rounded-full border border-white/35 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white/85">
-                      Coming Soon
+                    <span className="material-symbols-outlined text-sm opacity-0 peer-checked:opacity-100">check_circle</span>
+                    <span className="rounded-full border border-white/35 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white/85 peer-checked:border-[#65f3de]/60 peer-checked:text-white">
+                      Available
                     </span>
                   </div>
                 </label>
@@ -507,7 +513,7 @@ export default function CartCheckoutPage() {
                   </div>
                 </label>
               </div>
-              <p className="mt-4 text-xs font-semibold text-white/60">Online card payments are coming soon. Cash on Delivery is currently available.</p>
+              <p className="mt-4 text-xs font-semibold text-white/60">Choose Credit / Debit Card or Cash on Delivery to continue checkout.</p>
             </section>
 
             <section className="rounded-2xl border border-white/10 bg-[linear-gradient(145deg,#111b32_0%,#0a1324_100%)] p-8 text-white shadow-[0px_20px_50px_rgba(8,11,22,0.5)]">

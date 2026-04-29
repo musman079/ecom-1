@@ -232,10 +232,10 @@ export default function CartCheckoutDesktopPage() {
                 <div>
                   <h3 className="mb-6 text-sm font-black uppercase tracking-[0.2em]">Payment Method</h3>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <button type="button" disabled className="flex cursor-not-allowed flex-col gap-4 rounded-lg border border-white/20 bg-[#121b31] p-6 text-left text-white/70 opacity-70">
+                    <button type="button" onClick={() => { setSelectedPayment("card"); setCheckoutMessage("Payment method: Credit / Debit Card."); }} className={`flex flex-col gap-4 rounded-lg p-6 text-left transition ${selectedPayment === "card" ? "border border-[#65f3de]/50 bg-[#121b31] text-white" : "border border-white/20 bg-[#121b31] text-white/70 hover:text-white"}`}>
                       <div className="flex items-center justify-between">
                         <span className="material-symbols-outlined text-2xl">credit_card</span>
-                        <span className="rounded-full border border-white/30 px-3 py-1 text-[10px] font-bold uppercase tracking-wider">Coming Soon</span>
+                        <span className={`h-4 w-4 rounded-full ${selectedPayment === "card" ? "border-4 border-[#65f3de]" : "border border-white/40"}`} />
                       </div>
                       <span className="text-[10px] font-bold uppercase tracking-widest">Credit Card</span>
                     </button>
@@ -248,7 +248,7 @@ export default function CartCheckoutDesktopPage() {
                       <span className="text-[10px] font-bold uppercase tracking-widest">Cash on Delivery</span>
                     </button>
                   </div>
-                  <p className="mt-3 text-xs font-semibold text-white/60">Online card payments are coming soon.</p>
+                  <p className="mt-3 text-xs font-semibold text-white/60">Choose either payment option to continue checkout.</p>
                 </div>
 
                 <a href={CUSTOMER_ROUTES.ORDER_TRACKING} className="block w-full rounded-full bg-gradient-to-br from-[#65f3de] via-[#4a8dff] to-[#3f7dff] py-6 text-center text-sm font-bold uppercase tracking-[0.3em] text-[#0b1220] shadow-xl transition-transform hover:scale-[1.02]">

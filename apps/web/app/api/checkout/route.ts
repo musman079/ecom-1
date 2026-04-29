@@ -35,9 +35,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Complete shippingAddress is required." }, { status: 400 });
     }
 
-    if (payload.paymentMethod !== "cod") {
-      return NextResponse.json({ error: "Card payments are coming soon. Please use Cash on Delivery for now." }, { status: 400 });
-    }
+    const paymentMethod = payload.paymentMethod === "card" || payload.paymentMethod === "cod" ? payload.paymentMethod : "cod";
 
     const result = await checkoutCart(session.userId, {
       shippingAddress: {
@@ -48,7 +46,7 @@ export async function POST(request: Request) {
         postalCode: address.postalCode,
         country: address.country,
       },
-      paymentMethod: payload.paymentMethod,
+      paymentMethod,
       notes: payload.notes,
       couponCode: payload.couponCode,
     });

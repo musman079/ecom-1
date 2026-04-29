@@ -21,6 +21,7 @@ type DisplayProductCard = {
   category: string;
   name: string;
   price: string;
+  thumbnail?: string | null;
 };
 const cardTones = [
   "from-[#15233b] via-[#101b31] to-[#0e1728]",
@@ -61,6 +62,7 @@ export default async function Home() {
         category: product.categories[0] || "Collection",
         name: product.title,
         price: formatDashboardPrice(product.price),
+        thumbnail: product.thumbnail || product.image,
       }));
 
       newArrivals = mapped.slice(0, 4);
@@ -187,8 +189,24 @@ export default async function Home() {
                     href={`/product_detail_desktop?product=${encodeURIComponent(item.slug || item.id || item.name)}`}
                     className="group cursor-pointer"
                   >
-                    <div className={`mb-6 flex aspect-[3/4] overflow-hidden rounded-xl bg-gradient-to-br ${getCardTone(idx)} p-6`}>
-                      <div className="flex h-full w-full flex-col justify-between rounded-[1.25rem] border border-white/10 bg-white/5 p-5 backdrop-blur-sm transition duration-500 group-hover:-translate-y-0.5">
+                    <div className={`relative mb-6 flex aspect-[3/4] overflow-hidden rounded-xl bg-gradient-to-br ${getCardTone(idx)} p-6`}>
+                      {item.thumbnail ? (
+                        <img
+                          src={item.thumbnail}
+                          alt={item.name}
+                          loading="lazy"
+                          decoding="async"
+                          className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-white/5">
+                          <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/55">
+                            No Image
+                          </div>
+                        </div>
+                      )}
+                      <div className={`absolute inset-0 ${item.thumbnail ? "bg-gradient-to-t from-black/70 via-black/20 to-transparent" : "bg-black/10"}`} />
+                      <div className="relative flex h-full w-full flex-col justify-between rounded-[1.25rem] border border-white/10 bg-white/5 p-5 backdrop-blur-sm transition duration-500 group-hover:-translate-y-0.5">
                         <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/65">
                           <span>{item.label}</span>
                           <span>{item.price}</span>
@@ -232,10 +250,26 @@ export default async function Home() {
                     <Link
                       key={item.id || item.name}
                       href={`/product_detail_desktop?product=${encodeURIComponent(item.slug || item.id || item.name)}`}
-                      className={`min-w-[280px] ${idx === 2 ? "opacity-40" : ""}`}
+                        className={`group min-w-[280px] ${idx === 2 ? "opacity-40" : ""}`}
                     >
-                        <div className={`mb-4 flex aspect-[4/5] items-end overflow-hidden rounded-xl bg-gradient-to-br ${getCardTone(idx + 1)} p-5`}>
-                          <div className="rounded-[1.1rem] border border-white/10 bg-white/5 p-4 text-white backdrop-blur-sm">
+                        <div className={`mb-4 relative flex aspect-[4/5] items-end overflow-hidden rounded-xl bg-gradient-to-br ${getCardTone(idx + 1)} p-5`}>
+                          {item.thumbnail ? (
+                            <img
+                              src={item.thumbnail}
+                              alt={item.name}
+                                loading="lazy"
+                                decoding="async"
+                              className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                            />
+                            ) : (
+                              <div className="absolute inset-0 flex items-center justify-center bg-white/5">
+                                <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/55">
+                                  No Image
+                                </div>
+                              </div>
+                            )}
+                            <div className={`absolute inset-0 ${item.thumbnail ? "bg-gradient-to-t from-black/70 via-black/20 to-transparent" : "bg-black/10"}`} />
+                          <div className="relative rounded-[1.1rem] border border-white/10 bg-white/5 p-4 text-white backdrop-blur-sm">
                             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/65">{item.label}</p>
                             <h4 className="mt-2 text-lg font-black uppercase leading-[0.95] tracking-[-0.05em]">{item.name}</h4>
                             <p className="mt-3 text-sm font-medium">{item.price}</p>
