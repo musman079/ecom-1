@@ -1139,6 +1139,196 @@ export async function checkoutCart(userId: string, payload: {
   };
 }
 
+export async function placeOrderFromItems(
+  userId: string,
+  payload: {
+    items: Array<{
+      productId: string;
+      quantity: number;
+    }>;
+    shippingAddress: {
+      fullName: string;
+      phone: string;
+      line1: string;
+      city: string;
+      postalCode: string;
+      country: string;
+    };
+    paymentMethod: "card" | "cod";
+    notes?: string;
+    couponCode?: string;
+  },
+) {
+  const userObjectId = toObjectId(userId);
+  if (!userObjectId) {
+    return null;
+  }
+
+  if (!Array.isArray(payload.items) || payload.items.length === 0) {
+    return { error: "Cart items are required." as const };
+  }
+
+  const normalizedItems = payload.items
+    .map((item) => ({
+      productId: toObjectId(item.productId),
+      quantity: Math.max(1, Math.floor(Number(item.quantity))),
+    }))
+    .filter((item): item is { productId: ObjectId; quantity: number } => Boolean(item.productId));
+
+  if (normalizedItems.length === 0) {
+    return { error: "Invalid cart items supplied." as const };
+  }
+
+  const mergedByProduct = new Map<string, number>();
+  for (const item of normalizedItems) {
+    const key = item.productId.toHexString();
+    mergedByProduct.set(key, (mergedByProduct.get(key) ?? 0) + item.quantity);
+  }
+
+  const productIds = Array.from(mergedByProduct.keys()).map((id) => new ObjectId(id));
+  const products = await productsCollection();
+  const orders = await ordersCollection();
+  const productDocs = await products.find({ _id: { $in: productIds } }).toArray();
+  const productById = new Map(productDocs.map((doc) => [doc._id.toHexString(), doc]));
+
+  const orderItems: OrderItemSnapshot[] = [];
+  for (const [productId, quantity] of mergedByProduct.entries()) {
+    const product = productById.get(productId);
+
+    if (!product || product.status !== "published") {
+      return { error: "One or more products are no longer available." as const };
+    }
+
+    if (product.stockQuantity < quantity) {
+      return { error: `Insufficient stock for ${product.title}.` as const };
+    }
+
+    orderItems.push({
+      productId: product._id,
+      title: product.title,
+      sku: product.sku,
+      quantity,
+      unitPrice: product.price,
+      lineTotal: product.price * quantity,
+    });
+  }
+
+  for (const item of orderItems) {
+    const stockUpdate = await products.updateOne(
+      {
+        _id: item.productId,
+        stockQuantity: { $gte: item.quantity },
+      },
+      {
+        $inc: {
+          stockQuantity: -item.quantity,
+        },
+        $set: {
+          updatedAt: new Date(),
+        },
+      },
+    );
+
+    if (stockUpdate.modifiedCount === 0) {
+      return { error: `Stock changed for ${item.title}. Please review your cart.` as const };
+    }
+  }
+
+  const subtotal = orderItems.reduce((sum, item) => sum + item.lineTotal, 0);
+
+  let couponCode: string | undefined;
+  let discountAmount = 0;
+
+  if (payload.couponCode?.trim()) {
+    const couponResult = await applyCouponCode({
+      code: payload.couponCode,
+      subtotal,
+    });
+
+    if ("error" in couponResult) {
+      return { error: couponResult.error };
+    }
+
+    couponCode = couponResult.code;
+    discountAmount = couponResult.discountAmount;
+  }
+
+  const discountedSubtotal = Number(Math.max(0, subtotal - discountAmount).toFixed(2));
+  const shippingCost = discountedSubtotal > 0 ? 12 : 0;
+  const taxAmount = Number((discountedSubtotal * 0.08).toFixed(2));
+  const total = Number((discountedSubtotal + shippingCost + taxAmount).toFixed(2));
+  const now = new Date();
+
+  const order = {
+    orderNumber: buildOrderNumber(),
+    userId: userObjectId,
+    status: "processing",
+    items: orderItems,
+    subtotal,
+    discountAmount,
+    couponCode,
+    shippingCost,
+    taxAmount,
+    total,
+    shippingAddress: payload.shippingAddress,
+    paymentMethod: payload.paymentMethod,
+    paymentStatus: payload.paymentMethod === "card" ? "paid" : "pending",
+    estimatedDelivery: new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000),
+    notes: payload.notes,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  const orderResult = await orders.insertOne(order as OrderDocument);
+
+  await createNotifications([
+    {
+      userId: userObjectId,
+      audience: "customer",
+      kind: "order_created",
+      title: `Order ${order.orderNumber} confirmed`,
+      message: `Your order has been placed successfully. Current status: ${order.status}.`,
+      metadata: {
+        orderId: orderResult.insertedId.toHexString(),
+        orderNumber: order.orderNumber,
+      },
+    },
+  ]);
+
+  if (couponCode) {
+    const coupons = await couponsCollection();
+    await coupons.updateOne(
+      { code: couponCode },
+      {
+        $inc: { usedCount: 1 },
+        $set: { updatedAt: new Date() },
+      },
+    );
+  }
+
+  return {
+    orderId: orderResult.insertedId.toHexString(),
+    orderNumber: order.orderNumber,
+    status: order.status,
+    subtotal: order.subtotal,
+    discountAmount: order.discountAmount ?? 0,
+    couponCode: order.couponCode ?? null,
+    shippingCost: order.shippingCost,
+    taxAmount: order.taxAmount,
+    total: order.total,
+    paymentStatus: order.paymentStatus,
+    items: order.items.map((item) => ({
+      productId: item.productId.toHexString(),
+      title: item.title,
+      sku: item.sku,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      lineTotal: item.lineTotal,
+    })),
+    createdAt: now.toISOString(),
+  };
+}
+
 export async function listRecentOrdersByUser(userId: string, options?: { limit?: number }) {
   const userObjectId = toObjectId(userId);
   if (!userObjectId) {

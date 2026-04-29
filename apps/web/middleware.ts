@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-import { AUTH_COOKIE_NAME, getAdminEmails, verifyAuthToken } from "./src/lib/auth";
+import { getAdminEmails } from "./src/lib/auth";
 
 function unauthorizedResponse(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/api/")) {
@@ -21,19 +22,21 @@ function forbiddenResponse(request: NextRequest) {
 }
 
 export async function middleware(request: NextRequest) {
-  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET ?? process.env.JWT_SECRET,
+  });
 
-  if (!token) {
+  if (!token || typeof token.email !== "string") {
     return unauthorizedResponse(request);
   }
 
-  const payload = await verifyAuthToken(token);
-  if (!payload) {
-    return unauthorizedResponse(request);
-  }
-
-  const normalizedEmail = payload.email.trim().toLowerCase();
-  const tokenRoles = Array.isArray(payload.roles) ? payload.roles : [payload.role];
+  const normalizedEmail = token.email.trim().toLowerCase();
+  const tokenRoles = Array.isArray(token.roles)
+    ? token.roles.filter((value) => typeof value === "string")
+    : typeof token.role === "string"
+      ? [token.role]
+      : [];
   const adminByRole = tokenRoles.includes("ADMIN") || tokenRoles.includes("SUPER_ADMIN");
   const adminByEmail = getAdminEmails().includes(normalizedEmail);
 

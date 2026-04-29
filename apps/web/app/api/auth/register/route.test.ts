@@ -70,7 +70,7 @@ describe("POST /api/auth/register", () => {
     expect(payload.message).toBe("An account with this email already exists.");
   });
 
-  it("returns 201 and sets auth cookie on successful registration", async () => {
+  it("returns 201 on successful registration", async () => {
     mocks.prisma.user.findUnique
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce({
@@ -100,14 +100,7 @@ describe("POST /api/auth/register", () => {
     expect(response.status).toBe(201);
     expect(payload.success).toBe(true);
     expect(payload.user.role).toBe("CUSTOMER");
-    expect(mocks.signAuthToken).toHaveBeenCalledWith(
-      expect.objectContaining({
-        sub: "user-3",
-        email: "user@example.com",
-        role: "CUSTOMER",
-        roles: ["CUSTOMER"],
-      }),
-    );
-    expect(mocks.setAuthCookie).toHaveBeenCalledTimes(1);
+    expect(mocks.signAuthToken).not.toHaveBeenCalled();
+    expect(mocks.setAuthCookie).not.toHaveBeenCalled();
   });
 });

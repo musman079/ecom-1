@@ -1,25 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
-
-type ApiCartItem = {
-  productId: string;
-  title: string;
-  sku: string;
-  price: number;
-  quantity: number;
-  stockQuantity: number;
-  lineTotal: number;
-  thumbnail: string | null;
-};
-
-type ApiCart = {
-  items: ApiCartItem[];
-  subtotal: number;
-  totalItems: number;
-};
+import { useCartStore } from "../../src/store/cart-store";
 
 type ShippingForm = {
   fullName: string;
@@ -30,6 +17,15 @@ type ShippingForm = {
   country: string;
 };
 
+const shippingSchema = z.object({
+  fullName: z.string().min(2, "Full name is required."),
+  phone: z.string().min(7, "Valid phone number is required."),
+  line1: z.string().min(3, "Street address is required."),
+  city: z.string().min(2, "City is required."),
+  postalCode: z.string().min(3, "Postal code is required."),
+  country: z.string().min(2, "Country is required."),
+});
+
 type AppliedCoupon = {
   code: string;
   discountAmount: number;
@@ -38,68 +34,41 @@ type AppliedCoupon = {
 
 export default function CartCheckoutPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [activeProductId, setActiveProductId] = useState<string | null>(null);
-  const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"card" | "cod">("cod");
-  const [cart, setCart] = useState<ApiCart>({
-    items: [],
-    subtotal: 0,
-    totalItems: 0,
+
+  const cart = useCartStore((state) => ({
+    items: state.items,
+    subtotal: state.subtotal,
+    totalItems: state.totalItems,
+  }));
+  const updateCartQuantity = useCartStore((state) => state.updateQuantity);
+  const removeFromCart = useCartStore((state) => state.removeFromCart);
+  const clearCart = useCartStore((state) => state.clearCart);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ShippingForm>({
+    resolver: zodResolver(shippingSchema),
+    defaultValues: {
+      fullName: "",
+      phone: "",
+      line1: "",
+      city: "",
+      postalCode: "",
+      country: "",
+    },
   });
-  const [shippingForm, setShippingForm] = useState<ShippingForm>({
-    fullName: "",
-    phone: "",
-    line1: "",
-    city: "",
-    postalCode: "",
-    country: "",
-  });
+
   const [couponCode, setCouponCode] = useState("");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
-
-  const loadCart = async () => {
-    try {
-      const response = await fetch("/api/cart", { cache: "no-store" });
-
-      if (response.status === 401) {
-        setNeedsAuth(true);
-        setCart({ items: [], subtotal: 0, totalItems: 0 });
-        return;
-      }
-
-      const payload = (await response.json()) as {
-        cart?: ApiCart;
-        error?: string;
-      };
-
-      if (!response.ok || !payload.cart) {
-        setError(payload.error ?? "Unable to load cart.");
-        return;
-      }
-
-      setNeedsAuth(false);
-      setCart(payload.cart);
-    } catch {
-      setError("Unable to load cart due to network issue.");
-    }
-  };
-
-  useEffect(() => {
-    const init = async () => {
-      setLoading(true);
-      setError(null);
-      await loadCart();
-      setLoading(false);
-    };
-
-    void init();
-  }, []);
 
   const discountAmount = appliedCoupon?.discountAmount ?? 0;
   const discountedSubtotal = useMemo(() => Number(Math.max(0, cart.subtotal - discountAmount).toFixed(2)), [cart.subtotal, discountAmount]);
@@ -127,25 +96,7 @@ export default function CartCheckoutPage() {
     setMessage(null);
 
     try {
-      const response = await fetch("/api/cart", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ productId, quantity }),
-      });
-
-      const payload = (await response.json()) as {
-        cart?: ApiCart;
-        error?: string;
-      };
-
-      if (!response.ok || !payload.cart) {
-        setError(payload.error ?? "Unable to update cart item.");
-        return;
-      }
-
-      setCart(payload.cart);
+      updateCartQuantity(productId, quantity);
     } catch {
       setError("Unable to update quantity right now.");
     } finally {
@@ -159,21 +110,7 @@ export default function CartCheckoutPage() {
     setMessage(null);
 
     try {
-      const response = await fetch(`/api/cart?productId=${encodeURIComponent(productId)}`, {
-        method: "DELETE",
-      });
-
-      const payload = (await response.json()) as {
-        cart?: ApiCart;
-        error?: string;
-      };
-
-      if (!response.ok || !payload.cart) {
-        setError(payload.error ?? "Unable to remove product.");
-        return;
-      }
-
-      setCart(payload.cart);
+      removeFromCart(productId);
     } catch {
       setError("Unable to remove product right now.");
     } finally {
@@ -181,47 +118,38 @@ export default function CartCheckoutPage() {
     }
   };
 
-  const onShippingChange = (field: keyof ShippingForm, value: string) => {
-    setShippingForm((current) => ({
-      ...current,
-      [field]: value,
-    }));
-  };
-
-  const placeOrder = async () => {
+  const placeOrder = async (shippingForm: ShippingForm) => {
     setError(null);
     setMessage(null);
-
-    if (needsAuth) {
-      router.push(CUSTOMER_ROUTES.AUTH);
-      return;
-    }
 
     if (cart.items.length === 0) {
       setError("Your cart is empty.");
       return;
     }
 
-    const missing = Object.entries(shippingForm).some(([, value]) => !value.trim());
-    if (missing) {
-      setError("Please complete shipping details before checkout.");
-      return;
-    }
-
     setPlacingOrder(true);
 
     try {
-      const response = await fetch("/api/checkout", {
+      const response = await fetch("/api/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          items: cart.items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+          })),
           shippingAddress: shippingForm,
           paymentMethod,
           couponCode: appliedCoupon?.code,
         }),
       });
+
+      if (response.status === 401) {
+        router.push(CUSTOMER_ROUTES.AUTH);
+        return;
+      }
 
       const payload = (await response.json()) as {
         error?: string;
@@ -239,7 +167,7 @@ export default function CartCheckoutPage() {
       setAppliedCoupon(null);
       setCouponCode("");
       setCouponError(null);
-      await loadCart();
+      clearCart();
       router.push(CUSTOMER_ROUTES.ORDER_TRACKING);
     } catch {
       setError("Unable to place order right now.");
@@ -254,11 +182,6 @@ export default function CartCheckoutPage() {
 
     if (!couponCode.trim()) {
       setCouponError("Enter a coupon code.");
-      return;
-    }
-
-    if (needsAuth) {
-      setCouponError("Please sign in before applying coupons.");
       return;
     }
 
@@ -345,16 +268,7 @@ export default function CartCheckoutPage() {
           {message ? <p className="mb-4 rounded-lg border border-emerald-300/20 bg-emerald-400/10 px-4 py-3 text-sm font-semibold text-emerald-200">{message}</p> : null}
 
           <div className="space-y-12">
-            {loading ? (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-sm text-white/70 backdrop-blur-xl">Loading cart...</div>
-            ) : needsAuth ? (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-sm text-white/70 backdrop-blur-xl">
-                <p className="mb-4">Please sign in to access your cart.</p>
-                <a href={CUSTOMER_ROUTES.AUTH} className="inline-flex rounded-full bg-gradient-to-br from-[#65f3de] to-[#3f7dff] px-6 py-3 text-xs font-bold uppercase tracking-[0.16em] text-[#0c1220]">
-                  Go to Login
-                </a>
-              </div>
-            ) : cart.items.length === 0 ? (
+            {cart.items.length === 0 ? (
               <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-sm text-white/70 backdrop-blur-xl">No items in cart yet.</div>
             ) : (
               cart.items.map((item) => (
@@ -418,47 +332,47 @@ export default function CartCheckoutPage() {
           </div>
 
             <section className="mt-20 rounded-2xl border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl">
-            <form className="space-y-8">
+            <form className="space-y-8" id="shipping-form" onSubmit={handleSubmit(placeOrder)}>
               <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 <input
-                  value={shippingForm.fullName}
-                  onChange={(event) => onShippingChange("fullName", event.target.value)}
+                  {...register("fullName")}
                   className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0"
                   placeholder="Full Name"
                 />
                 <input
-                  value={shippingForm.phone}
-                  onChange={(event) => onShippingChange("phone", event.target.value)}
+                  {...register("phone")}
                   className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0"
                   placeholder="Phone Number"
                 />
               </div>
+              {errors.fullName ? <p className="text-xs font-semibold text-red-300">{errors.fullName.message}</p> : null}
+              {errors.phone ? <p className="text-xs font-semibold text-red-300">{errors.phone.message}</p> : null}
               <input
-                value={shippingForm.line1}
-                onChange={(event) => onShippingChange("line1", event.target.value)}
+                {...register("line1")}
                 className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0"
                 placeholder="Street Address"
               />
+              {errors.line1 ? <p className="text-xs font-semibold text-red-300">{errors.line1.message}</p> : null}
               <div className="grid grid-cols-2 gap-8 md:grid-cols-3">
                 <input
-                  value={shippingForm.city}
-                  onChange={(event) => onShippingChange("city", event.target.value)}
+                  {...register("city")}
                   className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0"
                   placeholder="City"
                 />
                 <input
-                  value={shippingForm.postalCode}
-                  onChange={(event) => onShippingChange("postalCode", event.target.value)}
+                  {...register("postalCode")}
                   className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0"
                   placeholder="Postal Code"
                 />
                 <input
-                  value={shippingForm.country}
-                  onChange={(event) => onShippingChange("country", event.target.value)}
+                  {...register("country")}
                   className="col-span-2 w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0 md:col-span-1"
                   placeholder="Country"
                 />
               </div>
+              {errors.city ? <p className="text-xs font-semibold text-red-300">{errors.city.message}</p> : null}
+              {errors.postalCode ? <p className="text-xs font-semibold text-red-300">{errors.postalCode.message}</p> : null}
+              {errors.country ? <p className="text-xs font-semibold text-red-300">{errors.country.message}</p> : null}
             </form>
           </section>
         </section>
@@ -530,7 +444,7 @@ export default function CartCheckoutPage() {
                   <button
                     type="button"
                     onClick={applyCoupon}
-                    disabled={applyingCoupon || loading || needsAuth}
+                    disabled={applyingCoupon || cart.items.length === 0}
                     className="rounded-md border border-white/25 px-4 text-[10px] font-black uppercase tracking-[0.16em] transition hover:bg-white/10 disabled:opacity-40"
                   >
                     {applyingCoupon ? "Applying" : "Apply"}
@@ -563,9 +477,9 @@ export default function CartCheckoutPage() {
               </div>
 
               <button
-                type="button"
-                disabled={placingOrder || loading || needsAuth}
-                onClick={placeOrder}
+                type="submit"
+                form="shipping-form"
+                disabled={placingOrder || cart.items.length === 0}
                 className="mt-10 block w-full rounded-full bg-gradient-to-br from-[#65f3de] via-[#4a8dff] to-[#3f7dff] py-5 text-center text-xs font-black uppercase tracking-[0.2em] text-[#081224] transition hover:scale-[1.02] hover:shadow-[0_10px_35px_rgba(74,141,255,0.35)] active:scale-95 disabled:opacity-40"
               >
                 {placingOrder ? "Placing Order..." : "Place Order"}

@@ -13,7 +13,7 @@ function errorResponse(message: string, status: number) {
   );
 }
 
-export async function GET(request: Request) {
+export async function GET(_: Request) {
   try {
     assertAuthEnvironment();
   } catch (error) {
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const user = await getCurrentUserFromRequest(request);
+    const user = await getCurrentUserFromRequest(_);
     if (!user) {
       return errorResponse("Unauthorized.", 401);
     }

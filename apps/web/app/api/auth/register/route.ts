@@ -2,14 +2,9 @@ import { Prisma, RoleType } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import {
-  assertAuthEnvironment,
-  AuthConfigError,
   hashPassword,
   isAdminEmail,
-  normalizeAuthRoles,
   normalizeEmail,
-  signAuthToken,
-  setAuthCookie,
   validateEmailFormat,
   validatePasswordStrength,
 } from "../../../../src/lib/auth";
@@ -34,13 +29,6 @@ function errorResponse(message: string, status: number) {
 }
 
 export async function POST(request: Request) {
-  try {
-    assertAuthEnvironment();
-  } catch (error) {
-    const message = error instanceof AuthConfigError ? error.message : "Authentication environment is not configured.";
-    return errorResponse(message, 500);
-  }
-
   let payload: RegisterPayload;
 
   try {
@@ -131,14 +119,7 @@ export async function POST(request: Request) {
         ? "ADMIN"
         : "CUSTOMER";
 
-    const token = await signAuthToken({
-      sub: user.id,
-      email: userWithRoles.email,
-      role,
-      roles: normalizeAuthRoles(userRoleNames, role),
-    });
-
-    const response = NextResponse.json(
+    return NextResponse.json(
       {
         success: true,
         message: "Registration successful.",
@@ -153,9 +134,6 @@ export async function POST(request: Request) {
       },
       { status: 201 },
     );
-
-    setAuthCookie(response, token);
-    return response;
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return errorResponse("An account with this email already exists.", 409);

@@ -167,8 +167,8 @@ function mapListItem(product: {
     stockQuantity: primaryVariant?.stockQuantity ?? 0,
     inStock: (primaryVariant?.stockQuantity ?? 0) > 0,
     status: "published",
-    thumbnail: primaryImage,
-    image: primaryImage,
+    thumbnail: primaryImage ?? null,
+    image: primaryImage ?? null,
     categories: product.categories.map((entry) => entry.category.name),
   };
 }

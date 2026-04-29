@@ -62,6 +62,7 @@ async function readUserCart(userId: string): Promise<ApiCart> {
     .map((item) => {
       const price = item.variant.priceInCents / 100;
       const lineTotal = price * item.quantity;
+      const thumbnail = (Array.isArray(item.variant.product.images) && item.variant.product.images.length > 0 ? item.variant.product.images[0] : null) ?? null;
 
       return {
         productId: item.variant.product.id,
@@ -71,7 +72,7 @@ async function readUserCart(userId: string): Promise<ApiCart> {
         quantity: item.quantity,
         stockQuantity: item.variant.stockQuantity,
         lineTotal,
-        thumbnail: Array.isArray(item.variant.product.images) && item.variant.product.images.length > 0 ? item.variant.product.images[0] : null,
+        thumbnail,
       };
     });
 

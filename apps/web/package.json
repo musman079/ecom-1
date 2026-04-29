@@ -21,15 +21,20 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
     "@prisma/client": "^6.7.0",
     "@repo/ui": "workspace:*",
     "bcryptjs": "^2.4.3",
     "jose": "^5.9.6",
     "mongodb": "^7.1.1",
     "next": "16.2.0",
+    "next-auth": "^4.24.14",
     "nodemailer": "^8.0.6",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-hook-form": "^7.74.0",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

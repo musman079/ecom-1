@@ -65,7 +65,7 @@ enum InventoryEventType {
 model User {
   id                   String             @id @default(cuid()) @map("_id")
   email                String             @unique
-  passwordHash         String
+  passwordHash         String?
   fullName             String
   phone                String?
   notificationOrderUpdates Boolean        @default(true)

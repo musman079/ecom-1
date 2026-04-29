@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 type AdminLogoutButtonProps = {
@@ -20,7 +21,7 @@ export default function AdminLogoutButton(props: AdminLogoutButtonProps) {
 
     setLoading(true);
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await signOut({ redirect: false, callbackUrl: "/auth" });
       router.replace("/auth");
       router.refresh();
     } catch {

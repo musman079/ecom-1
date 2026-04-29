@@ -89,6 +89,10 @@ export async function POST(request: Request) {
       return errorResponse("Invalid credentials.", 401);
     }
 
+    if (!user.passwordHash) {
+      return errorResponse("Invalid credentials.", 401);
+    }
+
     const passwordValid = await verifyPassword(password, user.passwordHash);
     if (!passwordValid) {
       return errorResponse("Invalid credentials.", 401);
