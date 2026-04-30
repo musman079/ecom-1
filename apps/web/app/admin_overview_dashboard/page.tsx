@@ -5,13 +5,27 @@ import { listAdminProducts } from "../../src/lib/admin-products";
 import { getSessionFromRequest } from "../../src/lib/auth-session";
 import { isAdminSessionUser } from "../../src/lib/admin-auth";
 import AdminLogoutButton from "../../src/components/admin-logout-button";
+import { listRecentOrdersForAdmin } from "../../src/lib/ecommerce-db";
 
-const orders = [
-  { id: "#ORD-2841", customer: "Sarah Miller", initials: "SM", date: "Oct 12, 2023", status: "Delivered", amount: "$450.00", tone: "bg-emerald-50 text-emerald-700" },
-  { id: "#ORD-2842", customer: "James Taylor", initials: "JT", date: "Oct 12, 2023", status: "Processing", amount: "$1,299.00", tone: "bg-blue-50 text-blue-700" },
-  { id: "#ORD-2843", customer: "Emma Brown", initials: "EB", date: "Oct 11, 2023", status: "Shipped", amount: "$89.00", tone: "bg-zinc-100 text-zinc-600" },
-  { id: "#ORD-2844", customer: "Arthur Wright", initials: "AW", date: "Oct 11, 2023", status: "Canceled", amount: "$1,540.00", tone: "bg-red-50 text-red-700" },
-];
+const getStatusTone = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    "delivered": "bg-emerald-50 text-emerald-700",
+    "shipped": "bg-blue-50 text-blue-700",
+    "processing": "bg-amber-50 text-amber-700",
+    "pending": "bg-zinc-100 text-zinc-600",
+    "confirmed": "bg-sky-50 text-sky-700",
+    "cancelled": "bg-red-50 text-red-700",
+  };
+  return statusMap[status.toLowerCase()] || "bg-zinc-100 text-zinc-600";
+};
+
+const getInitials = (name: string): string => {
+  return name
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase())
+    .join("")
+    .slice(0, 2);
+};
 
 const navItems = [
   { icon: "dashboard", label: "Overview", active: true },
@@ -66,6 +80,7 @@ export default async function AdminOverviewDashboardPage() {
   }
 
   const products = await listAdminProducts();
+  const recentOrdersData = await listRecentOrdersForAdmin({ limit: 8 });
 
   const publishedCount = products.filter((product) => product.status === "published").length;
   const draftCount = products.filter((product) => product.status === "draft").length;
@@ -80,6 +95,20 @@ export default async function AdminOverviewDashboardPage() {
   ];
 
   const topProducts = products.slice(0, 4);
+
+  // Transform database orders to UI format
+  const orders = recentOrdersData.map((order) => {
+    const statusDisplay = order.status.charAt(0).toUpperCase() + order.status.slice(1).toLowerCase();
+    return {
+      id: `#${order.orderNumber}`,
+      customer: order.customerName,
+      initials: getInitials(order.customerName),
+      date: new Date(order.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
+      status: statusDisplay,
+      amount: `$${(order.total / 100).toFixed(2)}`,
+      tone: getStatusTone(order.status),
+    };
+  });
 
   return (
     <div className="min-h-screen bg-[#f4f4f5] text-zinc-900">
