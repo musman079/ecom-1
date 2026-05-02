@@ -1,7 +1,9 @@
+import { ProductStatus as PrismaProductStatus } from "@prisma/client";
 import { ObjectId } from "mongodb";
 
 import { mapUserRoles } from "./admin-auth";
 import { getMongoDb } from "./mongodb";
+import { prisma } from "./prisma";
 
 export type UserDocument = {
   _id: ObjectId;
@@ -57,7 +59,10 @@ type CartDocument = {
 };
 
 type OrderItemSnapshot = {
-  productId: ObjectId;
+  /** Mongo product `_id`, or Prisma `Product.id` string when synced from storefront cart */
+  productId: ObjectId | string;
+  /** Present for Prisma / variant-backed lines — drives stock restock */
+  variantId?: string;
   title: string;
   sku: string;
   quantity: number;
@@ -68,7 +73,7 @@ type OrderItemSnapshot = {
 type OrderDocument = {
   _id: ObjectId;
   orderNumber: string;
-  userId: ObjectId;
+  userId: ObjectId | string;
   status: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
   items: OrderItemSnapshot[];
   subtotal: number;
@@ -136,7 +141,7 @@ const RETURN_STATUS_TRANSITIONS: Record<ReturnRequestStatus, ReturnRequestStatus
 type ReturnRequestDocument = {
   _id: ObjectId;
   returnNumber: string;
-  userId: ObjectId;
+  userId: ObjectId | string;
   orderId: ObjectId;
   orderNumber: string;
   reason: string;
@@ -163,7 +168,7 @@ type NotificationPreferences = {
 
 type NotificationDocument = {
   _id: ObjectId;
-  userId: ObjectId;
+  userId: ObjectId | string;
   audience: "customer" | "admin";
   kind: NotificationKind;
   title: string;
@@ -177,7 +182,7 @@ type NotificationDocument = {
 
 type NotificationEmailQueueDocument = {
   _id: ObjectId;
-  userId: ObjectId;
+  userId: ObjectId | string;
   kind: NotificationKind;
   subject: string;
   body: string;
@@ -209,6 +214,23 @@ function toObjectId(id: string) {
     return null;
   }
   return new ObjectId(id);
+}
+
+/** Query filter: match orders/notifications keyed by legacy BSON ObjectId or Prisma-style string ids */
+function bsonUserOwnershipFilter(field: string, userId: string): Record<string, unknown> {
+  if (/^[a-fA-F0-9]{24}$/.test(userId)) {
+    return { [field]: { $in: [userId, new ObjectId(userId)] } };
+  }
+  return { [field]: userId };
+}
+
+/** Value stored on new Mongo documents for orders/returns — ObjectId only for 24‑hex ids */
+function storedUserRef(userId: string): ObjectId | string {
+  return /^[a-fA-F0-9]{24}$/.test(userId) ? new ObjectId(userId) : userId;
+}
+
+function orderItemProductIdForApi(pid: OrderItemSnapshot["productId"]) {
+  return pid instanceof ObjectId ? pid.toHexString() : String(pid);
 }
 
 async function usersCollection() {
@@ -256,8 +278,18 @@ async function notificationEmailQueueCollection() {
   return db.collection<NotificationEmailQueueDocument>("notification_email_queue");
 }
 
+function notificationPreferenceKey(uid: ObjectId | string) {
+  return uid instanceof ObjectId ? uid.toHexString() : uid;
+}
+
+/** BSON-safe user ref for notification documents */
+function notificationStoredUserId(uid: ObjectId | string): ObjectId | string {
+  if (uid instanceof ObjectId) return uid;
+  return /^[a-fA-F0-9]{24}$/.test(uid) ? new ObjectId(uid) : uid;
+}
+
 async function createNotifications(input: Array<{
-  userId: ObjectId;
+  userId: ObjectId | string;
   audience: "customer" | "admin";
   kind: NotificationKind;
   title: string;
@@ -269,25 +301,59 @@ async function createNotifications(input: Array<{
   }
 
   const users = await usersCollection();
-  const customerIds = Array.from(
-    new Set(
-      input
-        .filter((item) => item.audience === "customer")
-        .map((item) => item.userId.toHexString()),
-    ),
-  ).map((id) => new ObjectId(id));
+  const mongoCustomerHexIds = new Set<string>();
+  const prismaCustomerIds = new Set<string>();
 
-  const customerDocs = customerIds.length > 0 ? await users.find({ _id: { $in: customerIds } }).toArray() : [];
-  const customerPreferenceMap = new Map(
+  for (const item of input) {
+    if (item.audience !== "customer") continue;
+    const uid = item.userId;
+    if (uid instanceof ObjectId) mongoCustomerHexIds.add(uid.toHexString());
+    else if (/^[a-fA-F0-9]{24}$/.test(uid)) mongoCustomerHexIds.add(uid);
+    else prismaCustomerIds.add(uid);
+  }
+
+  const customerDocs =
+    mongoCustomerHexIds.size > 0 ? await users.find({ _id: { $in: [...mongoCustomerHexIds].map((h) => new ObjectId(h)) } }).toArray() : [];
+
+  const prismaCustomers =
+    prismaCustomerIds.size > 0
+      ? await prisma.user.findMany({
+          where: { id: { in: [...prismaCustomerIds] }, isActive: true },
+          select: {
+            id: true,
+            email: true,
+            notificationOrderUpdates: true,
+            notificationReturnUpdates: true,
+            notificationEmailEnabled: true,
+          },
+        })
+      : [];
+
+  const customerPreferenceMap = new Map<string, NotificationPreferences>(
     customerDocs.map((doc) => [
       doc._id.toHexString(),
       {
         orderUpdates: doc.notificationPreferences?.orderUpdates ?? true,
         returnUpdates: doc.notificationPreferences?.returnUpdates ?? true,
         emailEnabled: doc.notificationPreferences?.emailEnabled ?? true,
-      } satisfies NotificationPreferences,
+      },
     ]),
   );
+
+  for (const u of prismaCustomers) {
+    customerPreferenceMap.set(u.id, {
+      orderUpdates: u.notificationOrderUpdates,
+      returnUpdates: u.notificationReturnUpdates,
+      emailEnabled: u.notificationEmailEnabled,
+    });
+  }
+
+  const customerEmailMap = new Map<string, string>(
+    customerDocs.map((doc) => [doc._id.toHexString(), doc.email]),
+  );
+  for (const u of prismaCustomers) {
+    customerEmailMap.set(u.id, u.email);
+  }
 
   const kindPreferenceKey: Record<NotificationKind, keyof NotificationPreferences | null> = {
     order_created: "orderUpdates",
@@ -302,11 +368,13 @@ async function createNotifications(input: Array<{
       return true;
     }
 
-    const preferences = customerPreferenceMap.get(item.userId.toHexString()) ?? {
-      orderUpdates: true,
-      returnUpdates: true,
-      emailEnabled: true,
-    };
+    const preferences =
+      customerPreferenceMap.get(notificationPreferenceKey(item.userId)) ??
+      ({
+        orderUpdates: true,
+        returnUpdates: true,
+        emailEnabled: true,
+      } satisfies NotificationPreferences);
 
     const preferenceKey = kindPreferenceKey[item.kind];
     if (!preferenceKey) {
@@ -326,7 +394,7 @@ async function createNotifications(input: Array<{
 
   await notifications.insertMany(
     filteredInput.map((item) => ({
-      userId: item.userId,
+      userId: notificationStoredUserId(item.userId),
       audience: item.audience,
       kind: item.kind,
       title: item.title,
@@ -340,25 +408,19 @@ async function createNotifications(input: Array<{
 
   const emailEligibleKinds: NotificationKind[] = ["order_created", "order_status_updated", "return_status_updated"];
 
-  // Build a map of userId → email for eligible customer notifications
-  const allCustomerIds = Array.from(
-    new Set(filteredInput.filter((i) => i.audience === "customer").map((i) => i.userId.toHexString())),
-  ).map((id) => new ObjectId(id));
-  const customerEmailDocs =
-    allCustomerIds.length > 0 ? await users.find({ _id: { $in: allCustomerIds } }).project<{ _id: ObjectId; email: string }>({ _id: 1, email: 1 }).toArray() : [];
-  const customerEmailMap = new Map(customerEmailDocs.map((doc) => [doc._id.toHexString(), doc.email]));
-
   const emailRows = filteredInput
     .filter((item) => {
       if (item.audience !== "customer" || !emailEligibleKinds.includes(item.kind)) {
         return false;
       }
 
-      const preferences = customerPreferenceMap.get(item.userId.toHexString()) ?? {
-        orderUpdates: true,
-        returnUpdates: true,
-        emailEnabled: true,
-      };
+      const preferences =
+        customerPreferenceMap.get(notificationPreferenceKey(item.userId)) ??
+        ({
+          orderUpdates: true,
+          returnUpdates: true,
+          emailEnabled: true,
+        } satisfies NotificationPreferences);
 
       return preferences.emailEnabled;
     })
@@ -380,10 +442,10 @@ async function createNotifications(input: Array<{
         body = `Your return request ${returnNumber ?? ""} has been updated. ${item.message}`.trim();
       }
 
-      const recipientEmail = customerEmailMap.get(item.userId.toHexString());
+      const recipientEmail = customerEmailMap.get(notificationPreferenceKey(item.userId));
 
       return {
-        userId: item.userId,
+        userId: notificationStoredUserId(item.userId),
         kind: item.kind,
         subject,
         body,
@@ -947,18 +1009,283 @@ async function restockOrderItems(items: OrderItemSnapshot[]) {
   const products = await productsCollection();
 
   for (const item of items) {
-    await products.updateOne(
-      { _id: item.productId },
+    if (item.variantId) {
+      await prisma.productVariant.update({
+        where: { id: item.variantId },
+        data: { stockQuantity: { increment: item.quantity } },
+      });
+      continue;
+    }
+
+    const pid = item.productId;
+    if (pid instanceof ObjectId) {
+      await products.updateOne(
+        { _id: pid },
+        {
+          $inc: {
+            stockQuantity: item.quantity,
+          },
+          $set: {
+            updatedAt: new Date(),
+          },
+        },
+      );
+      continue;
+    }
+
+    const mongoOid = typeof pid === "string" ? toObjectId(pid) : null;
+    if (mongoOid) {
+      await products.updateOne(
+        { _id: mongoOid },
+        {
+          $inc: {
+            stockQuantity: item.quantity,
+          },
+          $set: {
+            updatedAt: new Date(),
+          },
+        },
+      );
+    }
+  }
+}
+
+/**
+ * Storefront checkout backed by Prisma Cart + Inventory (authoritative cart from `/api/cart`).
+ */
+export async function checkoutFromPrismaCart(
+  userId: string,
+  payload: {
+    shippingAddress: {
+      fullName: string;
+      phone: string;
+      line1: string;
+      city: string;
+      postalCode: string;
+      country: string;
+    };
+    paymentMethod: "card" | "cod";
+    notes?: string;
+    couponCode?: string;
+  },
+) {
+  const cartRow = await prisma.cart.findUnique({
+    where: { userId },
+    include: {
+      items: {
+        include: {
+          variant: {
+            include: { product: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!cartRow || cartRow.items.length === 0) {
+    return { error: "Cart is empty." as const };
+  }
+
+  const restoredCartItems = cartRow.items.map((ci) => ({
+    variantId: ci.variantId,
+    quantity: ci.quantity,
+  }));
+
+  type PricedLine = {
+    variantId: string;
+    productId: string;
+    title: string;
+    sku: string;
+    quantity: number;
+    unitPrice: number;
+    lineTotal: number;
+  };
+
+  const lines: PricedLine[] = [];
+
+  for (const row of cartRow.items) {
+    const variant = row.variant;
+    const product = variant.product;
+
+    if (product.status !== PrismaProductStatus.PUBLISHED || !variant.isActive) {
+      return { error: "One or more products are no longer available." as const };
+    }
+
+    if (variant.stockQuantity < row.quantity) {
+      return { error: `Insufficient stock for ${product.title}.` as const };
+    }
+
+    const unitPrice = variant.priceInCents / 100;
+    lines.push({
+      variantId: row.variantId,
+      productId: product.id,
+      title: product.title,
+      sku: variant.sku,
+      quantity: row.quantity,
+      unitPrice,
+      lineTotal: Number((unitPrice * row.quantity).toFixed(2)),
+    });
+  }
+
+  const subtotal = Number(lines.reduce((sum, line) => sum + line.lineTotal, 0).toFixed(2));
+
+  let couponCode: string | undefined;
+  let discountAmount = 0;
+
+  if (payload.couponCode?.trim()) {
+    const couponResult = await applyCouponCode({
+      code: payload.couponCode,
+      subtotal,
+    });
+
+    if ("error" in couponResult) {
+      return { error: couponResult.error };
+    }
+
+    couponCode = couponResult.code;
+    discountAmount = couponResult.discountAmount;
+  }
+
+  const discountedSubtotal = Number(Math.max(0, subtotal - discountAmount).toFixed(2));
+  const shippingCost = discountedSubtotal > 0 ? 12 : 0;
+  const taxAmount = Number((discountedSubtotal * 0.08).toFixed(2));
+  const total = Number((discountedSubtotal + shippingCost + taxAmount).toFixed(2));
+  const now = new Date();
+  const orderNumber = buildOrderNumber();
+
+  const orderItems: OrderItemSnapshot[] = lines.map((line) => ({
+    productId: line.productId,
+    variantId: line.variantId,
+    title: line.title,
+    sku: line.sku,
+    quantity: line.quantity,
+    unitPrice: line.unitPrice,
+    lineTotal: line.lineTotal,
+  }));
+
+  const decrementedLines = lines.map((l) => ({ variantId: l.variantId, quantity: l.quantity }));
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      for (const line of lines) {
+        const res = await tx.productVariant.updateMany({
+          where: { id: line.variantId, stockQuantity: { gte: line.quantity } },
+          data: {
+            stockQuantity: { decrement: line.quantity },
+          },
+        });
+
+        if (res.count !== 1) {
+          throw new Error("stock_conflict");
+        }
+      }
+
+      await tx.cartItem.deleteMany({ where: { cartId: cartRow.id } });
+    });
+  } catch {
+    return { error: "Stock changed while checking out. Please refresh your cart and try again." as const };
+  }
+
+  const orders = await ordersCollection();
+
+  const orderBody = {
+    orderNumber,
+    userId: storedUserRef(userId),
+    status: "processing" as const,
+    items: orderItems,
+    subtotal,
+    discountAmount,
+    couponCode,
+    shippingCost,
+    taxAmount,
+    total,
+    shippingAddress: payload.shippingAddress,
+    paymentMethod: payload.paymentMethod,
+    paymentStatus: "pending" as const,
+    estimatedDelivery: new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000),
+    notes: payload.notes,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  let orderResult: { insertedId: ObjectId };
+  try {
+    orderResult = await orders.insertOne(orderBody as never);
+  } catch {
+    console.error("Mongo order insert failed after Prisma checkout; rolling back.");
+
+    try {
+      await prisma.$transaction(async (tx) => {
+        for (const d of decrementedLines) {
+          await tx.productVariant.update({
+            where: { id: d.variantId },
+            data: { stockQuantity: { increment: d.quantity } },
+          });
+        }
+
+        for (const ri of restoredCartItems) {
+          await tx.cartItem.create({
+            data: {
+              cartId: cartRow.id,
+              variantId: ri.variantId,
+              quantity: ri.quantity,
+            },
+          });
+        }
+      });
+    } catch (rollbackErr) {
+      console.error("Checkout rollback failed", rollbackErr);
+    }
+
+    return { error: "Failed to finalize order. Please try again." as const };
+  }
+
+  await createNotifications([
+    {
+      userId,
+      audience: "customer",
+      kind: "order_created",
+      title: `Order ${orderNumber} confirmed`,
+      message: `Your order has been placed successfully. Current status: ${orderBody.status}.`,
+      metadata: {
+        orderId: orderResult.insertedId.toHexString(),
+        orderNumber,
+      },
+    },
+  ]);
+
+  if (couponCode) {
+    const coupons = await couponsCollection();
+    await coupons.updateOne(
+      { code: couponCode },
       {
-        $inc: {
-          stockQuantity: item.quantity,
-        },
-        $set: {
-          updatedAt: new Date(),
-        },
+        $inc: { usedCount: 1 },
+        $set: { updatedAt: new Date() },
       },
     );
   }
+
+  return {
+    orderId: orderResult.insertedId.toHexString(),
+    orderNumber,
+    status: orderBody.status,
+    subtotal,
+    discountAmount: discountAmount ?? 0,
+    couponCode: couponCode ?? null,
+    shippingCost,
+    taxAmount,
+    total,
+    paymentStatus: orderBody.paymentStatus,
+    items: orderItems.map((item) => ({
+      productId: orderItemProductIdForApi(item.productId),
+      title: item.title,
+      sku: item.sku,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      lineTotal: item.lineTotal,
+    })),
+    createdAt: now.toISOString(),
+  };
 }
 
 export async function checkoutCart(userId: string, payload: {
@@ -1016,7 +1343,7 @@ export async function checkoutCart(userId: string, payload: {
   for (const item of orderItems) {
     const stockUpdate = await products.updateOne(
       {
-        _id: item.productId,
+        _id: item.productId as ObjectId,
         stockQuantity: { $gte: item.quantity },
       },
       {
@@ -1128,7 +1455,7 @@ export async function checkoutCart(userId: string, payload: {
     taxAmount: order.taxAmount,
     total: order.total,
     items: order.items.map((item) => ({
-      productId: item.productId.toHexString(),
+      productId: orderItemProductIdForApi(item.productId),
       title: item.title,
       sku: item.sku,
       quantity: item.quantity,
@@ -1216,7 +1543,7 @@ export async function placeOrderFromItems(
   for (const item of orderItems) {
     const stockUpdate = await products.updateOne(
       {
-        _id: item.productId,
+        _id: item.productId as ObjectId,
         stockQuantity: { $gte: item.quantity },
       },
       {
@@ -1272,7 +1599,7 @@ export async function placeOrderFromItems(
     total,
     shippingAddress: payload.shippingAddress,
     paymentMethod: payload.paymentMethod,
-    paymentStatus: payload.paymentMethod === "card" ? "paid" : "pending",
+    paymentStatus: "pending",
     estimatedDelivery: new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000),
     notes: payload.notes,
     createdAt: now,
@@ -1318,7 +1645,7 @@ export async function placeOrderFromItems(
     total: order.total,
     paymentStatus: order.paymentStatus,
     items: order.items.map((item) => ({
-      productId: item.productId.toHexString(),
+      productId: orderItemProductIdForApi(item.productId),
       title: item.title,
       sku: item.sku,
       quantity: item.quantity,
@@ -1330,16 +1657,11 @@ export async function placeOrderFromItems(
 }
 
 export async function listRecentOrdersByUser(userId: string, options?: { limit?: number }) {
-  const userObjectId = toObjectId(userId);
-  if (!userObjectId) {
-    return [];
-  }
-
   const limit = Math.max(1, Math.min(options?.limit ?? 12, 50));
   const orders = await ordersCollection();
 
   const docs = await orders
-    .find({ userId: userObjectId })
+    .find(bsonUserOwnershipFilter("userId", userId))
     .sort({ createdAt: -1 })
     .limit(limit)
     .toArray();
@@ -1368,19 +1690,38 @@ export async function listRecentOrdersForAdmin(options?: { limit?: number; statu
 
   const docs = await orders.find(filter).sort({ createdAt: -1 }).limit(limit).toArray();
 
-  const userIds = Array.from(new Set(docs.map((order) => order.userId.toHexString()))).map((id) => new ObjectId(id));
+  const userIdKeys = Array.from(
+    new Set(
+      docs.map((order) =>
+        typeof order.userId === "string" ? order.userId : order.userId.toHexString(),
+      ),
+    ),
+  );
+  const mongoUserIds = userIdKeys.filter((id) => /^[a-fA-F0-9]{24}$/.test(id)).map((id) => new ObjectId(id));
   const users = await usersCollection();
-  const userDocs = userIds.length > 0 ? await users.find({ _id: { $in: userIds } }).toArray() : [];
+  const userDocs = mongoUserIds.length > 0 ? await users.find({ _id: { $in: mongoUserIds } }).toArray() : [];
   const userMap = new Map(userDocs.map((user) => [user._id.toHexString(), user]));
 
+  const prismaUserKeys = userIdKeys.filter((id) => !/^[a-fA-F0-9]{24}$/.test(id));
+  const prismaUserDocs =
+    prismaUserKeys.length > 0
+      ? await prisma.user.findMany({
+          where: { id: { in: prismaUserKeys } },
+          select: { id: true, email: true, fullName: true },
+        })
+      : [];
+  const prismaUserMap = new Map(prismaUserDocs.map((u) => [u.id, u]));
+
   return docs.map((order) => {
-    const user = userMap.get(order.userId.toHexString());
+    const key = typeof order.userId === "string" ? order.userId : order.userId.toHexString();
+    const user = userMap.get(key);
+    const prismaCustomer = prismaUserMap.get(key);
     return {
       id: order._id.toHexString(),
       orderNumber: order.orderNumber,
-      userId: order.userId.toHexString(),
-      customerName: user?.fullName ?? "Customer",
-      customerEmail: user?.email ?? "-",
+      userId: key,
+      customerName: user?.fullName ?? prismaCustomer?.fullName ?? "Customer",
+      customerEmail: user?.email ?? prismaCustomer?.email ?? "-",
       status: order.status,
       paymentMethod: order.paymentMethod,
       paymentStatus: order.paymentStatus ?? "pending",
@@ -1500,14 +1841,16 @@ export async function updateOrderByAdmin(input: {
 }
 
 export async function getOrderByIdForUser(userId: string, orderId: string) {
-  const userObjectId = toObjectId(userId);
   const orderObjectId = toObjectId(orderId);
-  if (!userObjectId || !orderObjectId) {
+  if (!orderObjectId) {
     return null;
   }
 
   const orders = await ordersCollection();
-  const order = await orders.findOne({ _id: orderObjectId, userId: userObjectId });
+  const order = await orders.findOne({
+    _id: orderObjectId,
+    ...bsonUserOwnershipFilter("userId", userId),
+  });
   if (!order) {
     return null;
   }
@@ -1526,7 +1869,7 @@ export async function getOrderByIdForUser(userId: string, orderId: string) {
     taxAmount: order.taxAmount,
     total: order.total,
     items: order.items.map((item) => ({
-      productId: item.productId.toHexString(),
+      productId: orderItemProductIdForApi(item.productId),
       title: item.title,
       sku: item.sku,
       quantity: item.quantity,
@@ -1541,13 +1884,11 @@ export async function getOrderByIdForUser(userId: string, orderId: string) {
 }
 
 export async function trackOrderForUser(userId: string, orderNumber: string) {
-  const userObjectId = toObjectId(userId);
-  if (!userObjectId) {
-    return null;
-  }
-
   const orders = await ordersCollection();
-  const order = await orders.findOne({ userId: userObjectId, orderNumber: orderNumber.trim() });
+  const order = await orders.findOne({
+    orderNumber: orderNumber.trim(),
+    ...bsonUserOwnershipFilter("userId", userId),
+  });
   if (!order) {
     return null;
   }
@@ -1575,14 +1916,16 @@ export async function trackOrderForUser(userId: string, orderNumber: string) {
 }
 
 export async function cancelOrderForUser(userId: string, orderId: string) {
-  const userObjectId = toObjectId(userId);
   const orderObjectId = toObjectId(orderId);
-  if (!userObjectId || !orderObjectId) {
+  if (!orderObjectId) {
     return null;
   }
 
   const orders = await ordersCollection();
-  const order = await orders.findOne({ _id: orderObjectId, userId: userObjectId });
+  const order = await orders.findOne({
+    _id: orderObjectId,
+    ...bsonUserOwnershipFilter("userId", userId),
+  });
   if (!order) {
     return null;
   }
@@ -1613,9 +1956,8 @@ export async function createReturnRequestForUser(userId: string, payload: {
   notes?: string;
   resolution: "refund" | "exchange";
 }) {
-  const userObjectId = toObjectId(userId);
   const orderObjectId = toObjectId(payload.orderId);
-  if (!userObjectId || !orderObjectId) {
+  if (!orderObjectId) {
     return null;
   }
 
@@ -1633,7 +1975,10 @@ export async function createReturnRequestForUser(userId: string, payload: {
   }
 
   const orders = await ordersCollection();
-  const order = await orders.findOne({ _id: orderObjectId, userId: userObjectId });
+  const order = await orders.findOne({
+    _id: orderObjectId,
+    ...bsonUserOwnershipFilter("userId", userId),
+  });
   if (!order) {
     return { error: "Order not found." as const };
   }
@@ -1657,9 +2002,9 @@ export async function createReturnRequestForUser(userId: string, payload: {
 
   const returnRequests = await returnRequestsCollection();
   const existing = await returnRequests.findOne({
-    userId: userObjectId,
     orderId: orderObjectId,
     status: { $in: ["requested", "approved", "in_transit"] },
+    ...bsonUserOwnershipFilter("userId", userId),
   });
 
   if (existing) {
@@ -1671,7 +2016,7 @@ export async function createReturnRequestForUser(userId: string, payload: {
 
   const result = await returnRequests.insertOne({
     returnNumber,
-    userId: userObjectId,
+    userId: storedUserRef(userId),
     orderId: orderObjectId,
     orderNumber: order.orderNumber,
     reason,
@@ -1690,7 +2035,7 @@ export async function createReturnRequestForUser(userId: string, payload: {
   const adminIds = await getAdminUserIds();
 
   const notificationsToCreate: Array<{
-    userId: ObjectId;
+    userId: ObjectId | string;
     audience: "customer" | "admin";
     kind: NotificationKind;
     title: string;
@@ -1698,7 +2043,7 @@ export async function createReturnRequestForUser(userId: string, payload: {
     metadata?: Record<string, string>;
   }> = [
     {
-      userId: userObjectId,
+      userId,
       audience: "customer",
       kind: "return_requested",
       title: `Return ${created.returnNumber} submitted`,
@@ -1743,16 +2088,11 @@ export async function createReturnRequestForUser(userId: string, payload: {
 }
 
 export async function listReturnRequestsByUser(userId: string, options?: { limit?: number }) {
-  const userObjectId = toObjectId(userId);
-  if (!userObjectId) {
-    return [];
-  }
-
   const limit = Math.max(1, Math.min(options?.limit ?? 15, 50));
   const returnRequests = await returnRequestsCollection();
 
   const docs = await returnRequests
-    .find({ userId: userObjectId })
+    .find(bsonUserOwnershipFilter("userId", userId))
     .sort({ createdAt: -1 })
     .limit(limit)
     .toArray();
@@ -1783,20 +2123,35 @@ export async function listReturnRequestsForAdmin(options?: { limit?: number; sta
 
   const docs = await returnRequests.find(filter).sort({ createdAt: -1 }).limit(limit).toArray();
 
-  const userIds = Array.from(new Set(docs.map((item) => item.userId.toHexString()))).map((id) => new ObjectId(id));
+  const userIdKeys = Array.from(
+    new Set(docs.map((item) => (typeof item.userId === "string" ? item.userId : item.userId.toHexString()))),
+  );
+  const mongoUserIds = userIdKeys.filter((id) => /^[a-fA-F0-9]{24}$/.test(id)).map((id) => new ObjectId(id));
   const users = await usersCollection();
-  const userDocs = userIds.length > 0 ? await users.find({ _id: { $in: userIds } }).toArray() : [];
+  const userDocs = mongoUserIds.length > 0 ? await users.find({ _id: { $in: mongoUserIds } }).toArray() : [];
   const userMap = new Map(userDocs.map((user) => [user._id.toHexString(), user]));
 
+  const prismaUserKeys = userIdKeys.filter((id) => !/^[a-fA-F0-9]{24}$/.test(id));
+  const prismaUserDocs =
+    prismaUserKeys.length > 0
+      ? await prisma.user.findMany({
+          where: { id: { in: prismaUserKeys } },
+          select: { id: true, email: true, fullName: true },
+        })
+      : [];
+  const prismaUserMap = new Map(prismaUserDocs.map((u) => [u.id, u]));
+
   return docs.map((item) => {
-    const user = userMap.get(item.userId.toHexString());
+    const key = typeof item.userId === "string" ? item.userId : item.userId.toHexString();
+    const user = userMap.get(key);
+    const prismaCustomer = prismaUserMap.get(key);
     return {
       id: item._id.toHexString(),
       returnNumber: item.returnNumber,
       orderId: item.orderId.toHexString(),
       orderNumber: item.orderNumber,
-      customerName: user?.fullName ?? "Customer",
-      customerEmail: user?.email ?? "-",
+      customerName: user?.fullName ?? prismaCustomer?.fullName ?? "Customer",
+      customerEmail: user?.email ?? prismaCustomer?.email ?? "-",
       reason: item.reason,
       notes: item.notes ?? "",
       resolution: item.resolution,
@@ -1906,16 +2261,11 @@ export async function listNotificationsByUser(
   userId: string,
   options?: { limit?: number; unreadOnly?: boolean; kind?: NotificationKind; audience?: "customer" | "admin" },
 ) {
-  const userObjectId = toObjectId(userId);
-  if (!userObjectId) {
-    return { unreadCount: 0, notifications: [] };
-  }
-
   const limit = Math.max(1, Math.min(options?.limit ?? 20, 100));
   const notifications = await notificationsCollection();
 
   const filter: Record<string, unknown> = {
-    userId: userObjectId,
+    ...bsonUserOwnershipFilter("userId", userId),
   };
 
   if (options?.unreadOnly) {
@@ -1932,7 +2282,7 @@ export async function listNotificationsByUser(
 
   const [docs, unreadCount] = await Promise.all([
     notifications.find(filter).sort({ createdAt: -1 }).limit(limit).toArray(),
-    notifications.countDocuments({ userId: userObjectId, isRead: false }),
+    notifications.countDocuments({ ...bsonUserOwnershipFilter("userId", userId), isRead: false }),
   ]);
 
   return {
@@ -1953,17 +2303,12 @@ export async function listNotificationsByUser(
 }
 
 export async function markNotificationsReadByUser(userId: string, input?: { ids?: string[]; markAll?: boolean }) {
-  const userObjectId = toObjectId(userId);
-  if (!userObjectId) {
-    return { updatedCount: 0 };
-  }
-
   const notifications = await notificationsCollection();
   const now = new Date();
 
   if (input?.markAll) {
     const result = await notifications.updateMany(
-      { userId: userObjectId, isRead: false },
+      { ...bsonUserOwnershipFilter("userId", userId), isRead: false },
       {
         $set: {
           isRead: true,
@@ -1984,7 +2329,7 @@ export async function markNotificationsReadByUser(userId: string, input?: { ids?
 
   const result = await notifications.updateMany(
     {
-      userId: userObjectId,
+      ...bsonUserOwnershipFilter("userId", userId),
       _id: { $in: objectIds },
       isRead: false,
     },
