@@ -45,8 +45,7 @@ export default function CartCheckoutPage() {
     subtotal: state.subtotal,
     totalItems: state.totalItems,
   }));
-  const updateCartQuantity = useCartStore((state) => state.updateQuantity);
-  const removeFromCart = useCartStore((state) => state.removeFromCart);
+  const setCart = useCartStore((state) => state.setCart);
   const clearCart = useCartStore((state) => state.clearCart);
 
   const {
@@ -69,6 +68,43 @@ export default function CartCheckoutPage() {
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+
+  useEffect(() => {
+    const loadCart = async () => {
+      try {
+        const response = await fetch("/api/cart", { cache: "no-store" });
+
+        if (response.status === 401) {
+          router.push(CUSTOMER_ROUTES.AUTH);
+          return;
+        }
+
+        const payload = (await response.json()) as {
+          error?: string;
+          cart?: {
+            items?: typeof cart.items;
+            subtotal?: number;
+            totalItems?: number;
+          };
+        };
+
+        if (!response.ok || !payload.cart) {
+          setError(payload.error ?? "Unable to load cart.");
+          return;
+        }
+
+        setCart({
+          items: Array.isArray(payload.cart.items) ? payload.cart.items : [],
+          subtotal: Number(payload.cart.subtotal ?? 0),
+          totalItems: Number(payload.cart.totalItems ?? 0),
+        });
+      } catch {
+        setError("Unable to load cart right now.");
+      }
+    };
+
+    void loadCart();
+  }, [router, setCart]);
 
   const discountAmount = appliedCoupon?.discountAmount ?? 0;
   const discountedSubtotal = useMemo(() => Number(Math.max(0, cart.subtotal - discountAmount).toFixed(2)), [cart.subtotal, discountAmount]);
@@ -96,7 +132,34 @@ export default function CartCheckoutPage() {
     setMessage(null);
 
     try {
-      updateCartQuantity(productId, quantity);
+      const response = await fetch("/api/cart", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ productId, quantity }),
+      });
+
+      if (response.status === 401) {
+        router.push(CUSTOMER_ROUTES.AUTH);
+        return;
+      }
+
+      const payload = (await response.json()) as {
+        error?: string;
+        cart?: {
+          items: typeof cart.items;
+          subtotal: number;
+          totalItems: number;
+        };
+      };
+
+      if (!response.ok || !payload.cart) {
+        setError(payload.error ?? "Unable to update quantity right now.");
+        return;
+      }
+
+      setCart(payload.cart);
     } catch {
       setError("Unable to update quantity right now.");
     } finally {
@@ -110,7 +173,30 @@ export default function CartCheckoutPage() {
     setMessage(null);
 
     try {
-      removeFromCart(productId);
+      const response = await fetch(`/api/cart?productId=${encodeURIComponent(productId)}`, {
+        method: "DELETE",
+      });
+
+      if (response.status === 401) {
+        router.push(CUSTOMER_ROUTES.AUTH);
+        return;
+      }
+
+      const payload = (await response.json()) as {
+        error?: string;
+        cart?: {
+          items: typeof cart.items;
+          subtotal: number;
+          totalItems: number;
+        };
+      };
+
+      if (!response.ok || !payload.cart) {
+        setError(payload.error ?? "Unable to remove product right now.");
+        return;
+      }
+
+      setCart(payload.cart);
     } catch {
       setError("Unable to remove product right now.");
     } finally {
@@ -130,16 +216,12 @@ export default function CartCheckoutPage() {
     setPlacingOrder(true);
 
     try {
-      const response = await fetch("/api/orders", {
+      const response = await fetch("/api/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          items: cart.items.map((item) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-          })),
           shippingAddress: shippingForm,
           paymentMethod,
           couponCode: appliedCoupon?.code,
@@ -156,10 +238,17 @@ export default function CartCheckoutPage() {
         order?: {
           orderNumber: string;
         };
+        checkoutUrl?: string;
       };
 
       if (!response.ok || !payload.order) {
         setError(payload.error ?? "Checkout failed.");
+        return;
+      }
+
+      // If a hosted Stripe Checkout session URL is returned, redirect the browser to it
+      if (payload.checkoutUrl) {
+        window.location.href = payload.checkoutUrl;
         return;
       }
 

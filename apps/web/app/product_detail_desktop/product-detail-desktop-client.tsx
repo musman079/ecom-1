@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 import { useCartStore } from "../../src/store/cart-store";
 
@@ -49,6 +49,7 @@ function getDesktopTone(index: number) {
 
 export function ProductDetailDesktopClient() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [selectedColor, setSelectedColor] = useState("Black");
   const [selectedSize, setSelectedSize] = useState("S");
 
@@ -70,7 +71,7 @@ export function ProductDetailDesktopClient() {
   const [addToCartLoading, setAddToCartLoading] = useState(false);
   const [addToCartMessage, setAddToCartMessage] = useState<string | null>(null);
   const [addToCartError, setAddToCartError] = useState<string | null>(null);
-  const addToCartGlobal = useCartStore((state) => state.addToCart);
+  const setCart = useCartStore((state) => state.setCart);
 
   const productIdOrSlug = useMemo(() => searchParams.get("product")?.trim() ?? "", [searchParams]);
   const hasDesktopImages = Boolean(product?.images && product.images.length > 0);
@@ -156,18 +157,46 @@ export function ProductDetailDesktopClient() {
     setAddToCartLoading(true);
 
     try {
-      addToCartGlobal(
-        {
-          productId: product.id,
-          title: product.title,
-          sku: product.sku,
-          price: product.price,
-          stockQuantity: product.stockQuantity,
-          thumbnail: product.images[0] ?? null,
+      const response = await fetch("/api/cart", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        1,
-      );
+        body: JSON.stringify({
+          productId: product.id,
+          quantity: 1,
+        }),
+      });
 
+      if (response.status === 401) {
+        router.push(CUSTOMER_ROUTES.AUTH);
+        return;
+      }
+
+      const payload = (await response.json()) as {
+        error?: string;
+        cart?: {
+          items: Array<{
+            productId: string;
+            title: string;
+            sku: string;
+            price: number;
+            quantity: number;
+            stockQuantity: number;
+            lineTotal: number;
+            thumbnail: string | null;
+          }>;
+          subtotal: number;
+          totalItems: number;
+        };
+      };
+
+      if (!response.ok || !payload.cart) {
+        setAddToCartError(payload.error ?? "Unable to add product right now.");
+        return;
+      }
+
+      setCart(payload.cart);
       setAddToCartMessage("Added to cart successfully.");
     } catch {
       setAddToCartError("Unable to add product due to network issue.");

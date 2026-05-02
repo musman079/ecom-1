@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 
 type AuthMode = "login" | "register";
 
@@ -17,8 +18,6 @@ export function AuthClient() {
   const [showSplash, setShowSplash] = useState(true);
   const [mode, setMode] = useState<AuthMode>("login");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
   const [form, setForm] = useState<AuthFormState>({
     email: "",
     password: "",
@@ -82,8 +81,6 @@ export function AuthClient() {
   };
 
   const toggleMode = () => {
-    setError(null);
-    setMessage(null);
     if (mode === "login") {
       router.push("/auth?mode=register");
       return;
@@ -94,16 +91,14 @@ export function AuthClient() {
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setError(null);
-    setMessage(null);
 
     if (!form.email.trim() || !form.password.trim()) {
-      setError("Email and password are required.");
+      toast.error("Email and password are required.");
       return;
     }
 
     if (mode === "register" && !form.fullName.trim()) {
-      setError("Full name is required for account creation.");
+      toast.error("Full name is required for account creation.");
       return;
     }
 
@@ -129,7 +124,7 @@ export function AuthClient() {
         };
 
         if (!response.ok) {
-          setError(registerPayload.message ?? "Unable to create account. Please try again.");
+          toast.error(registerPayload.message ?? "Unable to create account. Please try again.");
           return;
         }
       }
@@ -141,11 +136,11 @@ export function AuthClient() {
       });
 
       if (!loginResult || loginResult.error) {
-        setError("Invalid email or password.");
+        toast.error("Invalid email or password.");
         return;
       }
 
-      setMessage(mode === "login" ? "Login successful. Redirecting..." : "Account created. Redirecting...");
+      toast.success(mode === "login" ? "Login successful. Redirecting..." : "Account created. Redirecting...");
 
       const meResponse = await fetch("/api/auth/me", { cache: "no-store" });
       if (!meResponse.ok) {
@@ -162,7 +157,7 @@ export function AuthClient() {
       const role = mePayload.user?.role ?? "CUSTOMER";
       router.push(role === "ADMIN" || role === "SUPER_ADMIN" ? "/admin_overview_dashboard" : "/");
     } catch {
-      setError("Network issue while signing in. Please retry.");
+      toast.error("Network issue while signing in. Please retry.");
     } finally {
       setSubmitting(false);
     }
@@ -261,9 +256,6 @@ export function AuthClient() {
               </div>
             </div>
 
-            {error ? <p className="rounded-lg border border-red-300/25 bg-red-400/10 px-3 py-2 text-xs font-bold tracking-wide text-red-200">{error}</p> : null}
-            {message ? <p className="rounded-lg border border-emerald-300/25 bg-emerald-400/10 px-3 py-2 text-xs font-bold tracking-wide text-emerald-200">{message}</p> : null}
-
             <button
               type="submit"
               disabled={submitting}
@@ -275,7 +267,7 @@ export function AuthClient() {
             <div className="flex items-center justify-between pt-2">
               <button
                 type="button"
-                onClick={() => setMessage("Password reset flow can be added next.")}
+                onClick={() => toast.message("Password reset flow can be added next.")}
                 className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/60 transition hover:text-white"
               >
                 Forgot Password?
