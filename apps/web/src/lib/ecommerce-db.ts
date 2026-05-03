@@ -144,14 +144,170 @@ type ReturnRequestDocument = {
   userId: ObjectId | string;
   orderId: ObjectId;
   orderNumber: string;
+  paymentStatus: "pending" | "paid" | "failed";
   reason: string;
   notes?: string;
   resolution: "refund" | "exchange";
   status: ReturnRequestStatus;
+  refundStatus: "not_required" | "pending" | "refunded" | "failed";
   adminNote?: string;
   createdAt: Date;
   updatedAt: Date;
 };
+
+type ShippingRateRule = {
+  countries?: string[];
+  states?: string[];
+  minSubtotal?: number;
+  maxSubtotal?: number;
+  rate: number;
+  freeOver?: number;
+  courier?: string;
+};
+
+type TaxRateRule = {
+  countries?: string[];
+  states?: string[];
+  rate: number;
+  label?: string;
+};
+
+type CheckoutAddress = {
+  fullName: string;
+  phone: string;
+  line1: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  state?: string;
+};
+
+type CheckoutPricingInput = {
+  subtotal: number;
+  shippingAddress: CheckoutAddress;
+  discountAmount?: number;
+};
+
+type WishlistItemDocument = {
+  _id: ObjectId;
+  userId: ObjectId | string;
+  productId: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+const DEFAULT_SHIPPING_RULES: ShippingRateRule[] = [
+  { countries: ["US", "United States"], states: ["CA", "NY"], minSubtotal: 0, rate: 9.5, freeOver: 150, courier: "Priority Ground" },
+  { countries: ["US", "United States"], minSubtotal: 0, rate: 12, freeOver: 120, courier: "Standard Ground" },
+  { countries: ["CA", "Canada"], minSubtotal: 0, rate: 15, freeOver: 180, courier: "North America Ground" },
+  { minSubtotal: 0, rate: 22, courier: "International Standard" },
+];
+
+const DEFAULT_TAX_RULES: TaxRateRule[] = [
+  { countries: ["US", "United States"], states: ["CA"], rate: 0.0825, label: "California sales tax" },
+  { countries: ["US", "United States"], states: ["NY"], rate: 0.08875, label: "New York sales tax" },
+  { countries: ["US", "United States"], rate: 0.06, label: "US sales tax" },
+  { countries: ["CA", "Canada"], rate: 0.13, label: "Canadian sales tax" },
+  { rate: 0.08, label: "Standard VAT" },
+];
+
+function normalizeLocationValue(value?: string) {
+  const normalized = value?.trim().toLowerCase();
+  return normalized ? normalized : undefined;
+}
+
+function parseRulesEnv<T>(name: string): T[] | null {
+  const raw = process.env[name];
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? (parsed as T[]) : null;
+  } catch {
+    console.warn(`Ignoring invalid ${name} configuration.`);
+    return null;
+  }
+}
+
+function matchesRule(location: { country?: string; state?: string }, rule: { countries?: string[]; states?: string[] }) {
+  const normalizedCountry = normalizeLocationValue(location.country);
+  const normalizedState = normalizeLocationValue(location.state);
+  const countries = rule.countries?.map((country) => country.trim().toLowerCase()).filter(Boolean);
+  const states = rule.states?.map((state) => state.trim().toLowerCase()).filter(Boolean);
+
+  const countryMatches = !countries || countries.length === 0 || (normalizedCountry ? countries.includes(normalizedCountry) : false);
+  const stateMatches = !states || states.length === 0 || (normalizedState ? states.includes(normalizedState) : false);
+
+  return countryMatches && stateMatches;
+}
+
+function resolveShippingRule(input: CheckoutPricingInput) {
+  const rules = parseRulesEnv<ShippingRateRule>("CHECKOUT_SHIPPING_RULES") ?? DEFAULT_SHIPPING_RULES;
+  const subtotal = Math.max(0, Number(input.subtotal ?? 0));
+
+  const rule =
+    rules.find((entry) => {
+      if (!matchesRule({ country: input.shippingAddress.country, state: input.shippingAddress.state }, entry)) {
+        return false;
+      }
+
+      if (typeof entry.minSubtotal === "number" && subtotal < entry.minSubtotal) {
+        return false;
+      }
+
+      if (typeof entry.maxSubtotal === "number" && subtotal > entry.maxSubtotal) {
+        return false;
+      }
+
+      return true;
+    }) ?? rules[rules.length - 1] ?? DEFAULT_SHIPPING_RULES[DEFAULT_SHIPPING_RULES.length - 1];
+
+  const shippingCost = typeof rule.freeOver === "number" && subtotal >= rule.freeOver ? 0 : Number((rule.rate ?? 0).toFixed(2));
+
+  return {
+    shippingCost: Number(shippingCost.toFixed(2)),
+    courier: rule.courier ?? "Standard shipping",
+  };
+}
+
+function resolveTaxRule(input: CheckoutPricingInput) {
+  const rules = parseRulesEnv<TaxRateRule>("CHECKOUT_TAX_RULES") ?? DEFAULT_TAX_RULES;
+  const taxableSubtotal = Math.max(0, Number(input.subtotal ?? 0) - Math.max(0, Number(input.discountAmount ?? 0)));
+
+  const rule =
+    rules.find((entry) => matchesRule({ country: input.shippingAddress.country, state: input.shippingAddress.state }, entry)) ??
+    rules[rules.length - 1] ??
+    DEFAULT_TAX_RULES[DEFAULT_TAX_RULES.length - 1];
+
+  return {
+    rate: Number(rule.rate ?? 0),
+    taxAmount: Number((taxableSubtotal * Number(rule.rate ?? 0)).toFixed(2)),
+    label: rule.label ?? "Sales tax",
+  };
+}
+
+export function calculateCheckoutPricing(input: CheckoutPricingInput) {
+  const shipping = resolveShippingRule(input);
+  const tax = resolveTaxRule(input);
+  const subtotal = Math.max(0, Number(input.subtotal ?? 0));
+  const discountAmount = Math.max(0, Number(input.discountAmount ?? 0));
+  const discountedSubtotal = Number(Math.max(0, subtotal - discountAmount).toFixed(2));
+  const total = Number((discountedSubtotal + shipping.shippingCost + tax.taxAmount).toFixed(2));
+
+  return {
+    subtotal,
+    discountAmount,
+    discountedSubtotal,
+    shippingCost: shipping.shippingCost,
+    shippingCourier: shipping.courier,
+    taxRate: tax.rate,
+    taxLabel: tax.label,
+    taxAmount: tax.taxAmount,
+    total,
+  };
+}
 
 type NotificationKind =
   | "order_created"
@@ -271,6 +427,11 @@ async function returnRequestsCollection() {
 async function notificationsCollection() {
   const db = await getMongoDb();
   return db.collection<NotificationDocument>("notifications");
+}
+
+async function wishlistCollection() {
+  const db = await getMongoDb();
+  return db.collection<WishlistItemDocument>("wishlist_items");
 }
 
 async function notificationEmailQueueCollection() {
@@ -1063,6 +1224,7 @@ export async function checkoutFromPrismaCart(
       city: string;
       postalCode: string;
       country: string;
+      state?: string;
     };
     paymentMethod: "card" | "cod";
     notes?: string;
@@ -1146,10 +1308,14 @@ export async function checkoutFromPrismaCart(
     discountAmount = couponResult.discountAmount;
   }
 
-  const discountedSubtotal = Number(Math.max(0, subtotal - discountAmount).toFixed(2));
-  const shippingCost = discountedSubtotal > 0 ? 12 : 0;
-  const taxAmount = Number((discountedSubtotal * 0.08).toFixed(2));
-  const total = Number((discountedSubtotal + shippingCost + taxAmount).toFixed(2));
+  const pricing = calculateCheckoutPricing({
+    subtotal,
+    discountAmount,
+    shippingAddress: payload.shippingAddress,
+  });
+  const shippingCost = pricing.shippingCost;
+  const taxAmount = pricing.taxAmount;
+  const total = pricing.total;
   const now = new Date();
   const orderNumber = buildOrderNumber();
 
@@ -1380,10 +1546,14 @@ export async function checkoutCart(userId: string, payload: {
     discountAmount = couponResult.discountAmount;
   }
 
-  const discountedSubtotal = Number(Math.max(0, subtotal - discountAmount).toFixed(2));
-  const shippingCost = discountedSubtotal > 0 ? 12 : 0;
-  const taxAmount = Number((discountedSubtotal * 0.08).toFixed(2));
-  const total = Number((discountedSubtotal + shippingCost + taxAmount).toFixed(2));
+  const pricing = calculateCheckoutPricing({
+    subtotal,
+    discountAmount,
+    shippingAddress: payload.shippingAddress,
+  });
+  const shippingCost = pricing.shippingCost;
+  const taxAmount = pricing.taxAmount;
+  const total = pricing.total;
   const now = new Date();
 
   const order = {
@@ -1580,10 +1750,14 @@ export async function placeOrderFromItems(
     discountAmount = couponResult.discountAmount;
   }
 
-  const discountedSubtotal = Number(Math.max(0, subtotal - discountAmount).toFixed(2));
-  const shippingCost = discountedSubtotal > 0 ? 12 : 0;
-  const taxAmount = Number((discountedSubtotal * 0.08).toFixed(2));
-  const total = Number((discountedSubtotal + shippingCost + taxAmount).toFixed(2));
+  const pricing = calculateCheckoutPricing({
+    subtotal,
+    discountAmount,
+    shippingAddress: payload.shippingAddress,
+  });
+  const shippingCost = pricing.shippingCost;
+  const taxAmount = pricing.taxAmount;
+  const total = pricing.total;
   const now = new Date();
 
   const order = {
@@ -1987,6 +2161,11 @@ export async function createReturnRequestForUser(userId: string, payload: {
     return { error: "Order has no items to return." as const };
   }
 
+  const paymentStatus = order.paymentStatus ?? "pending";
+  if (payload.resolution === "refund" && paymentStatus !== "paid") {
+    return { error: "Refunds are only available for paid orders." as const };
+  }
+
   if (order.status === "cancelled") {
     return { error: "Cancelled orders cannot be returned." as const };
   }
@@ -2019,10 +2198,12 @@ export async function createReturnRequestForUser(userId: string, payload: {
     userId: storedUserRef(userId),
     orderId: orderObjectId,
     orderNumber: order.orderNumber,
+    paymentStatus,
     reason,
     notes: normalizedNotes || undefined,
     resolution: payload.resolution,
     status: "requested",
+    refundStatus: payload.resolution === "refund" ? "pending" : "not_required",
     createdAt: now,
     updatedAt: now,
   } as ReturnRequestDocument);
@@ -2078,10 +2259,12 @@ export async function createReturnRequestForUser(userId: string, payload: {
     returnNumber: created.returnNumber,
     orderId: created.orderId.toHexString(),
     orderNumber: created.orderNumber,
+    paymentStatus: created.paymentStatus,
     reason: created.reason,
     notes: created.notes ?? "",
     resolution: created.resolution,
     status: created.status,
+    refundStatus: created.refundStatus,
     createdAt: created.createdAt.toISOString(),
     updatedAt: created.updatedAt.toISOString(),
   };
@@ -2102,10 +2285,12 @@ export async function listReturnRequestsByUser(userId: string, options?: { limit
     returnNumber: item.returnNumber,
     orderId: item.orderId.toHexString(),
     orderNumber: item.orderNumber,
+    paymentStatus: item.paymentStatus,
     reason: item.reason,
     notes: item.notes ?? "",
     resolution: item.resolution,
     status: item.status,
+    refundStatus: item.refundStatus,
     adminNote: item.adminNote ?? "",
     createdAt: item.createdAt.toISOString(),
     updatedAt: item.updatedAt.toISOString(),
@@ -2152,10 +2337,12 @@ export async function listReturnRequestsForAdmin(options?: { limit?: number; sta
       orderNumber: item.orderNumber,
       customerName: user?.fullName ?? prismaCustomer?.fullName ?? "Customer",
       customerEmail: user?.email ?? prismaCustomer?.email ?? "-",
+      paymentStatus: item.paymentStatus,
       reason: item.reason,
       notes: item.notes ?? "",
       resolution: item.resolution,
       status: item.status,
+      refundStatus: item.refundStatus,
       adminNote: item.adminNote ?? "",
       createdAt: item.createdAt.toISOString(),
       updatedAt: item.updatedAt.toISOString(),
@@ -2209,6 +2396,12 @@ export async function updateReturnRequestByAdmin(input: {
     updateSet.status = input.status;
   }
 
+  if (input.status === "refunded") {
+    updateSet.refundStatus = "refunded";
+  } else if (input.status === "rejected" && existing.resolution === "refund") {
+    updateSet.refundStatus = "failed";
+  }
+
   if (input.adminNote !== undefined) {
     updateSet.adminNote = trimmedAdminNote || undefined;
   }
@@ -2247,14 +2440,139 @@ export async function updateReturnRequestByAdmin(input: {
     returnNumber: updated.returnNumber,
     orderId: updated.orderId.toHexString(),
     orderNumber: updated.orderNumber,
+    paymentStatus: updated.paymentStatus,
     reason: updated.reason,
     notes: updated.notes ?? "",
     resolution: updated.resolution,
     status: updated.status,
+    refundStatus: updated.refundStatus,
     adminNote: updated.adminNote ?? "",
     createdAt: updated.createdAt.toISOString(),
     updatedAt: updated.updatedAt.toISOString(),
   };
+}
+
+export async function listWishlistForUser(userId: string) {
+  const wishlist = await wishlistCollection();
+  const items = await wishlist.find(bsonUserOwnershipFilter("userId", userId)).sort({ createdAt: -1 }).toArray();
+
+  const productIds = Array.from(new Set(items.map((item) => item.productId)));
+  if (productIds.length === 0) {
+    return [];
+  }
+
+  const products = await prisma.product.findMany({
+    where: {
+      id: { in: productIds },
+      status: PrismaProductStatus.PUBLISHED,
+    },
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      description: true,
+      status: true,
+      images: true,
+      categories: {
+        select: {
+          category: {
+            select: { name: true },
+          },
+        },
+      },
+      variants: {
+        where: { isActive: true },
+        orderBy: { createdAt: "asc" },
+        select: {
+          id: true,
+          sku: true,
+          title: true,
+          priceInCents: true,
+          compareAtPriceInCents: true,
+          stockQuantity: true,
+          isActive: true,
+          color: true,
+          size: true,
+        },
+      },
+    },
+  });
+
+  const productMap = new Map(products.map((product) => [product.id, product]));
+
+  return items
+    .map((item) => {
+      const product = productMap.get(item.productId);
+      if (!product) {
+        return null;
+      }
+
+      const primaryVariant = product.variants.find((variant) => variant.isActive) ?? product.variants[0] ?? null;
+      const imageArray = Array.isArray(product.images) ? product.images : [];
+
+      return {
+        id: item._id.toHexString(),
+        productId: product.id,
+        title: product.title,
+        slug: product.slug,
+        price: primaryVariant ? primaryVariant.priceInCents / 100 : 0,
+        thumbnail: imageArray[0] ?? null,
+        categories: product.categories.map((entry) => entry.category.name),
+        createdAt: item.createdAt.toISOString(),
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+}
+
+export async function isWishlistProductForUser(userId: string, productId: string) {
+  const wishlist = await wishlistCollection();
+  const product = await wishlist.findOne({ ...bsonUserOwnershipFilter("userId", userId), productId: productId.trim() });
+  return Boolean(product);
+}
+
+export async function addWishlistItemForUser(userId: string, productId: string) {
+  const wishlist = await wishlistCollection();
+  const normalizedProductId = productId.trim();
+
+  if (!normalizedProductId) {
+    return { error: "productId is required." as const };
+  }
+
+  const product = await prisma.product.findFirst({
+    where: { id: normalizedProductId, status: PrismaProductStatus.PUBLISHED },
+    select: { id: true },
+  });
+
+  if (!product) {
+    return { error: "Product not found." as const };
+  }
+
+  const existing = await wishlist.findOne({ ...bsonUserOwnershipFilter("userId", userId), productId: normalizedProductId });
+  if (existing) {
+    return { existed: true as const };
+  }
+
+  const now = new Date();
+  const result = await wishlist.insertOne({
+    userId: storedUserRef(userId),
+    productId: normalizedProductId,
+    createdAt: now,
+    updatedAt: now,
+  } as WishlistItemDocument);
+
+  return { id: result.insertedId.toHexString(), createdAt: now.toISOString() };
+}
+
+export async function removeWishlistItemForUser(userId: string, productId: string) {
+  const wishlist = await wishlistCollection();
+  const normalizedProductId = productId.trim();
+
+  if (!normalizedProductId) {
+    return { error: "productId is required." as const };
+  }
+
+  await wishlist.deleteOne({ ...bsonUserOwnershipFilter("userId", userId), productId: normalizedProductId });
+  return { ok: true as const };
 }
 
 export async function listNotificationsByUser(

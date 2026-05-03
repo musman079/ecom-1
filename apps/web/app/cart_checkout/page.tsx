@@ -108,9 +108,7 @@ export default function CartCheckoutPage() {
 
   const discountAmount = appliedCoupon?.discountAmount ?? 0;
   const discountedSubtotal = useMemo(() => Number(Math.max(0, cart.subtotal - discountAmount).toFixed(2)), [cart.subtotal, discountAmount]);
-  const shipping = discountedSubtotal > 0 ? 12 : 0;
-  const taxes = useMemo(() => Number((discountedSubtotal * 0.08).toFixed(2)), [discountedSubtotal]);
-  const total = discountedSubtotal + shipping + taxes;
+  const total = discountedSubtotal;
 
   useEffect(() => {
     setAppliedCoupon((current) => {
@@ -553,14 +551,14 @@ export default function CartCheckoutPage() {
                 </div>
                 <div className="flex items-center justify-between opacity-70">
                   <span className="text-sm uppercase tracking-wide">Shipping</span>
-                  <span className="text-sm">${shipping.toFixed(2)}</span>
+                  <span className="text-sm">Calculated at review</span>
                 </div>
                 <div className="flex items-center justify-between border-b border-white/20 pb-4 opacity-70">
                   <span className="text-sm uppercase tracking-wide">Taxes</span>
-                  <span className="text-sm">${taxes.toFixed(2)}</span>
+                  <span className="text-sm">Calculated at review</span>
                 </div>
                 <div className="flex items-center justify-between pt-2">
-                  <span className="text-3xl font-black uppercase tracking-tight sm:text-xl">Total</span>
+                  <span className="text-3xl font-black uppercase tracking-tight sm:text-xl">Subtotal after discounts</span>
                   <span className="text-4xl font-black sm:text-2xl">${total.toFixed(2)}</span>
                 </div>
               </div>

@@ -97,6 +97,7 @@ type CheckoutPayload = {
     city?: string;
     postalCode?: string;
     country?: string;
+    state?: string;
   };
   paymentMethod?: "card" | "cod";
   notes?: string;
@@ -131,6 +132,7 @@ export async function POST(request: Request) {
         city: address.city,
         postalCode: address.postalCode,
         country: address.country,
+        state: address.state,
       },
       paymentMethod,
       notes: payload.notes,

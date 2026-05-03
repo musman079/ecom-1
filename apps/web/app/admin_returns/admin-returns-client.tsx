@@ -12,10 +12,12 @@ type AdminReturn = {
   orderNumber: string;
   customerName: string;
   customerEmail: string;
+  paymentStatus: string;
   reason: string;
   notes: string;
   resolution: "refund" | "exchange";
   status: "requested" | "approved" | "in_transit" | "refunded" | "rejected";
+  refundStatus: "not_required" | "pending" | "refunded" | "failed";
   adminNote: string;
   createdAt: string;
   updatedAt: string;
@@ -551,6 +553,7 @@ export function AdminReturnsClient() {
                         <td className="px-4 py-4">
                           <p className="text-xs font-bold">#{row.orderNumber}</p>
                           <p className="mt-1 text-[10px] text-zinc-500">{row.orderId.slice(0, 10)}...</p>
+                          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Payment {row.paymentStatus}</p>
                         </td>
                         <td className="px-4 py-4">
                           <p className="text-xs font-bold">{row.customerName}</p>
@@ -564,6 +567,7 @@ export function AdminReturnsClient() {
                           <span className="rounded-full bg-zinc-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em]">
                             {row.resolution}
                           </span>
+                          <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Refund {row.refundStatus}</p>
                         </td>
                         <td className="px-4 py-4">
                           <select

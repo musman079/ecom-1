@@ -71,6 +71,10 @@ export function ProductDetailDesktopClient() {
   const [addToCartLoading, setAddToCartLoading] = useState(false);
   const [addToCartMessage, setAddToCartMessage] = useState<string | null>(null);
   const [addToCartError, setAddToCartError] = useState<string | null>(null);
+  const [wishlisted, setWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [wishlistMessage, setWishlistMessage] = useState<string | null>(null);
+  const [wishlistError, setWishlistError] = useState<string | null>(null);
   const setCart = useCartStore((state) => state.setCart);
 
   const productIdOrSlug = useMemo(() => searchParams.get("product")?.trim() ?? "", [searchParams]);
@@ -145,6 +149,30 @@ export function ProductDetailDesktopClient() {
     void loadProduct();
   }, [productIdOrSlug]);
 
+  useEffect(() => {
+    const syncWishlistState = async () => {
+      if (!product?.id) {
+        setWishlisted(false);
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/wishlist", { cache: "no-store" });
+        if (response.status !== 200) {
+          setWishlisted(false);
+          return;
+        }
+
+        const payload = (await response.json()) as { items?: Array<{ productId: string }> };
+        setWishlisted(Array.isArray(payload.items) && payload.items.some((item) => item.productId === product.id));
+      } catch {
+        setWishlisted(false);
+      }
+    };
+
+    void syncWishlistState();
+  }, [product?.id]);
+
   const addToCart = async () => {
     setAddToCartError(null);
     setAddToCartMessage(null);
@@ -202,6 +230,49 @@ export function ProductDetailDesktopClient() {
       setAddToCartError("Unable to add product due to network issue.");
     } finally {
       setAddToCartLoading(false);
+    }
+  };
+
+  const toggleWishlist = async () => {
+    setWishlistError(null);
+    setWishlistMessage(null);
+
+    if (!product?.id) {
+      setWishlistError("No published product is available to save right now.");
+      return;
+    }
+
+    setWishlistLoading(true);
+
+    try {
+      const requestUrl = wishlisted ? `/api/wishlist?productId=${encodeURIComponent(product.id)}` : "/api/wishlist";
+      const response = await fetch(requestUrl, {
+        method: wishlisted ? "DELETE" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: wishlisted ? undefined : JSON.stringify({ productId: product.id }),
+      });
+
+      if (response.status === 401) {
+        router.push(CUSTOMER_ROUTES.AUTH);
+        return;
+      }
+
+      const payload = (await response.json()) as { error?: string; saved?: boolean; removed?: boolean; isWishlisted?: boolean };
+
+      if (!response.ok) {
+        setWishlistError(payload.error ?? "Unable to update wishlist right now.");
+        return;
+      }
+
+      const nextWishlisted = typeof payload.isWishlisted === "boolean" ? payload.isWishlisted : !wishlisted;
+      setWishlisted(nextWishlisted);
+      setWishlistMessage(nextWishlisted ? "Added to wishlist." : "Removed from wishlist.");
+    } catch {
+      setWishlistError("Unable to update wishlist due to a network issue.");
+    } finally {
+      setWishlistLoading(false);
     }
   };
 
@@ -352,12 +423,19 @@ export function ProductDetailDesktopClient() {
                   >
                     {addToCartLoading ? "Adding..." : "Add to Cart"}
                   </button>
-                  <a href={CUSTOMER_ROUTES.PROFILE} className="flex w-full items-center justify-center gap-2 rounded-full border border-neutral-300 py-5 text-sm font-bold uppercase tracking-[0.2em] transition-colors hover:bg-neutral-200">
+                  <button
+                    type="button"
+                    onClick={toggleWishlist}
+                    disabled={wishlistLoading}
+                    className="flex w-full items-center justify-center gap-2 rounded-full border border-neutral-300 py-5 text-sm font-bold uppercase tracking-[0.2em] transition-colors hover:bg-neutral-200 disabled:opacity-40"
+                  >
                     <span className="material-symbols-outlined text-sm">favorite</span>
-                    Add to Wishlist
-                  </a>
+                    {wishlistLoading ? "Updating..." : wishlisted ? "Wishlisted" : "Add to Wishlist"}
+                  </button>
                   {addToCartError ? <p className="text-xs font-bold text-red-600">{addToCartError}</p> : null}
                   {addToCartMessage ? <p className="text-xs font-bold text-emerald-700">{addToCartMessage}</p> : null}
+                  {wishlistError ? <p className="text-xs font-bold text-red-600">{wishlistError}</p> : null}
+                  {wishlistMessage ? <p className="text-xs font-bold text-emerald-700">{wishlistMessage}</p> : null}
                 </div>
               </div>
 
@@ -489,9 +567,14 @@ export function ProductDetailDesktopClient() {
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-white/95 p-3 backdrop-blur-xl lg:hidden">
         <div className="mx-auto flex max-w-[560px] gap-2">
-          <a href={CUSTOMER_ROUTES.PROFILE} className="flex-1 rounded-full border border-neutral-300 py-3 text-center text-[11px] font-bold uppercase tracking-[0.18em]">
-            Wishlist
-          </a>
+          <button
+            type="button"
+            onClick={toggleWishlist}
+            disabled={wishlistLoading}
+            className="flex-1 rounded-full border border-neutral-300 py-3 text-center text-[11px] font-bold uppercase tracking-[0.18em] disabled:opacity-40"
+          >
+            {wishlistLoading ? "Updating" : wishlisted ? "Wishlisted" : "Wishlist"}
+          </button>
           <a href={CUSTOMER_ROUTES.CART_CHECKOUT} className="flex-1 rounded-full bg-black py-3 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-white">
             Add to Cart
           </a>

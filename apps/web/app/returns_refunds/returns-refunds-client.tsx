@@ -10,6 +10,7 @@ type OrderSummary = {
   id: string;
   orderNumber: string;
   status: string;
+  paymentStatus: string;
   total: number;
   totalItems: number;
   leadItemTitle: string;
@@ -18,7 +19,8 @@ type OrderSummary = {
 
 function canCreateReturn(order: OrderSummary) {
   const status = order.status.toLowerCase();
-  return status === "shipped" || status === "delivered";
+  const paymentStatus = order.paymentStatus.toLowerCase();
+  return (status === "shipped" || status === "delivered") && paymentStatus === "paid";
 }
 
 type ReturnRequest = {
@@ -26,10 +28,12 @@ type ReturnRequest = {
   returnNumber: string;
   orderId: string;
   orderNumber: string;
+  paymentStatus: string;
   reason: string;
   notes: string;
   resolution: "refund" | "exchange";
   status: "requested" | "approved" | "in_transit" | "refunded" | "rejected";
+  refundStatus: "not_required" | "pending" | "refunded" | "failed";
   adminNote: string;
   createdAt: string;
   updatedAt: string;
@@ -248,7 +252,7 @@ export function ReturnsRefundsClient() {
         </article>
         <article className="rounded-2xl border border-zinc-200 bg-white p-4">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">Eligible Orders</p>
-          <p className="mt-2 text-3xl font-black">{orders.length}</p>
+          <p className="mt-2 text-3xl font-black">{eligibleOrders.length}</p>
         </article>
       </section>
 
@@ -262,7 +266,7 @@ export function ReturnsRefundsClient() {
             <h2 className="text-sm font-black uppercase tracking-[0.16em]">Create Return Request</h2>
 
             {eligibleOrders.length === 0 ? (
-              <p className="mt-4 rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600">No shipped or delivered orders are currently eligible for returns.</p>
+              <p className="mt-4 rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600">No paid shipped or delivered orders are currently eligible for returns.</p>
             ) : (
               <div className="mt-4 space-y-4">
                 <label className="block text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">
@@ -346,12 +350,13 @@ export function ReturnsRefundsClient() {
                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">{item.returnNumber}</p>
                         <h3 className="mt-1 text-sm font-black">Order #{item.orderNumber}</h3>
                         <p className="mt-1 text-xs text-zinc-600">{item.reason}</p>
-                        <p className="mt-1 text-[11px] text-zinc-500">Requested on {formatDate(item.createdAt)} • {item.resolution}</p>
+                        <p className="mt-1 text-[11px] text-zinc-500">Requested on {formatDate(item.createdAt)} • {item.resolution} • Payment {item.paymentStatus}</p>
                       </div>
                       <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${getReturnStatusStyles(item.status)}`}>
                         {item.status.replace("_", " ")}
                       </span>
                     </div>
+                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Refund status: {item.refundStatus.replace("_", " ")}</p>
                     {item.notes ? <p className="mt-2 text-xs text-zinc-700">Notes: {item.notes}</p> : null}
                     {item.adminNote ? <p className="mt-1 text-xs font-semibold text-zinc-700">Admin update: {item.adminNote}</p> : null}
                   </article>

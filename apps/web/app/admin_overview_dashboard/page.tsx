@@ -112,8 +112,8 @@ export default async function AdminOverviewDashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#f4f4f5] text-zinc-900">
-      <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-zinc-200 bg-zinc-100/90 p-4 lg:flex">
-        <div className="mb-8 px-3 py-2">
+      <aside className="fixed top-0 left-0 flex-col hidden w-64 h-screen p-4 border-r border-zinc-200 bg-zinc-100/90 lg:flex">
+        <div className="px-3 py-2 mb-8">
           <h1 className="text-2xl font-black uppercase tracking-[-0.05em]">Editorial</h1>
           <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-500">Super Admin</p>
         </div>
@@ -133,31 +133,31 @@ export default async function AdminOverviewDashboardPage() {
           ))}
         </nav>
 
-        <div className="mt-auto border-t border-zinc-200 pt-4">
+        <div className="pt-4 mt-auto border-t border-zinc-200">
           <AdminLogoutButton
-            className="mx-2 flex w-full items-center gap-3 rounded-full px-4 py-3 text-sm font-medium text-zinc-500 transition hover:bg-zinc-200/70"
+            className="flex items-center w-full gap-3 px-4 py-3 mx-2 text-sm font-medium transition rounded-full text-zinc-500 hover:bg-zinc-200/70"
             iconClassName="material-symbols-outlined text-[20px]"
           />
         </div>
       </aside>
 
       <header className="sticky top-0 z-40 border-b border-zinc-200 bg-[#ffffff]/85 backdrop-blur-xl lg:ml-64">
-        <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-4 px-4 sm:px-6 lg:px-8">
           <div className="relative w-full max-w-md">
-            <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-400">search</span>
+            <span className="absolute text-sm -translate-y-1/2 pointer-events-none material-symbols-outlined left-3 top-1/2 text-zinc-400">search</span>
             <input
               type="text"
               placeholder="Search report..."
-              className="w-full rounded-full border border-transparent bg-zinc-100 py-2 pl-10 pr-4 text-xs font-medium outline-none ring-zinc-300 transition focus:ring-1"
+              className="w-full py-2 pl-10 pr-4 text-xs font-medium transition border border-transparent rounded-full outline-none bg-zinc-100 ring-zinc-300 focus:ring-1"
             />
           </div>
 
-          <div className="hidden items-center gap-5 sm:flex">
-            <a href="/admin_overview_dashboard" className="relative text-zinc-500 transition hover:text-zinc-900" aria-label="Notifications">
+          <div className="items-center hidden gap-5 sm:flex">
+            <a href="/admin_overview_dashboard" className="relative transition text-zinc-500 hover:text-zinc-900" aria-label="Notifications">
               <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute right-0 top-0 h-2 w-2 rounded-full bg-blue-600" />
+              <span className="absolute top-0 right-0 w-2 h-2 bg-blue-600 rounded-full" />
             </a>
-            <a href="/admin_overview_dashboard" className="text-zinc-500 transition hover:text-zinc-900" aria-label="Help">
+            <a href="/admin_overview_dashboard" className="transition text-zinc-500 hover:text-zinc-900" aria-label="Help">
               <span className="material-symbols-outlined">help</span>
             </a>
             <div className="flex items-center gap-2">
@@ -168,7 +168,7 @@ export default async function AdminOverviewDashboardPage() {
               <img
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuArxsCLUaQKsAUMj7ZXMhjbPMCLqMxk4k7ImkVQHyM5fkhkdAjsjplWEEiyqd6ENX934Id6cfdE8i7EBeAj6FOGT6zKSly3fcQoej1FMBjzdgvescj8v8pgwxf4uj3LHwv3Xz2A-5NhhYLyXv9xvrQmZ4BttjNhEui_Sr2K1ASiefLUpeVXYwoVfX0Zges1TPcPc_3Z6CXYr46ojrUkQuucc2t0akrdTN8ncWMkzNTqSKHEp_M-DaI-nx4ePnFsDcxBzPXnVCVRG4qa"
                 alt="Admin"
-                className="h-9 w-9 rounded-full object-cover"
+                className="object-cover rounded-full h-9 w-9"
               />
             </div>
           </div>
@@ -180,9 +180,9 @@ export default async function AdminOverviewDashboardPage() {
         </div>
       </header>
 
-      <main className="px-4 pb-24 pt-6 sm:px-6 lg:ml-64 lg:px-8 lg:pt-8">
+      <main className="px-4 pt-6 pb-24 sm:px-6 lg:ml-64 lg:px-8 lg:pt-8">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+          <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
             <div>
               <h2 className="text-4xl font-black uppercase tracking-[-0.04em]">Overview</h2>
               <p className="mt-1 text-sm text-zinc-600">
@@ -191,22 +191,22 @@ export default async function AdminOverviewDashboardPage() {
             </div>
             <div className="flex flex-wrap gap-3">
               <a href="/admin_overview_dashboard" className="flex items-center gap-2 rounded-full border border-zinc-200 bg-[#ffffff] px-4 py-2.5 text-xs font-bold tracking-tight">
-                <span className="material-symbols-outlined text-sm">calendar_today</span>
+                <span className="text-sm material-symbols-outlined">calendar_today</span>
                 <span>Last 30 Days</span>
               </a>
               <a href="/api/admin/products" className="flex items-center gap-2 rounded-full bg-[#000000] px-4 py-2.5 text-xs font-bold tracking-tight text-white">
-                <span className="material-symbols-outlined text-sm">download</span>
+                <span className="text-sm material-symbols-outlined">download</span>
                 <span>Export Report</span>
               </a>
             </div>
           </div>
 
-          <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <section className="grid grid-cols-1 gap-4 mb-8 sm:grid-cols-2 xl:grid-cols-4">
             {kpiCards.map((card, index) => (
               <article key={card.label} className="rounded-2xl bg-[#ffffff] p-5 shadow-sm transition hover:-translate-y-0.5">
-                <div className="mb-3 flex items-start justify-between">
+                <div className="flex items-start justify-between mb-3">
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">{card.label}</p>
-                  <div className="flex h-6 w-10 items-end gap-1">
+                  <div className="flex items-end w-10 h-6 gap-1">
                     <div className={`w-1 rounded-sm ${index % 2 ? "bg-zinc-900" : "bg-blue-500"}`} style={{ height: "50%", opacity: 0.4 }} />
                     <div className={`w-1 rounded-sm ${index % 2 ? "bg-zinc-900" : "bg-blue-500"}`} style={{ height: "75%", opacity: 0.65 }} />
                     <div className={`w-1 rounded-sm ${index % 2 ? "bg-zinc-900" : "bg-blue-500"}`} style={{ height: "100%" }} />
@@ -221,30 +221,30 @@ export default async function AdminOverviewDashboardPage() {
             ))}
           </section>
 
-          <section className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
+          <section className="grid grid-cols-1 gap-6 mb-8 xl:grid-cols-3">
             <article className="rounded-2xl bg-[#ffffff] p-6 shadow-sm xl:col-span-2">
-              <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
                 <div>
                   <h4 className="text-xl font-bold">Sales Velocity</h4>
                   <p className="text-xs font-medium text-zinc-500">Revenue across the current fiscal month</p>
                 </div>
                 <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
                   <span className="flex items-center gap-2">
-                    <i className="h-2 w-2 rounded-full bg-blue-600" />This Month
+                    <i className="w-2 h-2 bg-blue-600 rounded-full" />This Month
                   </span>
                   <span className="flex items-center gap-2">
-                    <i className="h-2 w-2 rounded-full bg-zinc-300" />Target
+                    <i className="w-2 h-2 rounded-full bg-zinc-300" />Target
                   </span>
                 </div>
               </div>
 
               <div className="relative h-[270px] rounded-xl bg-zinc-50 px-3 pb-3 pt-6 sm:h-[320px]">
-                <div className="absolute inset-x-0 top-8 space-y-12 px-3">
+                <div className="absolute inset-x-0 px-3 space-y-12 top-8">
                   {Array.from({ length: 4 }).map((_, idx) => (
-                    <div key={idx} className="h-px w-full bg-zinc-200" />
+                    <div key={idx} className="w-full h-px bg-zinc-200" />
                   ))}
                 </div>
-                <div className="relative z-10 flex h-full items-end gap-2 sm:gap-3">
+                <div className="relative z-10 flex items-end h-full gap-2 sm:gap-3">
                   {barHeights.map((h, idx) => (
                     <div
                       key={`bar-${idx}`}
@@ -269,15 +269,15 @@ export default async function AdminOverviewDashboardPage() {
                 {topProducts.length > 0 ? (
                   topProducts.map((product) => (
                     <div key={product.id} className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-900 text-xs font-black uppercase text-white">
+                      <div className="flex items-center justify-center w-12 h-12 text-xs font-black text-white uppercase rounded-lg bg-zinc-900">
                         {product.images && product.images.length > 0 ? (
-                          <img src={product.images[0]} alt="Product" className="h-full w-full object-cover rounded-lg" />
+                          <img src={product.images[0]} alt="Product" className="object-cover w-full h-full rounded-lg" />
                         ) : (
                           product.title.slice(0, 2)
                         )}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-bold">{product.title}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold truncate">{product.title}</p>
                         <p className="text-[10px] font-medium text-zinc-500">SKU {product.sku}</p>
                       </div>
                       <span className="text-xs font-bold">${product.price.toFixed(2)}</span>
@@ -294,7 +294,7 @@ export default async function AdminOverviewDashboardPage() {
           </section>
 
           <section className="overflow-hidden rounded-2xl bg-[#ffffff] shadow-sm">
-            <div className="flex items-center justify-between border-b border-zinc-100 p-5 sm:p-6">
+            <div className="flex items-center justify-between p-5 border-b border-zinc-100 sm:p-6">
               <h4 className="text-xl font-bold">Recent Orders</h4>
               <a href="/admin_orders" className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">View All Orders</a>
             </div>
@@ -330,22 +330,22 @@ export default async function AdminOverviewDashboardPage() {
                       <td className="px-6 py-4">
                         <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${order.tone}`}>{order.status}</span>
                       </td>
-                      <td className="px-6 py-4 text-right text-xs font-bold">{order.amount}</td>
+                      <td className="px-6 py-4 text-xs font-bold text-right">{order.amount}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           </section>
-
+{/* 
           <section className="mt-8 rounded-2xl bg-[#ffffff] p-6 shadow-sm sm:p-8">
-            <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center justify-between mb-6">
               <h4 className="text-xl font-bold">Admin Modules (Basic Setup)</h4>
               <span className="rounded-full bg-zinc-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-600">Phase 1</span>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {managementModules.map((module) => (
-                <article key={module.title} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                <article key={module.title} className="p-4 border rounded-2xl border-zinc-200 bg-zinc-50">
                   <h5 className="text-sm font-black uppercase tracking-[0.04em]">{module.title}</h5>
                   <ul className="mt-3 space-y-2 text-xs text-zinc-600">
                     {module.items.map((item) => (
@@ -358,7 +358,7 @@ export default async function AdminOverviewDashboardPage() {
                 </article>
               ))}
             </div>
-          </section>
+          </section> */}
         </div>
       </main>
 
