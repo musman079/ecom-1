@@ -2,8 +2,6 @@
  * @deprecated Use DELETE /api/cart?productId=... instead.
  * This route is kept for backwards compatibility only.
  */
-import { NextResponse } from "next/server";
-
 import { DELETE as canonicalCartDelete } from "../route";
 
 export async function POST(request: Request) {

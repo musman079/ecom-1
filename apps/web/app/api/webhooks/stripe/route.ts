@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 
 import { updateOrderByAdmin } from "../../../../src/lib/ecommerce-db";
 
+type StripeWebhookObject = {
+  metadata?: {
+    orderId?: string;
+  };
+};
+
 /**
  * Stripe webhook receiver — verifies signature and updates order payment status.
  */
@@ -24,7 +30,7 @@ export async function POST(request: Request) {
 
     // Handle relevant events
     if (event.type === "checkout.session.completed") {
-      const session = event.data.object as any;
+      const session = event.data.object as StripeWebhookObject;
       const orderId = session.metadata?.orderId;
       if (orderId) {
         await updateOrderByAdmin({ orderId, paymentStatus: "paid" });
@@ -32,7 +38,7 @@ export async function POST(request: Request) {
     }
 
     if (event.type === "payment_intent.succeeded") {
-      const pi = event.data.object as any;
+      const pi = event.data.object as StripeWebhookObject;
       const orderId = pi.metadata?.orderId;
       if (orderId) {
         await updateOrderByAdmin({ orderId, paymentStatus: "paid" });
@@ -40,7 +46,7 @@ export async function POST(request: Request) {
     }
 
     if (event.type === "payment_intent.payment_failed") {
-      const pi = event.data.object as any;
+      const pi = event.data.object as StripeWebhookObject;
       const orderId = pi.metadata?.orderId;
       if (orderId) {
         await updateOrderByAdmin({ orderId, paymentStatus: "failed" });

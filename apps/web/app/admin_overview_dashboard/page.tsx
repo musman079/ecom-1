@@ -50,17 +50,6 @@ const getAdminNavHref = (label: string) => {
 
 const barHeights = [40, 60, 75, 55, 85, 45, 30, 65, 95, 50, 40, 70];
 
-const managementModules = [
-  { title: "Products Management", items: ["Add/Edit/Delete products", "Multi-image support", "Category and SKU controls"] },
-  { title: "Inventory Management", items: ["Track stock levels", "Low stock alerts", "Bulk stock updates (next)"] },
-  { title: "Orders Management", items: ["View all orders", "Update order statuses", "Returns/refunds (next)"] },
-  { title: "Customers Management", items: ["Customer listing", "Customer profile details", "Purchase history"] },
-  { title: "Sales Analytics", items: ["Revenue snapshot", "Best sellers", "Monthly trend cards"] },
-  { title: "Payments & Refunds", items: ["Payment status", "Failed transactions", "Refund queue (next)"] },
-  { title: "Marketing", items: ["Coupons/discounts", "Campaign placeholders", "Newsletter tools (next)"] },
-  { title: "Settings", items: ["Store info", "Tax/shipping settings", "Admin user controls"] },
-];
-
 export default async function AdminOverviewDashboardPage() {
   const cookieStore = await cookies();
   const session = await getSessionFromRequest(

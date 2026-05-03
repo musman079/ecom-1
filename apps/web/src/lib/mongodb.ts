@@ -3,7 +3,6 @@ import { MongoClient } from "mongodb";
 import { getMongoDatabaseName, getMongoUrl } from "./env";
 
 declare global {
-  // eslint-disable-next-line no-var
   var mongoClientPromise: Promise<MongoClient> | undefined;
 }
 

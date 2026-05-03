@@ -2,8 +2,6 @@
  * @deprecated Use POST /api/checkout instead.
  * This route is kept for backwards compatibility only.
  */
-import { NextResponse } from "next/server";
-
 import { POST as canonicalCheckoutPost } from "../../checkout/route";
 
 export async function POST(request: Request) {

@@ -2,8 +2,6 @@
  * @deprecated Use PATCH /api/cart instead.
  * This route is kept for backwards compatibility only.
  */
-import { NextResponse } from "next/server";
-
 import { PATCH as canonicalCartPatch } from "../route";
 
 export async function POST(request: Request) {

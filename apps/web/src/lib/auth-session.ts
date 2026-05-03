@@ -39,7 +39,8 @@ function toSessionUser(session: RawServerSession | null) {
   } satisfies SessionUser;
 }
 
-export async function getSessionFromRequest(_: Request) {
+export async function getSessionFromRequest(request: Request) {
+  void request;
   const session = (await getServerSession(authOptions)) as RawServerSession | null;
   return toSessionUser(session);
 }

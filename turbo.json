@@ -1,6 +1,29 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
+  "globalEnv": [
+    "ADMIN_EMAILS",
+    "CHECKOUT_SHIPPING_RULES",
+    "CHECKOUT_TAX_RULES",
+    "DATABASE_URL",
+    "EMAIL_FROM",
+    "GITHUB_ID",
+    "GITHUB_SECRET",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "JWT_EXPIRY",
+    "JWT_SECRET",
+    "MONGODB_DB_NAME",
+    "MONGODB_URL",
+    "NEXTAUTH_SECRET",
+    "NODE_ENV",
+    "SMTP_HOST",
+    "SMTP_PASS",
+    "SMTP_PORT",
+    "SMTP_USER",
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

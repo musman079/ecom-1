@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
@@ -131,7 +131,7 @@ export function OrderTrackingClient() {
   const [message, setMessage] = useState<string | null>(null);
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
 
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     setError(null);
     try {
       const response = await fetch("/api/orders", { cache: "no-store" });
@@ -154,7 +154,7 @@ export function OrderTrackingClient() {
     } catch {
       setError("Unable to load order tracking right now.");
     }
-  };
+  }, [router]);
 
   useEffect(() => {
     const init = async () => {
@@ -162,7 +162,7 @@ export function OrderTrackingClient() {
       setLoading(false);
     };
     void init();
-  }, [router]);
+  }, [loadOrders]);
 
   const totals = useMemo(() => {
     return {
@@ -172,17 +172,15 @@ export function OrderTrackingClient() {
     };
   }, [orders]);
 
-  const lookupByOrderNumber = async (value?: string) => {
-    const normalized = (value ?? orderNumber).trim();
+  const lookupByOrderNumber = useCallback(async (value: string) => {
+    const normalized = value.trim();
     if (!normalized) {
       setLookupError("Enter your order number.");
       setTrackedOrder(null);
       return;
     }
 
-    if (value !== undefined) {
-      setOrderNumber(normalized);
-    }
+    setOrderNumber(normalized);
 
     setLookupLoading(true);
     setLookupError(null);
@@ -213,7 +211,7 @@ export function OrderTrackingClient() {
     } finally {
       setLookupLoading(false);
     }
-  };
+  }, [router]);
 
   const cancelOrder = async (orderId: string, orderNumber: string) => {
     setError(null);
@@ -259,7 +257,7 @@ export function OrderTrackingClient() {
     }
 
     void lookupByOrderNumber(fromNotification);
-  }, [searchParams]);
+  }, [lookupByOrderNumber, searchParams]);
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl px-6 py-12 text-[#eaf2ff] sm:py-16">
@@ -302,7 +300,7 @@ export function OrderTrackingClient() {
           </label>
           <button
             type="button"
-            onClick={() => void lookupByOrderNumber()}
+            onClick={() => void lookupByOrderNumber(orderNumber)}
             disabled={lookupLoading}
             className="h-11 rounded-full bg-gradient-to-br from-[#65f3de] via-[#4f8cff] to-[#3f7dff] px-6 text-xs font-black uppercase tracking-[0.16em] text-[#081224] transition hover:brightness-110 disabled:opacity-50"
           >

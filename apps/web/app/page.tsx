@@ -55,7 +55,7 @@ export default async function Home() {
 
     const products = result.products;
     if (products.length > 0) {
-      const mapped = products.map((product, index) => ({
+      const mapped = products.map((product) => ({
         id: product.id,
         slug: product.slug,
         label: product.categories[0] || "Kinetic Catalog",

@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
-import { useCartStore } from "../../src/store/cart-store";
+import { useCartStore, type CartItem } from "../../src/store/cart-store";
 
 type ShippingForm = {
   fullName: string;
@@ -82,7 +82,7 @@ export default function CartCheckoutPage() {
         const payload = (await response.json()) as {
           error?: string;
           cart?: {
-            items?: typeof cart.items;
+            items?: CartItem[];
             subtotal?: number;
             totalItems?: number;
           };
@@ -109,6 +109,7 @@ export default function CartCheckoutPage() {
   const discountAmount = appliedCoupon?.discountAmount ?? 0;
   const discountedSubtotal = useMemo(() => Number(Math.max(0, cart.subtotal - discountAmount).toFixed(2)), [cart.subtotal, discountAmount]);
   const total = discountedSubtotal;
+  const cartSubtotal = cart.subtotal;
 
   useEffect(() => {
     setAppliedCoupon((current) => {
@@ -116,13 +117,13 @@ export default function CartCheckoutPage() {
         return current;
       }
 
-      const nextSubtotal = Number(Math.max(0, cart.subtotal - current.discountAmount).toFixed(2));
+      const nextSubtotal = Number(Math.max(0, cartSubtotal - current.discountAmount).toFixed(2));
       return {
         ...current,
         finalSubtotal: nextSubtotal,
       };
     });
-  }, [cart.subtotal]);
+  }, [appliedCoupon, cartSubtotal]);
 
   const updateQuantity = async (productId: string, quantity: number) => {
     setActiveProductId(productId);
@@ -146,7 +147,7 @@ export default function CartCheckoutPage() {
       const payload = (await response.json()) as {
         error?: string;
         cart?: {
-          items: typeof cart.items;
+          items: CartItem[];
           subtotal: number;
           totalItems: number;
         };
@@ -183,7 +184,7 @@ export default function CartCheckoutPage() {
       const payload = (await response.json()) as {
         error?: string;
         cart?: {
-          items: typeof cart.items;
+          items: CartItem[];
           subtotal: number;
           totalItems: number;
         };
