@@ -5,6 +5,7 @@ import { existsSync } from "node:fs";
 
 import { requireAdminSession } from "../../../../src/lib/admin-auth";
 import { AuthError } from "../../../../src/lib/auth-session";
+import { resizeProductImage, getStandardImageExtension } from "../../../../src/lib/image-processor";
 
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -62,15 +63,18 @@ export async function POST(request: Request) {
 
     for (const file of files) {
       const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
+      let buffer = Buffer.from(bytes);
 
-      // Create a unique filename
+      // Resize and convert to standard format
+      buffer = await resizeProductImage(buffer);
+
+      // Create a unique filename with standard extension
       const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-      const originalExt = file.name.split(".").pop() || "png";
-      const filename = `product-${uniqueSuffix}.${originalExt}`;
+      const standardExt = getStandardImageExtension();
+      const filename = `product-${uniqueSuffix}.${standardExt}`;
       const filePath = join(uploadDir, filename);
 
-      // Save the file
+      // Save the resized file
       await writeFile(filePath, buffer);
 
       // The URL where the file can be accessed

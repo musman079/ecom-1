@@ -40,11 +40,14 @@ export default function CartCheckoutPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"card" | "cod">("cod");
 
-  const cart = useCartStore((state) => ({
-    items: state.items,
-    subtotal: state.subtotal,
-    totalItems: state.totalItems,
-  }));
+  const cartItems = useCartStore((state) => state.items);
+  const cartSubtotal = useCartStore((state) => state.subtotal);
+  const cartTotalItems = useCartStore((state) => state.totalItems);
+  const cart = {
+    items: cartItems,
+    subtotal: cartSubtotal,
+    totalItems: cartTotalItems,
+  };
   const setCart = useCartStore((state) => state.setCart);
   const clearCart = useCartStore((state) => state.clearCart);
 
@@ -109,7 +112,7 @@ export default function CartCheckoutPage() {
   const discountAmount = appliedCoupon?.discountAmount ?? 0;
   const discountedSubtotal = useMemo(() => Number(Math.max(0, cart.subtotal - discountAmount).toFixed(2)), [cart.subtotal, discountAmount]);
   const total = discountedSubtotal;
-  const cartSubtotal = cart.subtotal;
+  const currentSubtotal = cart.subtotal;
 
   useEffect(() => {
     setAppliedCoupon((current) => {
@@ -117,13 +120,13 @@ export default function CartCheckoutPage() {
         return current;
       }
 
-      const nextSubtotal = Number(Math.max(0, cartSubtotal - current.discountAmount).toFixed(2));
+      const nextSubtotal = Number(Math.max(0, currentSubtotal - current.discountAmount).toFixed(2));
       return {
         ...current,
         finalSubtotal: nextSubtotal,
       };
     });
-  }, [appliedCoupon, cartSubtotal]);
+  }, [appliedCoupon, currentSubtotal]);
 
   const updateQuantity = async (productId: string, quantity: number) => {
     setActiveProductId(productId);

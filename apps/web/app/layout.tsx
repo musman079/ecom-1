@@ -3,6 +3,7 @@ import { Space_Grotesk, Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 import { assertRuntimeEnvironment } from "../src/lib/env";
+import Header from "../src/components/Header";
 
 const display = Space_Grotesk({
   subsets: ["latin"],
@@ -35,7 +36,8 @@ export default function RootLayout({
         />
       </head>
       <body className={`${display.variable} ${body.variable}`}>
-        {children}
+        <Header />
+        <div className="pt-20">{children}</div>
         <Toaster
           richColors
           closeButton

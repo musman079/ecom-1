@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 import { useCartStore } from "../../src/store/cart-store";
+import CartBadge from "../../src/components/CartBadge";
 
 const navLinks = [
   { label: 'New Arrivals', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
@@ -76,6 +77,7 @@ export function ProductDetailDesktopClient() {
   const [wishlistMessage, setWishlistMessage] = useState<string | null>(null);
   const [wishlistError, setWishlistError] = useState<string | null>(null);
   const setCart = useCartStore((state) => state.setCart);
+  const addToCartLocal = useCartStore((state) => state.addToCart);
 
   const productIdOrSlug = useMemo(() => searchParams.get("product")?.trim() ?? "", [searchParams]);
   const hasDesktopImages = Boolean(product?.images && product.images.length > 0);
@@ -197,7 +199,20 @@ export function ProductDetailDesktopClient() {
       });
 
       if (response.status === 401) {
-        router.push(CUSTOMER_ROUTES.AUTH);
+        // Guest fallback: update client-only cart so header badge updates
+        addToCartLocal(
+          {
+            productId: product.id,
+            title: product.title,
+            sku: product.sku ?? product.slug ?? product.id,
+            price: product.price,
+            stockQuantity: product.stockQuantity ?? 9999,
+            thumbnail: Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : null,
+          },
+          1,
+        );
+
+        setAddToCartMessage("Added to cart (guest). Please sign in to persist cart.");
         return;
       }
 
@@ -298,9 +313,7 @@ export function ProductDetailDesktopClient() {
             <a href={CUSTOMER_ROUTES.PROFILE} aria-label="Favorite">
               <span className="material-symbols-outlined">favorite</span>
             </a>
-            <a href={CUSTOMER_ROUTES.CART_CHECKOUT} className="relative" aria-label="Shopping Bag">
-              <span className="material-symbols-outlined">shopping_bag</span>
-            </a>
+              <CartBadge />
             <a href={CUSTOMER_ROUTES.PROFILE} aria-label="Profile">
               <span className="material-symbols-outlined">person</span>
             </a>

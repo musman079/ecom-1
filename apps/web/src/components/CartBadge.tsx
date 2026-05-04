@@ -1,0 +1,18 @@
+"use client";
+
+import Link from "next/link";
+import { CUSTOMER_ROUTES } from "../constants/routes";
+import { useCartStore } from "../store/cart-store";
+
+export default function CartBadge() {
+  const totalItems = useCartStore((s) => s.totalItems);
+
+  return (
+    <Link href={CUSTOMER_ROUTES.CART_CHECKOUT} aria-label="Bag" className="relative">
+      <span className="material-symbols-outlined">shopping_bag</span>
+      <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-[#65f3de] to-[#3f7dff] text-[8px] font-bold text-[#0c1220]">
+        {totalItems}
+      </span>
+    </Link>
+  );
+}

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 import { useCartStore } from "../../src/store/cart-store";
+import CartBadge from "../../src/components/CartBadge";
 
 type ProductCard = {
   id: string;
@@ -61,6 +62,7 @@ export function ProductDetailsClient() {
   const [addToCartMessage, setAddToCartMessage] = useState<string | null>(null);
   const [addToCartError, setAddToCartError] = useState<string | null>(null);
   const setCart = useCartStore((state) => state.setCart);
+  const addToCartLocal = useCartStore((state) => state.addToCart);
 
   const productIdOrSlug = useMemo(() => searchParams.get("product")?.trim() ?? "", [searchParams]);
   const hasProductImages = Boolean(product?.images && product.images.length > 0);
@@ -198,7 +200,20 @@ export function ProductDetailsClient() {
       });
 
       if (response.status === 401) {
-        router.push(CUSTOMER_ROUTES.AUTH);
+        // Guest fallback: update client-only cart so badge updates in real-time
+        addToCartLocal(
+          {
+            productId: product.id,
+            title: product.title,
+            sku: product.sku ?? product.slug ?? product.id,
+            price: product.price,
+            stockQuantity: product.stockQuantity ?? 9999,
+            thumbnail: Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : null,
+          },
+          1,
+        );
+
+        setAddToCartMessage("Added to cart (guest). Please sign in to persist cart.");
         return;
       }
 
@@ -251,9 +266,7 @@ export function ProductDetailsClient() {
               <a href={CUSTOMER_ROUTES.PRODUCT_DETAILS} className="text-sm uppercase tracking-tight text-neutral-500 hover:opacity-70">Editorial</a>
               <a href={CUSTOMER_ROUTES.PRODUCT_DETAILS} className="text-sm uppercase tracking-tight text-neutral-500 hover:opacity-70">Archive</a>
             </nav>
-            <a href={CUSTOMER_ROUTES.CART_CHECKOUT} aria-label="Bag" className="transition hover:opacity-70 active:scale-95">
-              <span className="material-symbols-outlined">shopping_bag</span>
-            </a>
+            <CartBadge />
           </div>
         </div>
       </header>

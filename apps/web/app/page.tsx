@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CartBadge from "../src/components/CartBadge";
 import { CUSTOMER_ROUTES } from "../src/constants/routes";
 import { listPublicProducts } from "../src/lib/products";
 
@@ -99,9 +100,7 @@ export default async function Home() {
           </nav>
 
           <div className="flex items-center gap-5 text-lg">
-            <Link href={CUSTOMER_ROUTES.CART_CHECKOUT} aria-label="Bag">
-              <span className="material-symbols-outlined">shopping_bag</span>
-            </Link>
+            <CartBadge />
             <Link href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} aria-label="Favorites">
               <span className="material-symbols-outlined">favorite</span>
             </Link>
