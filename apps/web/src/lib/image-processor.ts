@@ -14,7 +14,7 @@ export const PRODUCT_IMAGE_STANDARD = {
  * Resize and optimize an image to standard product dimensions
  * Converts to WebP format for better compression and quality
  */
-export async function resizeProductImage(buffer: Buffer): Promise<Buffer> {
+export async function resizeProductImage(buffer: Buffer<ArrayBufferLike>): Promise<Buffer> {
   try {
     let pipeline = sharp(buffer);
 

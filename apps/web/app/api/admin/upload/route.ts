@@ -63,10 +63,10 @@ export async function POST(request: Request) {
 
     for (const file of files) {
       const bytes = await file.arrayBuffer();
-      let buffer = Buffer.from(bytes);
+      const rawBuffer = Buffer.from(bytes);
 
       // Resize and convert to standard format
-      buffer = await resizeProductImage(buffer);
+      const processedBuffer = await resizeProductImage(rawBuffer);
 
       // Create a unique filename with standard extension
       const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
       const filePath = join(uploadDir, filename);
 
       // Save the resized file
-      await writeFile(filePath, buffer);
+      await writeFile(filePath, processedBuffer);
 
       // The URL where the file can be accessed
       uploadedUrls.push(`/uploads/${filename}`);
