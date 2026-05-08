@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { Toaster } from "sonner";
 import "./globals.css";
 import { assertRuntimeEnvironment } from "../src/lib/env";
 import Header from "../src/components/Header";
 
-const display = Space_Grotesk({
-  subsets: ["latin"],
+const display = localFont({
+  src: "./fonts/GeistVF.woff",
   variable: "--font-display",
 });
 
-const body = Plus_Jakarta_Sans({
-  subsets: ["latin"],
+const body = localFont({
+  src: "./fonts/GeistVF.woff",
   variable: "--font-body",
 });
 

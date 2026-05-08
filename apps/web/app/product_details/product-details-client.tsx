@@ -208,7 +208,8 @@ export function ProductDetailsClient() {
             sku: product.sku ?? product.slug ?? product.id,
             price: product.price,
             stockQuantity: product.stockQuantity ?? 9999,
-            thumbnail: Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : null,
+            thumbnail:
+              Array.isArray(product.images) && product.images.length > 0 ? product.images[0] ?? null : null,
           },
           1,
         );

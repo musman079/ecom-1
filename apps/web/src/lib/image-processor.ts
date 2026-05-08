@@ -1,4 +1,3 @@
-// @ts-expect-error - sharp module compatibility
 import sharpModule from "sharp";
 
 const sharp = sharpModule;

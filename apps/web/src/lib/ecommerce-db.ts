@@ -246,6 +246,7 @@ function matchesRule(location: { country?: string; state?: string }, rule: { cou
 function resolveShippingRule(input: CheckoutPricingInput) {
   const rules = parseRulesEnv<ShippingRateRule>("CHECKOUT_SHIPPING_RULES") ?? DEFAULT_SHIPPING_RULES;
   const subtotal = Math.max(0, Number(input.subtotal ?? 0));
+  const fallbackRule = DEFAULT_SHIPPING_RULES[DEFAULT_SHIPPING_RULES.length - 1];
 
   const rule =
     rules.find((entry) => {
@@ -262,7 +263,14 @@ function resolveShippingRule(input: CheckoutPricingInput) {
       }
 
       return true;
-    }) ?? rules[rules.length - 1] ?? DEFAULT_SHIPPING_RULES[DEFAULT_SHIPPING_RULES.length - 1];
+    }) ?? rules[rules.length - 1] ?? fallbackRule;
+
+  if (!rule) {
+    return {
+      shippingCost: 0,
+      courier: "Standard shipping",
+    };
+  }
 
   const shippingCost = typeof rule.freeOver === "number" && subtotal >= rule.freeOver ? 0 : Number((rule.rate ?? 0).toFixed(2));
 
@@ -275,11 +283,20 @@ function resolveShippingRule(input: CheckoutPricingInput) {
 function resolveTaxRule(input: CheckoutPricingInput) {
   const rules = parseRulesEnv<TaxRateRule>("CHECKOUT_TAX_RULES") ?? DEFAULT_TAX_RULES;
   const taxableSubtotal = Math.max(0, Number(input.subtotal ?? 0) - Math.max(0, Number(input.discountAmount ?? 0)));
+  const fallbackRule = DEFAULT_TAX_RULES[DEFAULT_TAX_RULES.length - 1];
 
   const rule =
     rules.find((entry) => matchesRule({ country: input.shippingAddress.country, state: input.shippingAddress.state }, entry)) ??
     rules[rules.length - 1] ??
-    DEFAULT_TAX_RULES[DEFAULT_TAX_RULES.length - 1];
+    fallbackRule;
+
+  if (!rule) {
+    return {
+      rate: 0,
+      taxAmount: 0,
+      label: "Sales tax",
+    };
+  }
 
   return {
     rate: Number(rule.rate ?? 0),
