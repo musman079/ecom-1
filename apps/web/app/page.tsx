@@ -113,29 +113,24 @@ export default async function Home() {
 
       <main className="pt-20">
         <section className="relative flex h-[88vh] min-h-[700px] items-end overflow-hidden px-6 pb-14 lg:px-16 xl:px-24">
-          <img
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQMt_kCMH_abOeQ2xzVnsFWupcEIh_lmmj-aXsWtqoJXCyJTtKACTzoABStQLENCQkPZ78MJIKvA19LxhatzzCH_W_UJN1Xh9Zo5ULV1t2yMKhvkpNJCsD7xm7luMStpjx2yHxlZxdPT_ivcEO9gSeGoUSUn4CmkA-yYxJqWixH1Z5KycjVVR6SOPK20otzIRIBSNiAV2tX3AEx_EnYXVWA1zv7n3hjJxK5nWZCcw6b2DQHfGRoaXDeqcpeC30-hiOwXbGDTtNlz_C"
-            alt="Editorial model"
-            className="absolute inset-0 h-full w-full scale-[1.03] object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-br from-black/5 via-black/10 to-black/45" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1a2f5a] via-[#0f1a2e] to-[#050a15]" />
 
           <div className="relative max-w-4xl text-white">
-            <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.3em] text-white/80">
-              FW24 Collection
+            <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[#65f3de]">
+              Welcome to Kinetic
             </p>
             <h2 className="mb-8 text-6xl font-black uppercase italic leading-[0.9] tracking-[-0.06em] sm:text-7xl md:text-8xl xl:text-9xl">
-              Kinetic
+              Premium
               <br />
-              Energy
+              Fashion
             </h2>
 
             <div className="flex flex-wrap gap-4">
-              <Link href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="rounded-full bg-white px-10 py-4 text-sm font-bold text-black transition hover:scale-105">
-                Shop Collection
+              <Link href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="rounded-full bg-[#65f3de] px-10 py-4 text-sm font-bold text-black transition hover:scale-105 hover:bg-white">
+                Shop Now
               </Link>
-              <Link href={CUSTOMER_ROUTES.PRODUCT_DETAILS} className="rounded-full border border-white/20 bg-white/5 px-10 py-4 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/15">
-                View Editorial
+              <Link href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="rounded-full border border-white/20 bg-white/5 px-10 py-4 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/15">
+                Browse Collection
               </Link>
             </div>
           </div>
@@ -287,40 +282,16 @@ export default async function Home() {
               </div>
             </section>
 
-            <section className="grid h-auto grid-cols-1 gap-4 lg:h-[620px] lg:grid-cols-12">
-              <article className="group relative overflow-hidden rounded-xl lg:col-span-8">
-                <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRPLN47M4q7COyjhEncmHWR2rJa0q6aJcrs6Jbs9P3u05HKz8QDfYvvGWNiAQDaUDwI1eq61JOHWVV67zP7rXJgHktWGSUeTY3iztfTMvKaGHVgDUNq-FAEgg_ioF2Kf15IBR4iP9CY81_YLU2V8_BP0bLBxw1moZc_ajPrXVVdaxZghN_F_CR3JjyiTK5dZP_-0ZQbw9hrA2v7mawcTnOE4PzFKHw3-PdqMAy0wjGq34uGRBq3dwsvevXOsRXurSeFlimI2EWhjsF"
-                  alt="Metropolis nomads"
-                  className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/65 to-transparent p-10">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/65">Editorial</p>
-                    <h4 className="mt-2 text-5xl font-black uppercase leading-[0.85] tracking-[-0.05em] text-white">
-                      Metropolis
-                      <br />
-                      Nomads
-                    </h4>
-                    <Link href={CUSTOMER_ROUTES.PRODUCT_DETAILS} className="mt-4 inline-block border-b border-white text-xs font-bold text-white">Read The Story</Link>
-                  </div>
-                </div>
-              </article>
-
-              <article className="rounded-xl border border-white/10 bg-[#081222] p-10 text-white lg:col-span-4">
-                <p className="text-5xl">✦</p>
-                <h4 className="mt-6 text-5xl font-black uppercase leading-[0.85] tracking-[-0.05em]">
-                  Designed For
-                  <br />
-                  Motion
-                </h4>
-                <p className="mt-6 text-sm leading-7 text-white/70">
-                  Every stitch is a conscious decision to move forward. Explore the technology behind our FW24 textile selection.
+            <section className="rounded-xl border border-white/10 bg-white/[0.02] p-10 backdrop-blur-sm lg:p-16">
+              <div className="text-center">
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#65f3de]">Why Choose Us</p>
+                <h3 className="mt-4 text-4xl font-black uppercase leading-[0.9] tracking-[-0.05em] text-white">
+                  Premium Quality. Fast Delivery.
+                </h3>
+                <p className="mt-6 mx-auto max-w-2xl text-white/70">
+                  Curated collections from world-class designers. Free shipping on orders over $100. Premium customer support available 24/7.
                 </p>
-                <Link href={CUSTOMER_ROUTES.PRODUCT_DETAILS} className="mt-8 inline-block text-xs font-bold uppercase tracking-[0.18em]">
-                  Discover Technicals +
-                </Link>
-              </article>
+              </div>
             </section>
           </div>
         </div>

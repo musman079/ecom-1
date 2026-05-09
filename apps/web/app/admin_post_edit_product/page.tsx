@@ -217,11 +217,9 @@ export default function AdminPostEditProductPage() {
             <button type="button" onClick={() => setActionMessage("Help center opened.")} className="text-zinc-400 transition hover:text-zinc-900">
               <span className="material-symbols-outlined">help</span>
             </button>
-            <img
-              alt="Admin profile"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4GT8C29KZ2z93aHRA6mrYbA9kg0A8SYUndH_8d_nCIJvv310gJAMdHLDdcxN8vv1FfaqKqyfuFU5tpk88e9z2AH9ePYJGWtELAHGoiK3GtASQspyGVYFi36nYZtX2xLdxcxbE_iVy6xxZtsn2MtfJTAk-WMaS9Xh9hbpXjGlsLpC2lzb67oDYP971BG-8ZiQcSQTmfO25Wf96xbmT0DkzieopzjVb77EjUehsjs6BLZ2akLJPFUmnw3KDOnhnpAsVf5PSxo4udjOk"
-              className="h-8 w-8 rounded-full object-cover"
-            />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-[10px] font-bold text-white">
+              AR
+            </div>
             <AdminLogoutButton
               className="flex items-center gap-2 rounded-full border border-zinc-200 bg-[#ffffff] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-600"
               iconClassName="material-symbols-outlined text-sm"

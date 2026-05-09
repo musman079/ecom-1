@@ -14,29 +14,7 @@ const navLinks = [
   { label: 'Sustainability', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
 ];
 
-const lookItems = [
-  {
-    category: 'Pants',
-    name: 'KINETIC STRAIGHT TROUSERS',
-    price: '$480.00',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuB8JH5dsxI0_qeqPeR3coZPfuN4vJY-q9voRoFDD25eyjolXEi0neoV2l5UOZC1-1ItxyRn94M-9QGT9FBXLBX8aW7PuKvLYsRR2AKhecsiy4gYy4K7LrNOLc_SC6SR_v2Fgf2JVI_xPlmiLumkQ8WRaMttCLiqKDF9j_p0abxQnZpdC5CF8hkySyO_Z2bvKmCA-UhSN0GYll7SS-VjU8Ed_3CcnDhEIfxzJBUZymXiLaAyjtglKsXwVXiZaHmY8dnlNTcOZTWleQap',
-  },
-  {
-    category: 'Footwear',
-    name: 'KINETIC 0.2 SNEAKER',
-    price: '$620.00',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuB_dTvGKU_cyi3jj3qtcUp90hSyZ8Qfjre3dWkXsVmVcPdqC0wB9MzLL0N3byYuFSxxS5z4nrju2NncudNW0T8Uwhxd_GC_qMJK8GU6PsCil1J9Jj5AZmeCySVSM3iw40qO01ApJU2Cbs2Xp1lHqGZvaAM3eDmKARct7j-3jxrWS8CoaH4lCWMLNJj5HeVIFuqMBRlLuiXEpwDimb9aCx7KSPHKN9z1Neilkm0hqrk5rMukD2pVjbLg5lOEeoIXbc2ub3QkDPnXqplw',
-  },
-  {
-    category: 'Accessories',
-    name: 'MODULAR LEATHER TOTE',
-    price: '$890.00',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCUMq7WEFpTbAAaz6R6BfNEy-an0lMnNDsoMMWRQIr4gFjB19gl3O7XTDDUQOaG1ReFJSuY0NCAB5xpUOUFVrXAuA1k21_IILUkFCbpo9Ra6Zfd4I594s5e-6UcEkAZGPW8QYYbewFI1NQfCJ3Bw48_g1Jobf1VlCyj73Q6FlLxhP4nnc5nA9SOkAH7jzJ0G6TkKlHhxW_MU3sqdUGYPs56w05pOxFU0VCrYMC-3QzRcDttVgqqGqvys5W7QxY_pOIAfo3KgT1SyTId',
-  },
-];
+const lookItems: Array<{ category: string; name: string; price: string; image?: string }> = [];
 
 const desktopTones = [
   "from-[#ececec] via-white to-[#dcdcdc]",

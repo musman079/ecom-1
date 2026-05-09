@@ -281,11 +281,9 @@ export default function AdminCustomersPage() {
                 <p className="text-xs font-bold">Alex Rivera</p>
                 <p className="text-[10px] font-medium text-zinc-500">Head of Editorial</p>
               </div>
-              <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuArxsCLUaQKsAUMj7ZXMhjbPMCLqMxk4k7ImkVQHyM5fkhkdAjsjplWEEiyqd6ENX934Id6cfdE8i7EBeAj6FOGT6zKSly3fcQoej1FMBjzdgvescj8v8pgwxf4uj3LHwv3Xz2A-5NhhYLyXv9xvrQmZ4BttjNhEui_Sr2K1ASiefLUpeVXYwoVfX0Zges1TPcPc_3Z6CXYr46ojrUkQuucc2t0akrdTN8ncWMkzNTqSKHEp_M-DaI-nx4ePnFsDcxBzPXnVCVRG4qa"
-                alt="Admin"
-                className="object-cover rounded-full h-9 w-9"
-              />
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-xs font-bold text-white">
+                AR
+              </div>
             </div>
           </div>
 
