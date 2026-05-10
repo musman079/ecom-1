@@ -71,10 +71,10 @@ export default async function AdminOverviewDashboardPage() {
   const products: AdminProduct[] = await listAdminProducts();
   const recentOrdersData = await listRecentOrdersForAdmin({ limit: 8 });
 
-  const publishedCount = products.filter((product) => product.status === "published").length;
-  const draftCount = products.filter((product) => product.status === "draft").length;
-  const totalUnits = products.reduce((sum, product) => sum + product.stockQuantity, 0);
-  const inventoryValue = products.reduce((sum, product) => sum + product.price * product.stockQuantity, 0);
+  const publishedCount = products.filter((product: AdminProduct) => product.status === "published").length;
+  const draftCount = products.filter((product: AdminProduct) => product.status === "draft").length;
+  const totalUnits = products.reduce((sum: number, product: AdminProduct) => sum + product.stockQuantity, 0);
+  const inventoryValue = products.reduce((sum: number, product: AdminProduct) => sum + product.price * product.stockQuantity, 0);
 
   const kpiCards = [
     { label: "Total Products", value: String(products.length), delta: `${publishedCount} Published`, deltaTone: "text-emerald-600" },
@@ -154,7 +154,7 @@ export default async function AdminOverviewDashboardPage() {
                 <p className="text-xs font-bold">Alex Rivera</p>
                 <p className="text-[10px] font-medium text-zinc-500">Head of Editorial</p>
               </div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-xs font-bold text-white">
+              <div className="flex items-center justify-center text-xs font-bold text-white rounded-full h-9 w-9 bg-gradient-to-br from-blue-500 to-blue-600">
                 AR
               </div>
             </div>
