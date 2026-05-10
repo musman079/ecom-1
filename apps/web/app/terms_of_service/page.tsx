@@ -5,8 +5,8 @@ export default function TermsOfServicePage() {
     <main className="min-h-screen bg-[#0b1220] px-6 py-16 text-white sm:px-8">
       <div className="mx-auto w-full max-w-4xl rounded-3xl border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl sm:p-10">
         <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/55">Legal</p>
-        <h1 className="mt-3 text-3xl font-black uppercase tracking-tight sm:text-4xl">Terms of Service</h1>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-white/70">
+        <h1 className="mt-3 text-3xl font-black tracking-tight uppercase sm:text-4xl">Terms of Service</h1>
+        <p className="max-w-2xl mt-4 text-sm leading-7 text-white/70">
           These terms apply to your use of the Kinetic storefront, checkout flow, and account features.
           By using the site, you agree to provide accurate information and follow the rules below.
         </p>

@@ -16,7 +16,7 @@ const body = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "KINETIC Store",
+  title: "KINETIC Store ",
   description: "E-commerce Web App",
 };
 

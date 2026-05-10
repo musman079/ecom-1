@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { listAdminProducts } from "../../src/lib/admin-products";
+import { listAdminProducts, type AdminProduct } from "../../src/lib/admin-products";
 import { getSessionFromRequest } from "../../src/lib/auth-session";
 import { isAdminSessionUser } from "../../src/lib/admin-auth";
 import AdminLogoutButton from "../../src/components/admin-logout-button";
@@ -68,7 +68,7 @@ export default async function AdminOverviewDashboardPage() {
     redirect("/");
   }
 
-  const products = await listAdminProducts();
+  const products: AdminProduct[] = await listAdminProducts();
   const recentOrdersData = await listRecentOrdersForAdmin({ limit: 8 });
 
   const publishedCount = products.filter((product) => product.status === "published").length;
