@@ -135,7 +135,7 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
       return errorResponse("An account with this email already exists.", 409);
     }
 

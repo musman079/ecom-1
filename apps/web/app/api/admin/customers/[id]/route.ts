@@ -67,7 +67,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       },
     });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+    if (error && typeof error === "object" && "code" in error && error.code === "P2025") {
       return NextResponse.json({ error: "Customer not found." }, { status: 404 });
     }
 
@@ -97,7 +97,7 @@ export async function DELETE(request: Request, context: RouteContext) {
 
     return NextResponse.json({ customer: deletedUser });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+    if (error && typeof error === "object" && "code" in error && error.code === "P2025") {
       return NextResponse.json({ error: "Customer not found." }, { status: 404 });
     }
 
