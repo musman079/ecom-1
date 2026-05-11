@@ -3,6 +3,8 @@ import { prisma } from "../../../../src/lib/prisma";
 import { requireAdminSession } from "../../../../src/lib/admin-auth";
 import { AuthError } from "../../../../src/lib/auth-session";
 
+type CustomerWithDetails = Awaited<ReturnType<typeof prisma.user.findMany>>[number];
+
 export async function GET(request: Request) {
   try {
     await requireAdminSession(request);
