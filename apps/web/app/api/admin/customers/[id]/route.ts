@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 
 import { requireSuperAdminSession } from "../../../../../src/lib/admin-auth";
 import { AuthError } from "../../../../../src/lib/auth-session";
 import { prisma } from "../../../../../src/lib/prisma";
-import { Prisma } from "@prisma/client";
 
 type RouteContext = {
   params: Promise<{
