@@ -98,7 +98,7 @@ export async function POST(request: Request) {
       return errorResponse("Invalid credentials.", 401);
     }
 
-    const roleNames = user.roles.map((entry) => entry.role.name);
+    const roleNames = user.roles.map((entry: typeof user.roles[number]) => entry.role.name);
 
     if (isAdminEmail(user.email) && !roleNames.includes("ADMIN")) {
       await ensureUserRole(user.id, "ADMIN");

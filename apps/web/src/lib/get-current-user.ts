@@ -71,7 +71,7 @@ async function resolveUserByToken(token: string): Promise<SanitizedAuthUser | nu
     return null;
   }
 
-  const roleNames = user.roles.map((entry) => entry.role.name);
+  const roleNames = user.roles.map((entry: typeof user.roles[number]) => entry.role.name);
 
   return sanitizeAuthUser({
     id: user.id,
@@ -105,7 +105,7 @@ async function resolveUserByIdentity(identity: { id?: string | null; email?: str
     return null;
   }
 
-  const roleNames = user.roles.map((entry) => entry.role.name);
+  const roleNames = user.roles.map((entry: typeof user.roles[number]) => entry.role.name);
   const fallbackRole: AuthRole = "CUSTOMER";
 
   return sanitizeAuthUser({
