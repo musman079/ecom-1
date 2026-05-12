@@ -1,4 +1,4 @@
-import { Prisma, RoleType } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import {
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
 
     const passwordHash = await hashPassword(password);
 
-    const roleNames: RoleType[] = isAdminEmail(email) ? ["CUSTOMER", "ADMIN"] : ["CUSTOMER"];
+    const roleNames: Prisma.RoleType[] = isAdminEmail(email) ? ["CUSTOMER", "ADMIN"] : ["CUSTOMER"];
 
     await Promise.all(
       roleNames.map((name) =>
