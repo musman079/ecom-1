@@ -56,7 +56,7 @@ export async function GET(request: Request) {
     });
 
     // Transform the data
-    const transformedCustomers = customers.map((customer) => {
+    const transformedCustomers = customers.map((customer: CustomerWithDetails) => {
       const totalSpent = customer.orders.reduce((sum, order) => sum + order.totalInCents, 0);
       const lastOrder = customer.orders.length > 0 ? customer.orders[0] : null;
       const roleNames = customer.roles.map((entry) => entry.role.name);
