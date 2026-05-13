@@ -2340,14 +2340,15 @@ export async function listReturnRequestsForAdmin(options?: { limit?: number; sta
   const userMap = new Map(userDocs.map((user) => [user._id.toHexString(), user]));
 
   const prismaUserKeys = userIdKeys.filter((id) => !/^[a-fA-F0-9]{24}$/.test(id));
-  const prismaUserDocs =
+  type PrismaUserSnapshot = { id: string; email: string; fullName: string };
+  const prismaUserDocs: PrismaUserSnapshot[] =
     prismaUserKeys.length > 0
       ? await prisma.user.findMany({
           where: { id: { in: prismaUserKeys } },
           select: { id: true, email: true, fullName: true },
         })
       : [];
-  const prismaUserMap = new Map(prismaUserDocs.map((u) => [u.id, u]));
+  const prismaUserMap = new Map<string, PrismaUserSnapshot>(prismaUserDocs.map((u) => [u.id, u]));
 
   return docs.map((item) => {
     const key = typeof item.userId === "string" ? item.userId : item.userId.toHexString();
