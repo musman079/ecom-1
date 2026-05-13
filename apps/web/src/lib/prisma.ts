@@ -38,7 +38,7 @@ export const prisma = new Proxy({} as PrismaClient, {
   get(_target, prop) {
     if (prop === "then") return undefined; // avoid treating prisma as a Promise/thenable
     const client = getPrismaClient();
-    const value = (client as any)[prop];
+    const value = (client as unknown as Record<PropertyKey, unknown>)[prop];
     if (typeof value === "function") {
       return value.bind(client);
     }
