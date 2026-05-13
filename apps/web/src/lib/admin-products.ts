@@ -144,7 +144,7 @@ async function createUniqueSlug(title: string) {
 
 async function ensureSkuUnique(sku: string, excludedVariantId?: string) {
   const normalized = normalizeSku(sku);
-  const existingVariants = await prisma.productVariant.findMany({
+  const existingVariants: Array<{ id: string; sku: string }> = await prisma.productVariant.findMany({
     select: {
       id: true,
       sku: true,
