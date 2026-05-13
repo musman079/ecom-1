@@ -63,8 +63,8 @@ async function readUserCart(userId: string): Promise<ApiCart> {
   }
 
   const items: ApiCartItem[] = cart.items
-    .filter((item) => item.variant.product.status === ProductStatus.PUBLISHED)
-    .map((item) => {
+    .filter((item: typeof cart.items[number]) => item.variant.product.status === ProductStatus.PUBLISHED)
+    .map((item: typeof cart.items[number]) => {
       const price = item.variant.priceInCents / 100;
       const lineTotal = price * item.quantity;
       const thumbnail = (Array.isArray(item.variant.product.images) && item.variant.product.images.length > 0 ? item.variant.product.images[0] : null) ?? null;
