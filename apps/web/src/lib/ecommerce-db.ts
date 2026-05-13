@@ -2485,7 +2485,28 @@ export async function listWishlistForUser(userId: string) {
     return [];
   }
 
-  const products = await prisma.product.findMany({
+  type WishlistProductSnapshot = {
+    id: string;
+    title: string;
+    slug: string;
+    description: string;
+    status: string;
+    images: string[];
+    categories: Array<{ category: { name: string } }>;
+    variants: Array<{
+      id: string;
+      sku: string;
+      title: string;
+      priceInCents: number;
+      compareAtPriceInCents: number | null;
+      stockQuantity: number;
+      isActive: boolean;
+      color: string | null;
+      size: string | null;
+    }>;
+  };
+
+  const products: WishlistProductSnapshot[] = await prisma.product.findMany({
     where: {
       id: { in: productIds },
       status: PrismaProductStatus.PUBLISHED,
