@@ -5,6 +5,8 @@ import { ProductValidationError, createAdminProduct } from "../../../src/lib/adm
 import { AuthError } from "../../../src/lib/auth-session";
 import { listPublicProducts, type PublicSort } from "../../../src/lib/products";
 
+export const dynamic = "force-dynamic";
+
 type CreateProductPayload = {
   name?: string;
   title?: string;

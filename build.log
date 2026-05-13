@@ -1,0 +1,59 @@
+
+> ecommerce-workspace@ build C:\Users\Usman\Desktop\Project-1Ecom\ecommerce-workspace
+> turbo run build
+
+
+   • Packages in scope: @repo/eslint-config, @repo/types, @repo/typescript-config, @repo/ui, docs, mobile, web
+   • Running build in 7 packages
+   • Remote caching disabled
+
+web:build: cache miss, executing 3f10b2dbda362912
+docs:build: cache hit, replaying logs ea2de12728882c74
+docs:build: [6n[m]0;C:\Windows\system32\cmd.exe[?25h[25l
+docs:build: > docs@0.1.0 build C:\Users\Usman\Desktop\Project-1Ecom\eco
+docs:build: mmerce-workspace\apps\docs[K
+docs:build: > next build[K[6;1H[?25h[1m[38;2;173;127;168m▲ Next.js 16.2.0[m (Turbopack)
+docs:build: 
+docs:build: [1m[97m [m Creating an optimized production build ...
+docs:build: [1m[92m✓[m Compiled successfully in 20.6s
+docs:build: [?25l[1m[97m [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[92mdocs:build: ✓[m Finished TypeScript in 12.9s[K
+docs:build: [?25h[?25l[1m[97m [m Collecting page data using 3 workers  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Collecting page data using 3 workers  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Collecting page data using 3 workers  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Collecting page data using 3 workers  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Collecting page data using 3 workers  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Collecting page data using 3 workers  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Collecting page data using 3 workers  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Collecting page data using 3 workers  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Collecting page data using 3 workers  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Collecting page data using 3 workers  [36m.[mdocs:build: [K[59C[1m[92mdocs:build: ✓[m Collecting page data using 3 workers in 2.2s    
+docs:build: [?25h[?25l[1m[97m [m Generating static pages using 3 workers (0/4)  [36m[    ][mdocs:build: [K[59C[1m[97m[11;1H [m Generating static pages using 3 workers (0/4)  [36m[=   ][m    docs:build: [K[59C[10;1H[K[59C[1m[97mdocs:build:  [m Generating static pages using 3 workers (0/4)  [36m[==  ][mdocs:build: [K[59C[9;1H[K[59Cdocs:build: [K[59C[8;1H[K[59C[1m[97mdocs:build:  [m Generating static pages using 3 workers (1/4)  [36m[ ===][mdocs:build: [K[59C[7;1H[K[59Cdocs:build: [?25h[1m[92m✓[m Generating static pages using 3 workers (4/4) in 1070ms
+docs:build: [?25l[1m[97m [m Finalizing page optimization  [36m.[m[1m[92mdocs:build: ✓[m Finalizing page optimization in 17ms[K[10;1H[?25h[25l[4mRoute (app)[24m    
+docs:build: ┌ ○ /[10X
+docs:build: └ ○ /_not-found[14;1H[?25h[25l
+docs:build: ○  (Static)  prerendered as static content[17;1H[?25h
+web:build: 
+web:build: > web@0.1.0 build C:\Users\Usman\Desktop\Project-1Ecom\ecommerce-workspace\apps\web
+web:build: > next build
+web:build: 
+web:build: ▲ Next.js 16.2.0 (Turbopack)
+web:build: - Environments: .env
+web:build: 
+web:build: ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+web:build:   Creating an optimized production build ...
+web:build: ✓ Compiled successfully in 30.6s
+web:build:   Running TypeScript ...
+web:build: Failed to type check.
+web:build: 
+web:build: ./app/api/admin/customers/route.ts:62:35
+web:build: Type error: Property 'orders' does not exist on type '{ email: string; id: string; passwordHash: string | null; fullName: string; phone: string | null; notificationOrderUpdates: boolean; notificationReturnUpdates: boolean; notificationEmailEnabled: boolean; isActive: boolean; createdAt: Date; updatedAt: Date; }'.
+web:build: 
+web:build:   [90m60 |[0m     [90m// Transform the data[0m
+web:build:   [90m61 |[0m     [36mconst[0m transformedCustomers = customers.map((customer: [33mCustomerWithDetails[0m) => {
+web:build: [31m[1m>[0m [90m62 |[0m       [36mconst[0m totalSpent = customer.orders.reduce((sum: number, order: [36mtypeof[0m customer.order...
+web:build:   [90m   |[0m                                   [31m[1m^[0m
+web:build:   [90m63 |[0m       [36mconst[0m lastOrder = customer.orders.length > [35m0[0m ? customer.orders[[35m0[0m] : [36mnull[0m;
+web:build:   [90m64 |[0m       [36mconst[0m roleNames = customer.roles.map((entry: [36mtypeof[0m customer.roles[number]) => entry...
+web:build:   [90m65 |[0m       [36mconst[0m roles = roleNames.length > [35m0[0m ? [33mArray[0m.[36mfrom[0m([36mnew[0m [33mSet[0m(roleNames)) : [[32m"CUSTOMER"[0m];
+web:build: Next.js build worker exited with code: 1 and signal: null
+web:build:  ELIFECYCLE  Command failed with exit code 1.
+ ERROR  web#build: command (C:\Users\Usman\Desktop\Project-1Ecom\ecommerce-workspace\apps\web) C:\Users\Usman\AppData\Local\pnpm\.tools\pnpm\9.0.0\bin\pnpm.CMD run build exited (1)
+
+ Tasks:    1 successful, 2 total
+Cached:    1 cached, 2 total
+  Time:    1m9.576s 
+Failed:    web#build
+
+ ERROR  run failed: command  exited (1)
+ ELIFECYCLE  Command failed with exit code 1.

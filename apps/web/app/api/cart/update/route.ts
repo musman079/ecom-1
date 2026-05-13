@@ -4,6 +4,8 @@
  */
 import { PATCH as canonicalCartPatch } from "../route";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   const body = await request.text();
   const canonicalRequest = new Request(request.url, {

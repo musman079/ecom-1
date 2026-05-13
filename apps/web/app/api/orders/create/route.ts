@@ -4,6 +4,8 @@
  */
 import { POST as canonicalCheckoutPost } from "../../checkout/route";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   const response = await canonicalCheckoutPost(request);
   response.headers.set("X-Deprecated", "Use POST /api/checkout instead");

@@ -4,6 +4,8 @@ import { AuthError, requireAdminSession } from "../../../../../src/lib/admin-aut
 import { getMongoDb } from "../../../../../src/lib/mongodb";
 import { sendEmail } from "../../../../../src/lib/email-sender";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   try {
     await requireAdminSession(request);

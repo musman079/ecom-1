@@ -4,6 +4,8 @@ import { requireAdminSession } from "../../../../src/lib/admin-auth";
 import { AuthError } from "../../../../src/lib/auth-session";
 import { getAdminDashboardMetrics } from "../../../../src/lib/ecommerce-db";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   try {
     await requireAdminSession(request);

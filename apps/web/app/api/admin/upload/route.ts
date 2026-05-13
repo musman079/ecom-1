@@ -7,6 +7,8 @@ import { requireAdminSession } from "../../../../src/lib/admin-auth";
 import { AuthError } from "../../../../src/lib/auth-session";
 import { resizeProductImage, getStandardImageExtension } from "../../../../src/lib/image-processor";
 
+export const dynamic = "force-dynamic";
+
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 

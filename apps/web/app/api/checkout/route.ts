@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { AuthError, requireSession } from "../../../src/lib/auth-session";
 import { checkoutFromPrismaCart } from "../../../src/lib/ecommerce-db";
 
+export const dynamic = "force-dynamic";
+
 function dollarsToCents(value: number) {
   return Math.round(Number(value) * 100);
 }

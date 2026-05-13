@@ -9,6 +9,8 @@ import {
 import { AuthError } from "../../../../src/lib/auth-session";
 import { getPublicProductByIdOrSlug } from "../../../../src/lib/products";
 
+export const dynamic = "force-dynamic";
+
 type RouteContext = {
   params: Promise<{ id: string }>;
 };

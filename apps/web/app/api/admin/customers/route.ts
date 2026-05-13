@@ -1,9 +1,35 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../../../../src/lib/prisma";
 import { requireAdminSession } from "../../../../src/lib/admin-auth";
 import { AuthError } from "../../../../src/lib/auth-session";
 
-type CustomerWithDetails = Awaited<ReturnType<typeof prisma.user.findMany>>[number];
+export const dynamic = "force-dynamic";
+
+type CustomerWithDetails = Prisma.UserGetPayload<{
+  include: {
+    roles: {
+      include: {
+        role: true;
+      };
+    };
+    orders: {
+      select: {
+        id: true;
+        orderNumber: true;
+        totalInCents: true;
+        status: true;
+        createdAt: true;
+      };
+    };
+    _count: {
+      select: {
+        orders: true;
+        reviews: true;
+      };
+    };
+  };
+}>;
 
 export async function GET(request: Request) {
   try {

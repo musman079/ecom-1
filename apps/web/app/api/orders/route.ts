@@ -8,6 +8,8 @@ import { z } from "zod";
 import { AuthError, requireSession } from "../../../src/lib/auth-session";
 import { listRecentOrdersByUser, placeOrderFromItems } from "../../../src/lib/ecommerce-db";
 
+export const dynamic = "force-dynamic";
+
 const placeOrderSchema = z.object({
   items: z.array(
     z.object({

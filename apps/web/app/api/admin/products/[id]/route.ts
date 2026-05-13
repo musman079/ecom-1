@@ -10,6 +10,8 @@ import {
 import { requireAdminSession } from "../../../../../src/lib/admin-auth";
 import { AuthError } from "../../../../../src/lib/auth-session";
 
+export const dynamic = "force-dynamic";
+
 type RequestPayload = {
   title?: string;
   description?: string;

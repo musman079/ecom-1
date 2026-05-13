@@ -13,6 +13,8 @@ import {
 import { sanitizeAuthUser } from "../../../../src/lib/get-current-user";
 import { prisma } from "../../../../src/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 type LoginPayload = {
   email?: string;
   password?: string;

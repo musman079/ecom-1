@@ -4,6 +4,8 @@
  */
 import { POST as canonicalCheckoutPost } from "../../checkout/route";
 
+export const dynamic = "force-dynamic";
+
 type CheckoutPayload = {
   address?: {
     fullName?: string;

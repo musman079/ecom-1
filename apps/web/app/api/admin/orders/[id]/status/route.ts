@@ -4,6 +4,8 @@ import { requireAdminSession } from "../../../../../../src/lib/admin-auth";
 import { AuthError } from "../../../../../../src/lib/auth-session";
 import { updateOrderByAdmin } from "../../../../../../src/lib/ecommerce-db";
 
+export const dynamic = "force-dynamic";
+
 type RouteContext = {
   params: Promise<{ id: string }>;
 };

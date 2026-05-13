@@ -4,6 +4,8 @@
  */
 import { POST as canonicalCartPost } from "../route";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   const response = await canonicalCartPost(request);
   response.headers.set("X-Deprecated", "Use POST /api/cart instead");

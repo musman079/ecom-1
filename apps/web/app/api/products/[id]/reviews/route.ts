@@ -4,6 +4,8 @@ import { AuthError, requireSession } from "../../../../../src/lib/auth-session";
 import { createReview, listReviewsByProduct } from "../../../../../src/lib/ecommerce-db";
 import { prisma } from "../../../../../src/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 type RouteContext = {
   params: Promise<{ id: string }>;
 };

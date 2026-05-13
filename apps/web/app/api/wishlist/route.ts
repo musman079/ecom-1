@@ -8,6 +8,8 @@ import {
 } from "../../../src/lib/ecommerce-db";
 import { AuthError, requireSession } from "../../../src/lib/auth-session";
 
+export const dynamic = "force-dynamic";
+
 type WishlistPayload = {
   productId?: string;
 };

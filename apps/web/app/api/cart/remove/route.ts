@@ -4,6 +4,8 @@
  */
 import { DELETE as canonicalCartDelete } from "../route";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   let productId: string | undefined;
   try {

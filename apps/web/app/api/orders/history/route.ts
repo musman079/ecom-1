@@ -4,6 +4,8 @@
  */
 import { GET as canonicalOrdersGet } from "../route";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   const response = await canonicalOrdersGet(request);
   response.headers.set("X-Deprecated", "Use GET /api/orders instead");

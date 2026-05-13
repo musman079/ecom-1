@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { AuthError, requireSession } from "../../../../../src/lib/auth-session";
 import { getOrderByIdForUser } from "../../../../../src/lib/ecommerce-db";
 
+export const dynamic = "force-dynamic";
+
 type RouteContext = {
   params: Promise<{ id: string }>;
 };

@@ -1,0 +1,126 @@
+
+> ecommerce-workspace@ build C:\Users\Usman\Desktop\Project-1Ecom\ecommerce-workspace
+> turbo run build
+
+• turbo 2.9.6
+
+   • Packages in scope: @repo/eslint-config, @repo/types, @repo/typescript-config, @repo/ui, docs, mobile, web
+   • Running build in 7 packages
+   • Remote caching disabled
+
+web:build: cache miss, executing 87e7f2f0d8f94b46
+docs:build: cache hit, replaying logs ea2de12728882c74
+docs:build: [6n[m]0;C:\Windows\system32\cmd.exe[?25h[25l
+docs:build: > docs@0.1.0 build C:\Users\Usman\Desktop\Project-1Ecom\eco
+docs:build: mmerce-workspace\apps\docs[K
+docs:build: > next build[K[6;1H[?25h[1m[38;2;173;127;168m▲ Next.js 16.2.0[m (Turbopack)
+docs:build: 
+docs:build: [1m[97m [m Creating an optimized production build ...
+docs:build: [1m[92m✓[m Compiled successfully in 20.6s
+docs:build: [?25l[1m[97m [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Running TypeScript  [36m...[mdocs:build: [K[59C[1m[92mdocs:build: ✓[m Finished TypeScript in 12.9s[K
+docs:build: [?25h[?25l[1m[97m [m Collecting page data using 3 workers  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Collecting page data using 3 workers  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Collecting page data using 3 workers  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Collecting page data using 3 workers  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Collecting page data using 3 workers  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Collecting page data using 3 workers  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Collecting page data using 3 workers  [36m.[mdocs:build: [K[59C[1m[97mdocs:build:  [m Collecting page data using 3 workers  [36m..[mdocs:build: [K[59C[1m[97mdocs:build:  [m Collecting page data using 3 workers  [36m...[mdocs:build: [K[59C[1m[97mdocs:build:  [m Collecting page data using 3 workers  [36m.[mdocs:build: [K[59C[1m[92mdocs:build: ✓[m Collecting page data using 3 workers in 2.2s    
+docs:build: [?25h[?25l[1m[97m [m Generating static pages using 3 workers (0/4)  [36m[    ][mdocs:build: [K[59C[1m[97m[11;1H [m Generating static pages using 3 workers (0/4)  [36m[=   ][m    docs:build: [K[59C[10;1H[K[59C[1m[97mdocs:build:  [m Generating static pages using 3 workers (0/4)  [36m[==  ][mdocs:build: [K[59C[9;1H[K[59Cdocs:build: [K[59C[8;1H[K[59C[1m[97mdocs:build:  [m Generating static pages using 3 workers (1/4)  [36m[ ===][mdocs:build: [K[59C[7;1H[K[59Cdocs:build: [?25h[1m[92m✓[m Generating static pages using 3 workers (4/4) in 1070ms
+docs:build: [?25l[1m[97m [m Finalizing page optimization  [36m.[m[1m[92mdocs:build: ✓[m Finalizing page optimization in 17ms[K[10;1H[?25h[25l[4mRoute (app)[24m    
+docs:build: ┌ ○ /[10X
+docs:build: └ ○ /_not-found[14;1H[?25h[25l
+docs:build: ○  (Static)  prerendered as static content[17;1H[?25h
+web:build: 
+web:build: > web@0.1.0 build C:\Users\Usman\Desktop\Project-1Ecom\ecommerce-workspace\apps\web
+web:build: > next build
+web:build: 
+web:build: ▲ Next.js 16.2.0 (Turbopack)
+web:build: - Environments: .env
+web:build: 
+web:build: ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+web:build:   Creating an optimized production build ...
+web:build: ✓ Compiled successfully in 23.0s
+web:build:   Running TypeScript ...
+web:build:   Finished TypeScript in 23.2s ...
+web:build:   Collecting page data using 3 workers ...
+web:build:   Generating static pages using 3 workers (0/24) ...
+web:build:   Generating static pages using 3 workers (6/24) 
+web:build:   Generating static pages using 3 workers (12/24) 
+web:build:   Generating static pages using 3 workers (18/24) 
+web:build: ✓ Generating static pages using 3 workers (24/24) in 4.2s
+web:build:   Finalizing page optimization ...
+web:build: 
+web:build: Route (app)
+web:build: ┌ ○ /
+web:build: ├ ○ /_not-found
+web:build: ├ ƒ /admin_analytics
+web:build: ├ ○ /admin_customers
+web:build: ├ ○ /admin_orders
+web:build: ├ ƒ /admin_overview_dashboard
+web:build: ├ ○ /admin_post_edit_product
+web:build: ├ ○ /admin_products
+web:build: ├ ○ /admin_returns
+web:build: ├ ○ /admin_settings
+web:build: ├ ƒ /api/admin/analytics
+web:build: ├ ƒ /api/admin/customers
+web:build: ├ ƒ /api/admin/customers/[id]
+web:build: ├ ƒ /api/admin/dashboard
+web:build: ├ ƒ /api/admin/email-queue
+web:build: ├ ƒ /api/admin/email-queue/process
+web:build: ├ ƒ /api/admin/orders
+web:build: ├ ƒ /api/admin/orders/[id]
+web:build: ├ ƒ /api/admin/orders/[id]/status
+web:build: ├ ƒ /api/admin/products
+web:build: ├ ƒ /api/admin/products/[id]
+web:build: ├ ƒ /api/admin/returns
+web:build: ├ ƒ /api/admin/returns/[id]
+web:build: ├ ƒ /api/admin/upload
+web:build: ├ ƒ /api/auth/[...nextauth]
+web:build: ├ ƒ /api/auth/login
+web:build: ├ ƒ /api/auth/logout
+web:build: ├ ƒ /api/auth/me
+web:build: ├ ƒ /api/auth/register
+web:build: ├ ƒ /api/cart
+web:build: ├ ƒ /api/cart/add
+web:build: ├ ƒ /api/cart/checkout
+web:build: ├ ƒ /api/cart/remove
+web:build: ├ ƒ /api/cart/remove/[productId]
+web:build: ├ ƒ /api/cart/update
+web:build: ├ ƒ /api/cart/update/[productId]
+web:build: ├ ƒ /api/checkout
+web:build: ├ ƒ /api/coupons/apply
+web:build: ├ ƒ /api/notifications
+web:build: ├ ƒ /api/notifications/preferences
+web:build: ├ ƒ /api/orders
+web:build: ├ ƒ /api/orders/[id]
+web:build: ├ ƒ /api/orders/[id]/cancel
+web:build: ├ ƒ /api/orders/[id]/track
+web:build: ├ ƒ /api/orders/create
+web:build: ├ ƒ /api/orders/history
+web:build: ├ ƒ /api/orders/track/[orderNumber]
+web:build: ├ ƒ /api/products
+web:build: ├ ƒ /api/products/[id]
+web:build: ├ ƒ /api/products/[id]/reviews
+web:build: ├ ƒ /api/profile
+web:build: ├ ƒ /api/returns
+web:build: ├ ƒ /api/reviews
+web:build: ├ ƒ /api/webhooks/stripe
+web:build: ├ ƒ /api/wishlist
+web:build: ├ ○ /auth
+web:build: ├ ○ /cart_checkout
+web:build: ├ ○ /cart_checkout_desktop
+web:build: ├ ○ /kinetic_luxury_fashion_e_commerce
+web:build: ├ ○ /order_tracking
+web:build: ├ ○ /privacy_policy
+web:build: ├ ○ /product_detail_desktop
+web:build: ├ ○ /product_details
+web:build: ├ ○ /profile
+web:build: ├ ○ /returns_refunds
+web:build: ├ ○ /reviews
+web:build: └ ○ /terms_of_service
+web:build: 
+web:build: 
+web:build: ƒ Proxy (Middleware)
+web:build: 
+web:build: ○  (Static)   prerendered as static content
+web:build: ƒ  (Dynamic)  server-rendered on demand
+web:build: 
+
+ Tasks:    2 successful, 2 total
+Cached:    1 cached, 2 total
+  Time:    1m1.36s 
+

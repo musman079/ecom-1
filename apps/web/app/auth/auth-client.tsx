@@ -350,7 +350,6 @@ export function AuthClient() {
         </div>
       ) : null}
 
-      {/* @ts-expect-error styled-jsx is compiled by Next.js */}
       <style jsx global>{`
         @keyframes pulse-soft {
           0%,

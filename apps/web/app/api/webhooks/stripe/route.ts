@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 import { updateOrderByAdmin } from "../../../../src/lib/ecommerce-db";
 
+export const dynamic = "force-dynamic";
+
 type StripeWebhookObject = {
   metadata?: {
     orderId?: string;

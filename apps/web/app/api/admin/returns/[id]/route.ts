@@ -4,6 +4,8 @@ import { requireAdminSession } from "../../../../../src/lib/admin-auth";
 import { AuthError } from "../../../../../src/lib/auth-session";
 import { updateReturnRequestByAdmin } from "../../../../../src/lib/ecommerce-db";
 
+export const dynamic = "force-dynamic";
+
 type RequestPayload = {
   status?: "requested" | "approved" | "in_transit" | "refunded" | "rejected";
   adminNote?: string;

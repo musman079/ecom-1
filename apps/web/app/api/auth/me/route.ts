@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { assertAuthEnvironment, AuthConfigError } from "../../../../src/lib/auth";
 import { getCurrentUserFromRequest } from "../../../../src/lib/get-current-user";
 
+export const dynamic = "force-dynamic";
+
 function errorResponse(message: string, status: number) {
   return NextResponse.json(
     {

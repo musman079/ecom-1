@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { AuthError, requireSession } from "../../../src/lib/auth-session";
 import { prisma } from "../../../src/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 const ProductStatus = {
   DRAFT: "DRAFT",
   PUBLISHED: "PUBLISHED",
