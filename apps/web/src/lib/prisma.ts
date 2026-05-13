@@ -1,5 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 
+// Prisma expects DATABASE_URL; reuse MONGODB_URL when only that is configured.
+const resolvedDatabaseUrl = process.env.DATABASE_URL ?? process.env.MONGODB_URL;
+if (!process.env.DATABASE_URL && resolvedDatabaseUrl) {
+  process.env.DATABASE_URL = resolvedDatabaseUrl;
+}
+
 declare global {
   var prisma: PrismaClient | undefined;
 }
