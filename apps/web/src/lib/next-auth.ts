@@ -1,4 +1,3 @@
-import type { Prisma } from "@prisma/client";
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
@@ -36,7 +35,7 @@ function mapUserRoles(email: string, roles?: string[]): SessionRole[] {
   return Array.from(new Set(baseRoles.filter((role): role is SessionRole => ["CUSTOMER", "ADMIN", "SUPER_ADMIN"].includes(role))));
 }
 
-async function ensureRoleExists(name: Prisma.RoleType) {
+async function ensureRoleExists(name: SessionRole) {
   return prisma.role.upsert({
     where: { name },
     update: {},
@@ -44,7 +43,7 @@ async function ensureRoleExists(name: Prisma.RoleType) {
   });
 }
 
-async function ensureUserRole(userId: string, roleName: Prisma.RoleType) {
+async function ensureUserRole(userId: string, roleName: SessionRole) {
   const role = await ensureRoleExists(roleName);
 
   await prisma.userRole.upsert({

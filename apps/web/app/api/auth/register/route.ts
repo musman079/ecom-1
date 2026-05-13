@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import {
@@ -17,6 +16,8 @@ type RegisterPayload = {
   fullName?: string;
   phone?: string;
 };
+
+type RoleName = "CUSTOMER" | "ADMIN" | "SUPER_ADMIN";
 
 function errorResponse(message: string, status: number) {
   return NextResponse.json(
@@ -68,7 +69,7 @@ export async function POST(request: Request) {
 
     const passwordHash = await hashPassword(password);
 
-    const roleNames: Prisma.RoleType[] = isAdminEmail(email) ? ["CUSTOMER", "ADMIN"] : ["CUSTOMER"];
+    const roleNames: RoleName[] = isAdminEmail(email) ? ["CUSTOMER", "ADMIN"] : ["CUSTOMER"];
 
     await Promise.all(
       roleNames.map((name) =>
@@ -112,7 +113,7 @@ export async function POST(request: Request) {
       return errorResponse("Failed to load created user.", 500);
     }
 
-    const userRoleNames = userWithRoles.roles.map((entry) => entry.role.name);
+    const userRoleNames = userWithRoles.roles.map((entry: typeof userWithRoles.roles[number]) => entry.role.name);
     const role = userRoleNames.includes("SUPER_ADMIN")
       ? "SUPER_ADMIN"
       : userRoleNames.includes("ADMIN")
