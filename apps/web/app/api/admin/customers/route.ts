@@ -1,35 +1,34 @@
 import { NextResponse } from "next/server";
-import type { Prisma } from "@prisma/client";
 import { prisma } from "../../../../src/lib/prisma";
 import { requireAdminSession } from "../../../../src/lib/admin-auth";
 import { AuthError } from "../../../../src/lib/auth-session";
 
 export const dynamic = "force-dynamic";
 
-type CustomerWithDetails = Prisma.UserGetPayload<{
-  include: {
-    roles: {
-      include: {
-        role: true;
-      };
+type CustomerWithDetails = {
+  id: string;
+  email: string;
+  fullName: string;
+  phone: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  orders: Array<{
+    id: string;
+    orderNumber: string;
+    totalInCents: number;
+    status: string;
+    createdAt: Date;
+  }>;
+  roles: Array<{
+    role: {
+      name: string;
     };
-    orders: {
-      select: {
-        id: true;
-        orderNumber: true;
-        totalInCents: true;
-        status: true;
-        createdAt: true;
-      };
-    };
-    _count: {
-      select: {
-        orders: true;
-        reviews: true;
-      };
-    };
+  }>;
+  _count: {
+    orders: number;
+    reviews: number;
   };
-}>;
+};
 
 export async function GET(request: Request) {
   try {
