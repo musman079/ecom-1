@@ -1,6 +1,12 @@
-import { ProductStatus as PrismaProductStatus } from "@prisma/client";
-
 import { prisma } from "./prisma";
+
+const PrismaProductStatus = {
+  DRAFT: "DRAFT",
+  PUBLISHED: "PUBLISHED",
+  ARCHIVED: "ARCHIVED",
+} as const;
+
+type PrismaProductStatus = (typeof PrismaProductStatus)[keyof typeof PrismaProductStatus];
 
 export type ProductStatus = "draft" | "published";
 

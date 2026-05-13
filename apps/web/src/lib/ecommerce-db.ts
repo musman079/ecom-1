@@ -1,9 +1,14 @@
-import { ProductStatus as PrismaProductStatus } from "@prisma/client";
 import { ObjectId } from "mongodb";
 
 import { mapUserRoles } from "./admin-auth";
 import { getMongoDb } from "./mongodb";
 import { prisma } from "./prisma";
+
+const PrismaProductStatus = {
+  DRAFT: "DRAFT",
+  PUBLISHED: "PUBLISHED",
+  ARCHIVED: "ARCHIVED",
+} as const;
 
 export type UserDocument = {
   _id: ObjectId;

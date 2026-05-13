@@ -1,6 +1,12 @@
-import { ProductStatus } from "@prisma/client";
-
 import { prisma } from "./prisma";
+
+const ProductStatus = {
+  DRAFT: "DRAFT",
+  PUBLISHED: "PUBLISHED",
+  ARCHIVED: "ARCHIVED",
+} as const;
+
+type ProductStatus = (typeof ProductStatus)[keyof typeof ProductStatus];
 
 export type PublicSort = "newest" | "price_asc" | "price_desc" | "popular";
 

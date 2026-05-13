@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
-import { ProductStatus } from "@prisma/client";
 
 import { AuthError, requireSession } from "../../../src/lib/auth-session";
 import { prisma } from "../../../src/lib/prisma";
+
+const ProductStatus = {
+  DRAFT: "DRAFT",
+  PUBLISHED: "PUBLISHED",
+  ARCHIVED: "ARCHIVED",
+} as const;
 
 type CartMutationPayload = {
   productId?: string;
