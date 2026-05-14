@@ -10,13 +10,5 @@
       }
     }
   ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "apps/web/$1"
-    }
-  ],
-  "installCommand": "pnpm install --shamefully-hoist",
-  "buildCommand": "pnpm run build",
-  "outputDirectory": "apps/web/.next"
+  "installCommand": "pnpm install --shamefully-hoist"
 }
