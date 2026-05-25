@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 import { useCartStore } from "../../src/store/cart-store";
 import CartBadge from "../../src/components/CartBadge";
@@ -43,7 +43,6 @@ function getDetailTone(index: number) {
 
 export function ProductDetailsClient() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [selectedColor, setSelectedColor] = useState("Black");
   const [selectedSize, setSelectedSize] = useState("M");
   const [product, setProduct] = useState<ProductDetail | null>(null);
