@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 import { useCartStore } from "../../src/store/cart-store";
 import CartBadge from "../../src/components/CartBadge";
+import { FadeIn } from "../../src/components/motion/fade-in";
+import { kineticEase } from "../../src/components/motion/motion-config";
 
 const navLinks = [
   { label: 'New Arrivals', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
@@ -54,6 +57,8 @@ export function ProductDetailDesktopClient() {
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [wishlistMessage, setWishlistMessage] = useState<string | null>(null);
   const [wishlistError, setWishlistError] = useState<string | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const reduceMotion = useReducedMotion();
   const setCart = useCartStore((state) => state.setCart);
   const addToCartLocal = useCartStore((state) => state.addToCart);
 
@@ -118,6 +123,7 @@ export function ProductDetailDesktopClient() {
           product.images = Array.isArray(product.images) ? product.images : [];
         }
         setProduct(product ?? null);
+        setActiveImageIndex(0);
       } catch {
         setProduct(null);
         setError("Failed to load product details.");
@@ -271,7 +277,7 @@ export function ProductDetailDesktopClient() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f3f3f4] text-[#1a1c1c]">
+    <div className="min-h-screen bg-[#f3f3f4] text-[#1a1c1c] -mt-20 pt-20">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-black/5 bg-white/85 backdrop-blur-xl">
         <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center justify-between px-4 sm:h-20 sm:px-6 xl:px-12">
           <h1 className="text-2xl font-black tracking-[-0.06em] sm:text-3xl">KINETIC</h1>
@@ -315,28 +321,34 @@ export function ProductDetailDesktopClient() {
           <div className="flex flex-col gap-4 lg:col-span-7">
             {hasDesktopImages ? (
               <>
-                <div className="group aspect-[3/4] w-full overflow-hidden bg-neutral-200">
-                  <img
-                    src={product?.images?.[0] || ""}
-                    alt={product?.title || "Product image"}
-                    className="h-full w-full object-cover transition duration-1000 group-hover:scale-105"
-                  />
+                <div className="group relative aspect-[3/4] w-full overflow-hidden bg-neutral-200">
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={product?.images?.[activeImageIndex] ?? activeImageIndex}
+                      src={product?.images?.[activeImageIndex] || ""}
+                      alt={product?.title || "Product image"}
+                      initial={reduceMotion ? false : { opacity: 0, scale: 1.04 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={reduceMotion ? undefined : { opacity: 0 }}
+                      transition={{ duration: 0.5, ease: kineticEase }}
+                      className="h-full w-full object-cover transition duration-1000 group-hover:scale-105"
+                    />
+                  </AnimatePresence>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="aspect-[3/4] overflow-hidden bg-neutral-200">
-                    <img
-                      src={product?.images?.[1] || product?.images?.[0] || ""}
-                      alt="Detail View"
-                      className="h-full w-full object-cover transition duration-700 hover:scale-110"
-                    />
-                  </div>
-                  <div className="aspect-[3/4] overflow-hidden bg-neutral-200">
-                    <img
-                      src={product?.images?.[2] || product?.images?.[0] || ""}
-                      alt="Styling Shot"
-                      className="h-full w-full object-cover transition duration-700 hover:scale-110"
-                    />
-                  </div>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-2">
+                  {product?.images?.slice(0, 4).map((image, idx) => (
+                    <motion.button
+                      key={`${image}-${idx}`}
+                      type="button"
+                      onClick={() => setActiveImageIndex(idx)}
+                      whileHover={reduceMotion ? undefined : { scale: 1.02 }}
+                      className={`aspect-[3/4] overflow-hidden bg-neutral-200 text-left ${
+                        idx === activeImageIndex ? "ring-2 ring-black ring-offset-2" : ""
+                      }`}
+                    >
+                      <img src={image} alt={`View ${idx + 1}`} className="h-full w-full object-cover transition duration-700 hover:scale-110" />
+                    </motion.button>
+                  ))}
                 </div>
               </>
             ) : (
@@ -358,7 +370,7 @@ export function ProductDetailDesktopClient() {
             )}
           </div>
 
-          <div className="px-4 pt-10 sm:px-6 sm:pt-12 lg:col-span-5 lg:px-0 lg:pl-20 lg:pt-0">
+          <FadeIn className="px-4 pt-10 sm:px-6 sm:pt-12 lg:col-span-5 lg:px-0 lg:pl-20 lg:pt-0">
             <div className="lg:sticky lg:top-32 lg:max-w-md">
               <span className="mb-4 block text-[10px] font-bold uppercase tracking-[0.3em] text-[#497cff]">
                 {loading ? "Loading..." : "New Season Collection"}
@@ -377,9 +389,18 @@ export function ProductDetailDesktopClient() {
                 <div>
                   <span className="mb-4 block text-[10px] font-semibold uppercase tracking-[0.2em]">Color - {selectedColor === "Black" ? "Obsidian Black" : selectedColor}</span>
                   <div className="flex gap-3">
-                    <button type="button" onClick={() => setSelectedColor("Black")} className={`h-8 w-8 rounded-full bg-black ${selectedColor === "Black" ? "ring-2 ring-black ring-offset-2" : ""}`} aria-label="Black" />
-                    <button type="button" onClick={() => setSelectedColor("Grey")} className={`h-8 w-8 rounded-full bg-neutral-400 transition-all hover:ring-2 hover:ring-neutral-300 hover:ring-offset-2 ${selectedColor === "Grey" ? "ring-2 ring-black ring-offset-2" : ""}`} aria-label="Grey" />
-                    <button type="button" onClick={() => setSelectedColor("White")} className={`h-8 w-8 rounded-full bg-neutral-200 transition-all hover:ring-2 hover:ring-neutral-200 hover:ring-offset-2 ${selectedColor === "White" ? "ring-2 ring-black ring-offset-2" : ""}`} aria-label="White" />
+                    {(["Black", "Grey", "White"] as const).map((color) => (
+                      <motion.button
+                        key={color}
+                        type="button"
+                        onClick={() => setSelectedColor(color)}
+                        whileTap={reduceMotion ? undefined : { scale: 0.9 }}
+                        className={`h-8 w-8 rounded-full transition-all ${
+                          color === "Black" ? "bg-black" : color === "Grey" ? "bg-neutral-400" : "bg-neutral-200"
+                        } ${selectedColor === color ? "ring-2 ring-black ring-offset-2" : ""}`}
+                        aria-label={color}
+                      />
+                    ))}
                   </div>
                 </div>
 
@@ -392,38 +413,49 @@ export function ProductDetailDesktopClient() {
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     {(["XS", "S", "M", "L"] as const).map((size) => (
-                      <button
+                      <motion.button
                         key={size}
                         type="button"
                         onClick={() => setSelectedSize(size)}
-                        className={`h-12 rounded-xl border text-xs font-semibold ${
+                        whileTap={reduceMotion ? undefined : { scale: 0.95 }}
+                        className={`h-12 rounded-xl border text-xs font-semibold transition ${
                           selectedSize === size ? "border-black bg-black font-bold text-white" : "border-neutral-300"
                         }`}
                       >
                         {size}
-                      </button>
+                      </motion.button>
                     ))}
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  <button
+                  <motion.button
                     type="button"
                     onClick={addToCart}
                     disabled={addToCartLoading}
-                    className="block w-full rounded-full bg-black py-5 text-center text-sm font-bold uppercase tracking-[0.2em] text-white shadow-xl shadow-black/10 transition-transform hover:scale-[1.01] disabled:opacity-40"
+                    whileHover={reduceMotion ? undefined : { scale: 1.02 }}
+                    whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+                    className="block w-full rounded-full bg-black py-5 text-center text-sm font-bold uppercase tracking-[0.2em] text-white shadow-xl shadow-black/10 disabled:opacity-40"
                   >
                     {addToCartLoading ? "Adding..." : "Add to Cart"}
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
                     type="button"
                     onClick={toggleWishlist}
                     disabled={wishlistLoading}
+                    whileTap={reduceMotion ? undefined : { scale: 0.98 }}
                     className="flex w-full items-center justify-center gap-2 rounded-full border border-neutral-300 py-5 text-sm font-bold uppercase tracking-[0.2em] transition-colors hover:bg-neutral-200 disabled:opacity-40"
                   >
-                    <span className="material-symbols-outlined text-sm">favorite</span>
+                    <motion.span
+                      animate={wishlisted && !reduceMotion ? { scale: [1, 1.25, 1] } : { scale: 1 }}
+                      transition={{ duration: 0.35 }}
+                      className="material-symbols-outlined text-sm"
+                      style={{ fontVariationSettings: wishlisted ? "'FILL' 1" : "'FILL' 0" }}
+                    >
+                      favorite
+                    </motion.span>
                     {wishlistLoading ? "Updating..." : wishlisted ? "Wishlisted" : "Add to Wishlist"}
-                  </button>
+                  </motion.button>
                   {addToCartError ? <p className="text-xs font-bold text-red-600">{addToCartError}</p> : null}
                   {addToCartMessage ? <p className="text-xs font-bold text-emerald-700">{addToCartMessage}</p> : null}
                   {wishlistError ? <p className="text-xs font-bold text-red-600">{wishlistError}</p> : null}
@@ -453,10 +485,10 @@ export function ProductDetailDesktopClient() {
                 </details>
               </div>
             </div>
-          </div>
+          </FadeIn>
         </section>
 
-        <section className="bg-neutral-200/50 px-4 py-16 sm:px-6 sm:py-24 xl:px-12">
+        <FadeIn as="section" className="bg-neutral-200/50 px-4 py-16 sm:px-6 sm:py-24 xl:px-12">
           <div className="mb-16 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <h3 className="text-3xl font-black uppercase leading-[0.9] tracking-[-0.05em] sm:text-5xl">Complete The Look</h3>
@@ -509,7 +541,7 @@ export function ProductDetailDesktopClient() {
               </div>
             </article>
           </div>
-        </section>
+        </FadeIn>
 
         <footer className="border-t border-black/5 bg-white">
           <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 gap-12 px-6 py-20 md:grid-cols-4 xl:px-12">

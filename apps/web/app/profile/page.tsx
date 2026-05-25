@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { FadeIn } from "../../src/components/motion/fade-in";
+import { Stagger, StaggerItem } from "../../src/components/motion/stagger";
 
 import AdminLogoutButton from "../../src/components/admin-logout-button";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
@@ -113,6 +116,7 @@ function getNotificationHref(item: UserNotification) {
 
 export default function ProfilePage() {
   const router = useRouter();
+  const reduceMotion = useReducedMotion();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -346,7 +350,7 @@ export default function ProfilePage() {
   return (
     <main className="min-h-screen bg-[#070d17] px-6 py-10 text-[#eaf2ff] sm:py-12">
       <section className="mx-auto w-full max-w-6xl space-y-6">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-xl sm:p-8">
+        <FadeIn className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-xl sm:p-8">
           <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">Customer Account</p>
@@ -402,25 +406,28 @@ export default function ProfilePage() {
                 </button>
               </section>
 
-              <section className="grid gap-4 sm:grid-cols-3 lg:col-span-5 lg:grid-cols-1">
-                <article className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">Recent Orders</p>
-                  <p className="mt-2 text-3xl font-black text-white">{summary.totalOrders}</p>
-                </article>
-                <article className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">In Transit</p>
-                  <p className="mt-2 text-3xl font-black text-white">{summary.inTransit}</p>
-                </article>
-                <article className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">Recent Spend</p>
-                  <p className="mt-2 text-3xl font-black text-white">${summary.totalSpend.toFixed(2)}</p>
-                </article>
-              </section>
+              <Stagger className="grid gap-4 sm:grid-cols-3 lg:col-span-5 lg:grid-cols-1">
+                {[
+                  { label: "Recent Orders", value: summary.totalOrders },
+                  { label: "In Transit", value: summary.inTransit },
+                  { label: "Recent Spend", value: `$${summary.totalSpend.toFixed(2)}` },
+                ].map((stat) => (
+                  <StaggerItem key={stat.label}>
+                    <motion.article
+                      whileHover={reduceMotion ? undefined : { y: -3 }}
+                      className="rounded-xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-white/20"
+                    >
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">{stat.label}</p>
+                      <p className="mt-2 text-3xl font-black text-white">{stat.value}</p>
+                    </motion.article>
+                  </StaggerItem>
+                ))}
+              </Stagger>
             </div>
           ) : null}
-        </div>
+        </FadeIn>
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-xl sm:p-8">
+        <FadeIn className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-xl sm:p-8">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xl font-black tracking-tight">Notification Preferences</h2>
             <button
@@ -474,9 +481,9 @@ export default function ProfilePage() {
               Email Alerts
             </label>
           </div>
-        </section>
+        </FadeIn>
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-xl sm:p-8">
+        <FadeIn className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-xl sm:p-8">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-black tracking-tight">Notifications</h2>
@@ -495,9 +502,10 @@ export default function ProfilePage() {
           {notifications.length === 0 ? (
             <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/60">No notifications yet.</p>
           ) : (
-            <div className="space-y-3">
+            <Stagger className="space-y-3">
               {notifications.map((item) => (
-                <article key={item.id} className={`rounded-xl border p-4 ${item.isRead ? "border-white/10 bg-white/[0.03]" : "border-[#4f8cff]/40 bg-[#4f8cff]/10"}`}>
+                <StaggerItem key={item.id}>
+                <article className={`rounded-xl border p-4 transition hover:border-white/25 ${item.isRead ? "border-white/10 bg-white/[0.03]" : "border-[#4f8cff]/40 bg-[#4f8cff]/10"}`}>
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <h3 className="text-sm font-bold text-white">{item.title}</h3>
                     <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/60">{formatProfileDate(item.createdAt)}</span>
@@ -507,12 +515,13 @@ export default function ProfilePage() {
                     View Details
                   </Link>
                 </article>
+                </StaggerItem>
               ))}
-            </div>
+            </Stagger>
           )}
-        </section>
+        </FadeIn>
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-xl sm:p-8">
+        <FadeIn className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-xl sm:p-8">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xl font-black tracking-tight">Recent Orders</h2>
             <div className="flex gap-2">
@@ -528,9 +537,13 @@ export default function ProfilePage() {
           {recentOrders.length === 0 ? (
             <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/60">No orders yet. Your latest purchases will appear here.</p>
           ) : (
-            <div className="space-y-3">
+            <Stagger className="space-y-3">
               {recentOrders.map((order) => (
-                <article key={order.id} className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                <StaggerItem key={order.id}>
+                <motion.article
+                  whileHover={reduceMotion ? undefined : { x: 4 }}
+                  className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-white/20"
+                >
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/60">Order #{order.orderNumber}</p>
                     <h3 className="mt-1 text-sm font-bold text-white">{order.leadItemTitle}</h3>
@@ -550,9 +563,10 @@ export default function ProfilePage() {
                       </Link>
                     ) : null}
                   </div>
-                </article>
+                </motion.article>
+                </StaggerItem>
               ))}
-            </div>
+            </Stagger>
           )}
 
           <div className="mt-6 flex items-center justify-between">
@@ -560,7 +574,7 @@ export default function ProfilePage() {
               Back to home
             </Link>
           </div>
-        </section>
+        </FadeIn>
       </section>
     </main>
   );

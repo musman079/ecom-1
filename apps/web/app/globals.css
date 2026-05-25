@@ -87,10 +87,7 @@ button:hover .material-symbols-outlined {
   color: var(--app-primary);
 }
 
-main > section,
-main > aside,
-main article,
-main section {
+.motion-fade-lift {
   animation: fade-lift 0.7s ease both;
 }
 

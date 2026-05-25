@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 import { useCartStore, type CartItem } from "../../src/store/cart-store";
+import { CartLineItem } from "../../src/components/cart/cart-line-item";
+import { FadeIn } from "../../src/components/motion/fade-in";
 
 type ShippingForm = {
   fullName: string;
@@ -71,6 +74,7 @@ export default function CartCheckoutPage() {
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const loadCart = async () => {
@@ -317,7 +321,7 @@ export default function CartCheckoutPage() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#0b1220] text-[#f2f4f8]">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#0b1220] text-[#f2f4f8] -mt-20 pt-20">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-28 -top-24 h-80 w-80 rounded-full bg-[#3f7dff]/30 blur-3xl" />
         <div className="absolute right-[-120px] top-44 h-[24rem] w-[24rem] rounded-full bg-[#17c4b3]/20 blur-3xl" />
@@ -358,69 +362,36 @@ export default function CartCheckoutPage() {
           {error ? <p className="mb-4 rounded-lg border border-red-300/30 bg-red-400/10 px-4 py-3 text-sm font-semibold text-red-200">{error}</p> : null}
           {message ? <p className="mb-4 rounded-lg border border-emerald-300/20 bg-emerald-400/10 px-4 py-3 text-sm font-semibold text-emerald-200">{message}</p> : null}
 
-          <div className="space-y-12">
-            {cart.items.length === 0 ? (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-sm text-white/70 backdrop-blur-xl">No items in cart yet.</div>
-            ) : (
-              cart.items.map((item) => (
-              <article key={item.productId} className="group flex items-start gap-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl transition hover:border-white/20 hover:bg-white/[0.05]">
-                <div className="h-40 w-32 shrink-0 overflow-hidden rounded-xl bg-white/5">
-                  {item.thumbnail ? (
-                    <img
-                      src={item.thumbnail}
-                      alt={item.title}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#1d2940] to-[#0d1627] text-[10px] font-bold uppercase tracking-[0.18em] text-white/45">
-                      No Image
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex h-40 flex-grow flex-col py-2">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.15em] text-[#65f3de]">In Cart</span>
-                      <h3 className="text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-3xl">{item.title}</h3>
-                      <p className="text-sm text-white/60">SKU: {item.sku}</p>
-                    </div>
-                    <span className="text-3xl font-bold text-white sm:text-lg">${item.price.toFixed(2)}</span>
-                  </div>
-
-                  <div className="mt-auto flex items-center justify-between">
-                    <div className="flex items-center gap-6 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-white">
-                      <button
-                        type="button"
-                        disabled={activeProductId === item.productId || item.quantity <= 1}
-                        onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                        className="material-symbols-outlined text-sm disabled:opacity-40"
-                      >
-                        remove
-                      </button>
-                      <span className="w-4 text-center text-sm font-bold">{item.quantity}</span>
-                      <button
-                        type="button"
-                        disabled={activeProductId === item.productId || item.quantity >= item.stockQuantity}
-                        onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                        className="material-symbols-outlined text-sm disabled:opacity-40"
-                      >
-                        add
-                      </button>
-                    </div>
-                    <button
-                      type="button"
-                      disabled={activeProductId === item.productId}
-                      onClick={() => removeItem(item.productId)}
-                      className="text-[10px] font-bold uppercase tracking-widest text-white/65 transition hover:text-[#ff9b9b] disabled:opacity-40"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              </article>
-            )))}
-          </div>
+          <AnimatePresence mode="popLayout">
+            <div className="space-y-12">
+              {cart.items.length === 0 ? (
+                <motion.div
+                  initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-2xl border border-white/10 bg-white/5 p-8 text-sm text-white/70 backdrop-blur-xl"
+                >
+                  No items in cart yet.
+                </motion.div>
+              ) : (
+                cart.items.map((item) => (
+                  <CartLineItem
+                    key={item.productId}
+                    productId={item.productId}
+                    title={item.title}
+                    sku={item.sku}
+                    price={item.price}
+                    quantity={item.quantity}
+                    stockQuantity={item.stockQuantity}
+                    thumbnail={item.thumbnail}
+                    activeProductId={activeProductId}
+                    onDecrement={() => updateQuantity(item.productId, item.quantity - 1)}
+                    onIncrement={() => updateQuantity(item.productId, item.quantity + 1)}
+                    onRemove={() => removeItem(item.productId)}
+                  />
+                ))
+              )}
+            </div>
+          </AnimatePresence>
 
             <section className="mt-20 rounded-2xl border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl">
             <form className="space-y-8" id="shipping-form" onSubmit={handleSubmit(placeOrder)}>
@@ -468,7 +439,7 @@ export default function CartCheckoutPage() {
           </section>
         </section>
 
-        <aside className="lg:col-span-5">
+        <FadeIn as="aside" className="lg:col-span-5">
           <div className="space-y-8 lg:sticky lg:top-28">
             <section className="rounded-2xl border border-white/10 bg-white/[0.05] p-8 shadow-[0px_20px_50px_rgba(5,8,16,0.45)] backdrop-blur-2xl">
               <h2 className="mb-6 text-sm font-black uppercase tracking-widest text-white">Payment Method</h2>
@@ -563,25 +534,34 @@ export default function CartCheckoutPage() {
                 </div>
                 <div className="flex items-center justify-between pt-2">
                   <span className="text-3xl font-black uppercase tracking-tight sm:text-xl">Subtotal after discounts</span>
-                  <span className="text-4xl font-black sm:text-2xl">${total.toFixed(2)}</span>
+                  <motion.span
+                    key={total}
+                    initial={reduceMotion ? false : { opacity: 0.5, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-4xl font-black sm:text-2xl"
+                  >
+                    ${total.toFixed(2)}
+                  </motion.span>
                 </div>
               </div>
 
-              <button
+              <motion.button
                 type="submit"
                 form="shipping-form"
                 disabled={placingOrder || cart.items.length === 0}
-                className="mt-10 block w-full rounded-full bg-gradient-to-br from-[#65f3de] via-[#4a8dff] to-[#3f7dff] py-5 text-center text-xs font-black uppercase tracking-[0.2em] text-[#081224] transition hover:scale-[1.02] hover:shadow-[0_10px_35px_rgba(74,141,255,0.35)] active:scale-95 disabled:opacity-40"
+                whileHover={reduceMotion ? undefined : { scale: 1.02 }}
+                whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+                className="mt-10 block w-full rounded-full bg-gradient-to-br from-[#65f3de] via-[#4a8dff] to-[#3f7dff] py-5 text-center text-xs font-black uppercase tracking-[0.2em] text-[#081224] transition hover:shadow-[0_10px_35px_rgba(74,141,255,0.35)] disabled:opacity-40"
               >
                 {placingOrder ? "Placing Order..." : "Place Order"}
-              </button>
+              </motion.button>
               <div className="mt-6 flex items-center justify-center gap-2 opacity-60">
                 <span className="material-symbols-outlined text-sm">lock</span>
                 <span className="text-[10px] font-bold uppercase tracking-widest">Encrypted Checkout</span>
               </div>
             </section>
           </div>
-        </aside>
+        </FadeIn>
       </main>
 
       <nav className="fixed bottom-0 left-0 z-50 flex w-full items-center justify-around rounded-t-2xl border-t border-white/10 bg-[#0d1627]/90 px-4 pb-6 pt-3 shadow-[0_-10px_30px_rgba(0,0,0,0.25)] backdrop-blur-2xl md:hidden">

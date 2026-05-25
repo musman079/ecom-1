@@ -1,10 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 import { useCartStore } from "../../src/store/cart-store";
 import CartBadge from "../../src/components/CartBadge";
+import { FadeIn } from "../../src/components/motion/fade-in";
+import { Stagger, StaggerItem } from "../../src/components/motion/stagger";
+import { ProductCard } from "../../src/components/product-card";
+import { kineticEase } from "../../src/components/motion/motion-config";
 
 type ProductCard = {
   id: string;
@@ -61,6 +66,8 @@ export function ProductDetailsClient() {
   const [addToCartLoading, setAddToCartLoading] = useState(false);
   const [addToCartMessage, setAddToCartMessage] = useState<string | null>(null);
   const [addToCartError, setAddToCartError] = useState<string | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const reduceMotion = useReducedMotion();
   const setCart = useCartStore((state) => state.setCart);
   const addToCartLocal = useCartStore((state) => state.addToCart);
 
@@ -113,6 +120,7 @@ export function ProductDetailsClient() {
           product.images = Array.isArray(product.images) ? product.images : [];
         }
         setProduct(product ?? null);
+        setActiveImageIndex(0);
       } catch {
         setProduct(null);
         setDetailError("Failed to load product details.");
@@ -251,7 +259,7 @@ export function ProductDetailsClient() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f9f9f9] text-[#1a1c1c]">
+    <div className="min-h-screen bg-[#f9f9f9] text-[#1a1c1c] -mt-20 pt-20">
       <header className="fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 md:px-8">
           <div className="flex items-center gap-4">
@@ -277,12 +285,19 @@ export function ProductDetailsClient() {
           <section className="w-full space-y-6 lg:w-3/5">
             <div className="relative">
               {hasProductImages ? (
-                <div className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto rounded-xl bg-[#f3f3f4]">
-                  {product?.images?.map((image, idx) => (
-                    <div key={image} className="relative aspect-[4/5] w-full shrink-0 snap-center md:aspect-square">
-                      <img src={image} alt={`Gallery ${idx + 1}`} className="h-full w-full object-cover" />
-                    </div>
-                  ))}
+                <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-[#f3f3f4] md:aspect-square">
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={product?.images?.[activeImageIndex] ?? activeImageIndex}
+                      src={product?.images?.[activeImageIndex] ?? ""}
+                      alt={`Gallery ${activeImageIndex + 1}`}
+                      initial={reduceMotion ? false : { opacity: 0, scale: 1.03 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={reduceMotion ? undefined : { opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.45, ease: kineticEase }}
+                      className="h-full w-full object-cover"
+                    />
+                  </AnimatePresence>
                 </div>
               ) : (
                 <div className={`flex aspect-[4/5] flex-col justify-between overflow-hidden rounded-xl bg-gradient-to-br ${getDetailTone(0)} p-8 md:aspect-square`}>
@@ -306,15 +321,18 @@ export function ProductDetailsClient() {
             {hasProductImages ? (
               <div className="grid grid-cols-5 gap-3 md:gap-4">
                 {product?.images?.slice(0, 5).map((image, idx) => (
-                  <button
+                  <motion.button
                     key={image}
-                    className={`aspect-square overflow-hidden rounded-lg transition hover:opacity-80 ${
-                      idx === 0 ? "ring-1 ring-black ring-offset-2" : ""
-                    }`}
                     type="button"
+                    onClick={() => setActiveImageIndex(idx)}
+                    whileHover={reduceMotion ? undefined : { scale: 1.03 }}
+                    whileTap={reduceMotion ? undefined : { scale: 0.97 }}
+                    className={`aspect-square overflow-hidden rounded-lg transition ${
+                      idx === activeImageIndex ? "ring-2 ring-black ring-offset-2" : "opacity-80 hover:opacity-100"
+                    }`}
                   >
                     <img src={image} alt={`Thumbnail ${idx + 1}`} className="h-full w-full object-cover" />
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             ) : (
@@ -326,7 +344,7 @@ export function ProductDetailsClient() {
             )}
           </section>
 
-          <section className="w-full lg:sticky lg:top-32 lg:w-2/5">
+          <FadeIn as="section" className="w-full lg:sticky lg:top-32 lg:w-2/5">
             <div className="space-y-8">
               <div className="space-y-2">
                 <span className="text-xs font-bold uppercase tracking-[0.2em] text-neutral-500">New Arrival - FW24</span>
@@ -372,16 +390,17 @@ export function ProductDetailsClient() {
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     {(["S", "M", "L", "XL"] as const).map((size) => (
-                      <button
+                      <motion.button
                         key={size}
                         type="button"
                         onClick={() => setSelectedSize(size)}
-                        className={`rounded-lg py-4 text-sm uppercase ${
+                        whileTap={reduceMotion ? undefined : { scale: 0.95 }}
+                        className={`rounded-lg py-4 text-sm uppercase transition ${
                           selectedSize === size ? "bg-black font-bold text-white" : "bg-[#eeeeee]"
                         }`}
                       >
                         {size}
-                      </button>
+                      </motion.button>
                     ))}
                   </div>
                 </div>
@@ -408,23 +427,25 @@ export function ProductDetailsClient() {
               </div>
 
               <div className="hidden lg:block pt-6">
-                <button
+                <motion.button
                   type="button"
                   onClick={addToCart}
                   disabled={addToCartLoading}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-black py-6 text-sm font-bold uppercase tracking-widest text-white transition hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
+                  whileHover={reduceMotion ? undefined : { scale: 1.02 }}
+                  whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-black py-6 text-sm font-bold uppercase tracking-widest text-white transition hover:opacity-90 disabled:opacity-40"
                 >
-                  Add to Cart
+                  {addToCartLoading ? "Adding..." : "Add to Cart"}
                   <span className="material-symbols-outlined text-lg">arrow_forward</span>
-                </button>
+                </motion.button>
                 {addToCartError ? <p className="mt-3 text-xs font-bold text-red-600">{addToCartError}</p> : null}
                 {addToCartMessage ? <p className="mt-3 text-xs font-bold text-emerald-700">{addToCartMessage}</p> : null}
               </div>
             </div>
-          </section>
+          </FadeIn>
         </div>
 
-        <section className="mt-24 space-y-12">
+        <FadeIn as="section" className="mt-24 space-y-12">
           <h2 className="text-center text-3xl font-black uppercase tracking-tighter">Complete the Look</h2>
 
           <div className="mx-auto flex max-w-3xl flex-col gap-4 md:flex-row">
@@ -451,34 +472,27 @@ export function ProductDetailsClient() {
             <p className="text-center text-sm text-neutral-500">No published products matched your filters.</p>
           ) : null}
 
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-            {listItems.map((item, index) => (
-              <a
-                key={item.id}
-                href={`/product_detail_desktop?product=${encodeURIComponent(item.slug || item.id)}`}
-                className="group cursor-pointer space-y-4"
-              >
-                <div className={`aspect-[3/4] overflow-hidden rounded-lg bg-gradient-to-br ${getDetailTone(index)} p-4`}>
-                  {item.thumbnail ? (
-                    <img
-                      src={item.thumbnail}
-                      alt={item.title}
-                      className="h-full w-full rounded-md object-cover transition duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full flex-col justify-end rounded-md border border-black/5 bg-white/35 p-4 backdrop-blur-sm">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-neutral-500">Published product</p>
-                      <h3 className="mt-2 text-lg font-black uppercase leading-[0.95] tracking-[-0.05em] text-[#1a1c1c]">{item.title}</h3>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-xs font-bold uppercase tracking-wider">{item.title}</h3>
-                  <p className="text-sm text-neutral-600">${item.price.toFixed(2)}</p>
-                </div>
-              </a>
-            ))}
-          </div>
+          <AnimatePresence mode="wait">
+            <Stagger key={`${page}-${sort}-${searchText}`} className="grid grid-cols-2 gap-6 md:grid-cols-4">
+              {listItems.map((item, index) => (
+                <StaggerItem key={item.id}>
+                  <ProductCard
+                    item={{
+                      id: item.id,
+                      slug: item.slug,
+                      name: item.title,
+                      label: "Catalog",
+                      price: `$${item.price.toFixed(2)}`,
+                      thumbnail: item.thumbnail,
+                    }}
+                    index={index}
+                    href={`/product_detail_desktop?product=${encodeURIComponent(item.slug || item.id)}`}
+                    variant="light"
+                  />
+                </StaggerItem>
+              ))}
+            </Stagger>
+          </AnimatePresence>
 
           {!listLoading && !listError ? (
             <div className="flex items-center justify-center gap-4">
@@ -503,7 +517,7 @@ export function ProductDetailsClient() {
               </button>
             </div>
           ) : null}
-        </section>
+        </FadeIn>
       </main>
 
       <div className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl bg-white/90 px-6 pb-8 pt-4 shadow-[0_-10px_30px_rgba(0,0,0,0.03)] backdrop-blur-xl lg:hidden">

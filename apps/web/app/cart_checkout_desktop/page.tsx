@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
+import { FadeIn } from "../../src/components/motion/fade-in";
 
 const navLinks = [
   { label: 'New Arrivals', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
@@ -74,7 +75,7 @@ export default function CartCheckoutDesktopPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_10%_10%,#304d8f_0%,#0b1220_45%,#070c16_100%)] text-[#f2f4f8]">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_10%_10%,#304d8f_0%,#0b1220_45%,#070c16_100%)] text-[#f2f4f8] -mt-20 pt-20">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#0d1627]/70 backdrop-blur-xl">
         <div className="mx-auto flex h-20 w-full max-w-[1440px] items-center justify-between px-6 xl:px-12">
           <h1 className="text-3xl font-black tracking-[-0.02em] text-white">KINETIC</h1>
@@ -100,13 +101,13 @@ export default function CartCheckoutDesktopPage() {
       </header>
 
       <main className="mx-auto min-h-screen max-w-[1440px] px-6 pb-24 pt-32 md:px-12">
-        <header className="mb-16">
+        <FadeIn as="header" className="mb-16">
           <h2 className="mb-4 text-5xl font-black uppercase tracking-[-0.06em] text-white md:text-7xl">Checkout</h2>
           <div className="flex items-center gap-4">
             <span className="text-xs font-bold uppercase tracking-widest text-white/75">Shopping Bag ({totalItems})</span>
             <div className="h-px flex-1 bg-white/20" />
           </div>
-        </header>
+        </FadeIn>
 
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-12">
           <section className="flex flex-col gap-12 lg:col-span-7">
