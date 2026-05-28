@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
+import { buildAuthHref } from "../../src/lib/auth-redirect";
 
 type OrderSummary = {
   id: string;
@@ -75,6 +76,7 @@ function getReturnStatusStyles(status: ReturnRequest["status"]) {
 export function ReturnsRefundsClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [returns, setReturns] = useState<ReturnRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,6 +90,11 @@ export function ReturnsRefundsClient() {
     reason: "",
     notes: "",
   });
+  const nextPath = useMemo(() => {
+    const query = searchParams.toString();
+    return query ? `${pathname}?${query}` : pathname;
+  }, [pathname, searchParams]);
+  const authRedirect = useMemo(() => buildAuthHref(nextPath), [nextPath]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -101,7 +108,7 @@ export function ReturnsRefundsClient() {
         ]);
 
         if (ordersResponse.status === 401 || returnsResponse.status === 401) {
-          router.replace(CUSTOMER_ROUTES.AUTH);
+          router.replace(authRedirect);
           return;
         }
 
@@ -200,7 +207,7 @@ export function ReturnsRefundsClient() {
       });
 
       if (response.status === 401) {
-        router.replace(CUSTOMER_ROUTES.AUTH);
+        router.replace(authRedirect);
         return;
       }
 

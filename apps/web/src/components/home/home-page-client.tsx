@@ -7,6 +7,7 @@ import { FadeIn } from "../motion/fade-in";
 import { HeroBackground, HeroItem, HeroMotion } from "../motion/hero-motion";
 import { Stagger, StaggerItem } from "../motion/stagger";
 import CartBadge from "../CartBadge";
+import { AuthLink } from "../auth/auth-link";
 import { ProductCard, type ProductCardData } from "../product-card";
 import { SiteFooter } from "../site-footer";
 
@@ -60,12 +61,12 @@ export function HomePageClient({ newArrivals, bestSellers }: HomePageClientProps
 
           <div className="flex items-center gap-5 text-lg">
             <CartBadge />
-            <Link href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} aria-label="Favorites">
+            <AuthLink href={CUSTOMER_ROUTES.REVIEWS} requiresAuth ariaLabel="Reviews">
               <span className="material-symbols-outlined">favorite</span>
-            </Link>
-            <Link href={CUSTOMER_ROUTES.PROFILE} aria-label="Profile">
+            </AuthLink>
+            <AuthLink href={CUSTOMER_ROUTES.PROFILE} requiresAuth ariaLabel="Profile">
               <span className="material-symbols-outlined">person</span>
-            </Link>
+            </AuthLink>
           </div>
         </div>
       </header>
@@ -108,6 +109,22 @@ export function HomePageClient({ newArrivals, bestSellers }: HomePageClientProps
               </div>
             </HeroItem>
           </HeroMotion>
+
+          {reduceMotion ? (
+            <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 text-[9px] font-bold uppercase tracking-[0.28em] text-white/70">
+              <span>Scroll</span>
+              <span className="material-symbols-outlined text-base">expand_more</span>
+            </div>
+          ) : (
+            <motion.div
+              className="absolute bottom-6 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 text-[9px] font-bold uppercase tracking-[0.28em] text-white/70"
+              animate={{ y: [0, 10, 0], opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <span>Scroll</span>
+              <span className="material-symbols-outlined text-base">expand_more</span>
+            </motion.div>
+          )}
         </section>
 
         <div className="mx-auto flex w-full max-w-[1400px] gap-12 px-6 py-12 xl:px-12">

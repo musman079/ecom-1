@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 import { assertRuntimeEnvironment } from "../src/lib/env";
 import Header from "../src/components/Header";
+import MobileNav from "../src/components/MobileNav";
 
 const display = localFont({
   src: "./fonts/GeistVF.woff",
@@ -37,7 +38,8 @@ export default function RootLayout({
       </head>
       <body className={`${display.variable} ${body.variable}`}>
         <Header />
-        <div className="pt-20">{children}</div>
+        <div className="pt-20 pb-24">{children}</div>
+        <MobileNav />
         <Toaster
           richColors
           closeButton

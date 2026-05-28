@@ -5,10 +5,11 @@ import { usePathname } from "next/navigation";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { CUSTOMER_ROUTES } from "../constants/routes";
 import CartBadge from "./CartBadge";
+import { AuthLink } from "./auth/auth-link";
 
 const navLinks = [
   { label: "Shop", href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
-  { label: "Cart", href: CUSTOMER_ROUTES.CART_CHECKOUT },
+  { label: "Cart", href: CUSTOMER_ROUTES.CART_CHECKOUT, requiresAuth: true },
 ] as const;
 
 const pagesWithOwnHeader = ["/", "/product_details", "/product_detail_desktop", "/cart_checkout", "/cart_checkout_desktop"];
@@ -23,6 +24,7 @@ export default function Header() {
     [0, 80],
     ["0 0 0 rgba(0,0,0,0)", "0 8px 32px rgba(0,0,0,0.35)"],
   );
+  const headerLineOpacity = useTransform(scrollY, [0, 80], [0.2, 0.8]);
 
   if (pathname.startsWith("/admin")) {
     return null;
@@ -36,7 +38,7 @@ export default function Header() {
 
   return (
     <HeaderTag
-      className="fixed inset-x-0 top-0 z-50 border-b border-white/10 backdrop-blur-xl transition-[height] duration-300"
+      className="fixed inset-x-0 top-0 z-50 border-b border-white/10 backdrop-blur-xl transition-[height] duration-300 relative"
       style={
         reduceMotion
           ? { backgroundColor: "rgba(13, 22, 39, 0.85)" }
@@ -56,9 +58,10 @@ export default function Header() {
 
         <nav className="hidden items-center gap-8 md:flex">
           {navLinks.map((link) => (
-            <Link
+            <AuthLink
               key={link.label}
               href={link.href}
+              requiresAuth={Boolean(link.requiresAuth)}
               className={`relative text-xs font-bold uppercase tracking-[0.18em] transition-colors ${
                 pathname === link.href ? "text-[#65f3de]" : "text-white/60 hover:text-white"
               }`}
@@ -70,20 +73,28 @@ export default function Header() {
                   className="absolute -bottom-1 left-0 right-0 h-px bg-[#65f3de]"
                 />
               ) : null}
-            </Link>
+            </AuthLink>
           ))}
         </nav>
 
         <div className="flex items-center gap-5 text-lg">
           <CartBadge />
-          <Link href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} aria-label="Favorites" className="transition hover:opacity-80">
+          <AuthLink href={CUSTOMER_ROUTES.REVIEWS} requiresAuth ariaLabel="Reviews" className="transition hover:opacity-80">
             <span className="material-symbols-outlined">favorite</span>
-          </Link>
-          <Link href={CUSTOMER_ROUTES.PROFILE} aria-label="Profile" className="transition hover:opacity-80">
+          </AuthLink>
+          <AuthLink href={CUSTOMER_ROUTES.PROFILE} requiresAuth ariaLabel="Profile" className="transition hover:opacity-80">
             <span className="material-symbols-outlined">person</span>
-          </Link>
+          </AuthLink>
         </div>
       </div>
+      {reduceMotion ? (
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#65f3de]/60 to-transparent opacity-40" />
+      ) : (
+        <motion.div
+          className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#65f3de]/60 to-transparent"
+          style={{ opacity: headerLineOpacity }}
+        />
+      )}
     </HeaderTag>
   );
 }

@@ -1,15 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 import { useCartStore, type CartItem } from "../../src/store/cart-store";
 import { CartLineItem } from "../../src/components/cart/cart-line-item";
 import { FadeIn } from "../../src/components/motion/fade-in";
+import { AuthLink } from "../../src/components/auth/auth-link";
+import { buildAuthHref } from "../../src/lib/auth-redirect";
 
 type ShippingForm = {
   fullName: string;
@@ -37,11 +40,14 @@ type AppliedCoupon = {
 
 export default function CartCheckoutPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [placingOrder, setPlacingOrder] = useState(false);
   const [activeProductId, setActiveProductId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"card" | "cod">("cod");
+  const checkoutSteps = ["Bag", "Shipping", "Payment"] as const;
 
   const cartItems = useCartStore((state) => state.items);
   const cartSubtotal = useCartStore((state) => state.subtotal);
@@ -51,6 +57,13 @@ export default function CartCheckoutPage() {
     subtotal: cartSubtotal,
     totalItems: cartTotalItems,
   };
+  const nextPath = useMemo(() => {
+    const query = searchParams.toString();
+    return query ? `${pathname}?${query}` : pathname;
+  }, [pathname, searchParams]);
+  const authRedirect = useMemo(() => buildAuthHref(nextPath), [nextPath]);
+  const activeStep = cart.items.length === 0 ? 1 : 2;
+  const progress = (activeStep - 1) / (checkoutSteps.length - 1);
   const setCart = useCartStore((state) => state.setCart);
   const clearCart = useCartStore((state) => state.clearCart);
 
@@ -82,7 +95,7 @@ export default function CartCheckoutPage() {
         const response = await fetch("/api/cart", { cache: "no-store" });
 
         if (response.status === 401) {
-          router.push(CUSTOMER_ROUTES.AUTH);
+          router.push(authRedirect);
           return;
         }
 
@@ -147,7 +160,7 @@ export default function CartCheckoutPage() {
       });
 
       if (response.status === 401) {
-        router.push(CUSTOMER_ROUTES.AUTH);
+        router.push(authRedirect);
         return;
       }
 
@@ -184,7 +197,7 @@ export default function CartCheckoutPage() {
       });
 
       if (response.status === 401) {
-        router.push(CUSTOMER_ROUTES.AUTH);
+        router.push(authRedirect);
         return;
       }
 
@@ -235,7 +248,7 @@ export default function CartCheckoutPage() {
       });
 
       if (response.status === 401) {
-        router.push(CUSTOMER_ROUTES.AUTH);
+        router.push(authRedirect);
         return;
       }
 
@@ -331,28 +344,54 @@ export default function CartCheckoutPage() {
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#0d1627]/70 backdrop-blur-2xl">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-4">
-            <a href={CUSTOMER_ROUTES.HOME} className="active:scale-95 transition" aria-label="Menu">
+            <Link href={CUSTOMER_ROUTES.HOME} className="active:scale-95 transition" aria-label="Menu">
               <span className="material-symbols-outlined">menu</span>
-            </a>
+            </Link>
             <span className="text-xl font-black uppercase tracking-[0.08em] text-white">KINETIC</span>
           </div>
 
           <div className="flex items-center gap-6">
             <nav className="hidden gap-8 md:flex">
-              <a href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="text-xs font-bold uppercase tracking-[0.18em] text-white/60">Explore</a>
-              <a href={CUSTOMER_ROUTES.CART_CHECKOUT} className="text-xs font-bold uppercase tracking-[0.18em] text-white">Cart</a>
+              <Link href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="text-xs font-bold uppercase tracking-[0.18em] text-white/60">Explore</Link>
+              <AuthLink href={CUSTOMER_ROUTES.CART_CHECKOUT} requiresAuth className="text-xs font-bold uppercase tracking-[0.18em] text-white">Cart</AuthLink>
             </nav>
-            <a href={CUSTOMER_ROUTES.CART_CHECKOUT} className="relative active:scale-95 transition" aria-label="Cart">
+            <AuthLink href={CUSTOMER_ROUTES.CART_CHECKOUT} requiresAuth className="relative active:scale-95 transition" ariaLabel="Cart">
               <span className="material-symbols-outlined text-white">shopping_bag</span>
               <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-[#65f3de] to-[#3f7dff] text-[8px] font-bold text-[#0c1220]">
                 {cart.totalItems}
               </span>
-            </a>
+            </AuthLink>
           </div>
         </div>
       </header>
 
       <main className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 gap-12 px-6 pb-32 pt-24 lg:grid-cols-12">
+        <section className="lg:col-span-12">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-5 backdrop-blur-xl">
+            <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/45">
+              {checkoutSteps.map((step, index) => (
+                <span key={step} className={index + 1 <= activeStep ? "text-white" : "text-white/35"}>
+                  {step}
+                </span>
+              ))}
+            </div>
+            <div className="mt-4 h-1 w-full rounded-full bg-white/10">
+              {reduceMotion ? (
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[#65f3de] via-[#4a8dff] to-[#3f7dff]"
+                  style={{ width: `${progress * 100}%` }}
+                />
+              ) : (
+                <motion.div
+                  className="h-full rounded-full bg-gradient-to-r from-[#65f3de] via-[#4a8dff] to-[#3f7dff]"
+                  initial={{ width: "0%" }}
+                  animate={{ width: `${progress * 100}%` }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                />
+              )}
+            </div>
+          </div>
+        </section>
         <section className="lg:col-span-7">
           <div className="mb-12">
             <h1 className="mb-2 text-5xl font-black uppercase tracking-[-0.05em] text-white md:text-6xl">Checkout Studio</h1>
@@ -564,30 +603,6 @@ export default function CartCheckoutPage() {
         </FadeIn>
       </main>
 
-      <nav className="fixed bottom-0 left-0 z-50 flex w-full items-center justify-around rounded-t-2xl border-t border-white/10 bg-[#0d1627]/90 px-4 pb-6 pt-3 shadow-[0_-10px_30px_rgba(0,0,0,0.25)] backdrop-blur-2xl md:hidden">
-        <a href={CUSTOMER_ROUTES.HOME} className="flex flex-col items-center text-white/50">
-          <span className="material-symbols-outlined">home</span>
-          <span className="mt-1 text-[10px] font-medium uppercase tracking-widest">Home</span>
-        </a>
-        <a href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="flex flex-col items-center text-white/50">
-          <span className="material-symbols-outlined">search</span>
-          <span className="mt-1 text-[10px] font-medium uppercase tracking-widest">Search</span>
-        </a>
-        <a href={CUSTOMER_ROUTES.REVIEWS} className="flex flex-col items-center text-white/50">
-          <span className="material-symbols-outlined">favorite</span>
-          <span className="mt-1 text-[10px] font-medium uppercase tracking-widest">Reviews</span>
-        </a>
-        <a href={CUSTOMER_ROUTES.ORDER_TRACKING} className="flex scale-110 flex-col items-center text-[#65f3de]">
-          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-            package_2
-          </span>
-          <span className="mt-1 text-[10px] font-medium uppercase tracking-widest">Orders</span>
-        </a>
-        <a href={CUSTOMER_ROUTES.PROFILE} className="flex flex-col items-center text-white/50">
-          <span className="material-symbols-outlined">person</span>
-          <span className="mt-1 text-[10px] font-medium uppercase tracking-widest">Profile</span>
-        </a>
-      </nav>
     </div>
   );
 }

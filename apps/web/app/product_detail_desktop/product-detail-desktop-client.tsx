@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 import { useCartStore } from "../../src/store/cart-store";
 import CartBadge from "../../src/components/CartBadge";
 import { FadeIn } from "../../src/components/motion/fade-in";
 import { kineticEase } from "../../src/components/motion/motion-config";
+import { AuthLink } from "../../src/components/auth/auth-link";
+import { buildAuthHref } from "../../src/lib/auth-redirect";
 
 const navLinks = [
   { label: 'New Arrivals', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
@@ -31,6 +34,7 @@ function getDesktopTone(index: number) {
 
 export function ProductDetailDesktopClient() {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const router = useRouter();
   const [selectedColor, setSelectedColor] = useState("Black");
   const [selectedSize, setSelectedSize] = useState("S");
@@ -58,12 +62,40 @@ export function ProductDetailDesktopClient() {
   const [wishlistMessage, setWishlistMessage] = useState<string | null>(null);
   const [wishlistError, setWishlistError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [imageDirection, setImageDirection] = useState(0);
   const reduceMotion = useReducedMotion();
   const setCart = useCartStore((state) => state.setCart);
-  const addToCartLocal = useCartStore((state) => state.addToCart);
 
   const productIdOrSlug = useMemo(() => searchParams.get("product")?.trim() ?? "", [searchParams]);
   const hasDesktopImages = Boolean(product?.images && product.images.length > 0);
+  const imageCount = product?.images?.length ?? 0;
+  const nextPath = useMemo(() => {
+    const query = searchParams.toString();
+    return query ? `${pathname}?${query}` : pathname;
+  }, [pathname, searchParams]);
+  const authRedirect = useMemo(() => buildAuthHref(nextPath), [nextPath]);
+  const imageVariants = {
+    enter: (direction: number) => ({
+      opacity: 0,
+      x: direction > 0 ? 28 : -28,
+      scale: 1.02,
+    }),
+    center: { opacity: 1, x: 0, scale: 1 },
+    exit: (direction: number) => ({
+      opacity: 0,
+      x: direction > 0 ? -28 : 28,
+      scale: 0.98,
+    }),
+  };
+
+  const updateImageIndex = (nextIndex: number) => {
+    if (nextIndex === activeImageIndex) {
+      return;
+    }
+
+    setImageDirection(nextIndex > activeImageIndex ? 1 : -1);
+    setActiveImageIndex(nextIndex);
+  };
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -124,6 +156,7 @@ export function ProductDetailDesktopClient() {
         }
         setProduct(product ?? null);
         setActiveImageIndex(0);
+        setImageDirection(0);
       } catch {
         setProduct(null);
         setError("Failed to load product details.");
@@ -183,21 +216,7 @@ export function ProductDetailDesktopClient() {
       });
 
       if (response.status === 401) {
-        // Guest fallback: update client-only cart so header badge updates
-        addToCartLocal(
-          {
-            productId: product.id,
-            title: product.title,
-            sku: product.sku ?? product.slug ?? product.id,
-            price: product.price,
-            stockQuantity: product.stockQuantity ?? 9999,
-            thumbnail:
-              Array.isArray(product.images) && product.images.length > 0 ? product.images[0] ?? null : null,
-          },
-          1,
-        );
-
-        setAddToCartMessage("Added to cart (guest). Please sign in to persist cart.");
+        router.push(authRedirect);
         return;
       }
 
@@ -255,7 +274,7 @@ export function ProductDetailDesktopClient() {
       });
 
       if (response.status === 401) {
-        router.push(CUSTOMER_ROUTES.AUTH);
+        router.push(authRedirect);
         return;
       }
 
@@ -284,24 +303,24 @@ export function ProductDetailDesktopClient() {
 
           <nav className="hidden items-center gap-8 lg:flex">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.label}
                 href={link.href}
                 className="border-b border-transparent pb-1 text-xs font-semibold uppercase tracking-[0.15em] text-neutral-500 transition-colors hover:text-black"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </nav>
 
           <div className="flex items-center gap-5">
-            <a href={CUSTOMER_ROUTES.PROFILE} aria-label="Favorite">
+            <AuthLink href={CUSTOMER_ROUTES.REVIEWS} requiresAuth ariaLabel="Reviews">
               <span className="material-symbols-outlined">favorite</span>
-            </a>
-              <CartBadge />
-            <a href={CUSTOMER_ROUTES.PROFILE} aria-label="Profile">
+            </AuthLink>
+            <CartBadge />
+            <AuthLink href={CUSTOMER_ROUTES.PROFILE} requiresAuth ariaLabel="Profile">
               <span className="material-symbols-outlined">person</span>
-            </a>
+            </AuthLink>
           </div>
         </div>
       </header>
@@ -322,25 +341,32 @@ export function ProductDetailDesktopClient() {
             {hasDesktopImages ? (
               <>
                 <div className="group relative aspect-[3/4] w-full overflow-hidden bg-neutral-200">
-                  <AnimatePresence mode="wait">
+                  <AnimatePresence mode="wait" custom={imageDirection}>
                     <motion.img
                       key={product?.images?.[activeImageIndex] ?? activeImageIndex}
                       src={product?.images?.[activeImageIndex] || ""}
                       alt={product?.title || "Product image"}
-                      initial={reduceMotion ? false : { opacity: 0, scale: 1.04 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={reduceMotion ? undefined : { opacity: 0 }}
+                      custom={imageDirection}
+                      variants={imageVariants}
+                      initial={reduceMotion ? false : "enter"}
+                      animate="center"
+                      exit="exit"
                       transition={{ duration: 0.5, ease: kineticEase }}
                       className="h-full w-full object-cover transition duration-1000 group-hover:scale-105"
                     />
                   </AnimatePresence>
+                  {imageCount > 0 ? (
+                    <div className="absolute bottom-4 right-4 rounded-full bg-black/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">
+                      {activeImageIndex + 1}/{imageCount}
+                    </div>
+                  ) : null}
                 </div>
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-2">
                   {product?.images?.slice(0, 4).map((image, idx) => (
                     <motion.button
                       key={`${image}-${idx}`}
                       type="button"
-                      onClick={() => setActiveImageIndex(idx)}
+                      onClick={() => updateImageIndex(idx)}
                       whileHover={reduceMotion ? undefined : { scale: 1.02 }}
                       className={`aspect-[3/4] overflow-hidden bg-neutral-200 text-left ${
                         idx === activeImageIndex ? "ring-2 ring-black ring-offset-2" : ""
@@ -417,6 +443,7 @@ export function ProductDetailDesktopClient() {
                         key={size}
                         type="button"
                         onClick={() => setSelectedSize(size)}
+                        whileHover={reduceMotion ? undefined : { y: -2 }}
                         whileTap={reduceMotion ? undefined : { scale: 0.95 }}
                         className={`h-12 rounded-xl border text-xs font-semibold transition ${
                           selectedSize === size ? "border-black bg-black font-bold text-white" : "border-neutral-300"
@@ -508,9 +535,9 @@ export function ProductDetailDesktopClient() {
                     <h4 className="mt-2 text-lg font-black uppercase leading-[0.95] tracking-[-0.05em]">{item.name}</h4>
                     <p className="mt-3 text-sm font-medium text-neutral-600">{item.price}</p>
                   </div>
-                  <a href={CUSTOMER_ROUTES.CART_CHECKOUT} className="absolute bottom-4 right-4 translate-y-2 rounded-full bg-white p-3 opacity-0 shadow-lg transition-all group-hover:translate-y-0 group-hover:opacity-100" aria-label="Add To Cart">
+                  <AuthLink href={CUSTOMER_ROUTES.CART_CHECKOUT} requiresAuth className="absolute bottom-4 right-4 translate-y-2 rounded-full bg-white p-3 opacity-0 shadow-lg transition-all group-hover:translate-y-0 group-hover:opacity-100" ariaLabel="Add To Cart">
                     <span className="material-symbols-outlined">add</span>
-                  </a>
+                  </AuthLink>
                 </div>
                 <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">{item.category}</p>
                 <h4 className="mb-2 text-sm font-bold tracking-tight">{item.name}</h4>
@@ -599,9 +626,9 @@ export function ProductDetailDesktopClient() {
           >
             {wishlistLoading ? "Updating" : wishlisted ? "Wishlisted" : "Wishlist"}
           </button>
-          <a href={CUSTOMER_ROUTES.CART_CHECKOUT} className="flex-1 rounded-full bg-black py-3 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-white">
+          <AuthLink href={CUSTOMER_ROUTES.CART_CHECKOUT} requiresAuth className="flex-1 rounded-full bg-black py-3 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-white" ariaLabel="Add to Cart">
             Add to Cart
-          </a>
+          </AuthLink>
         </div>
       </div>
 

@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { CUSTOMER_ROUTES } from "../../src/constants/routes";
+import { getSafeNextPath } from "../../src/lib/auth-redirect";
 
 type AuthMode = "login" | "register";
 
@@ -26,6 +28,22 @@ export function AuthClient() {
   });
   const router = useRouter();
   const searchParams = useSearchParams();
+  const nextPath = useMemo(() => getSafeNextPath(searchParams.get("next")), [searchParams]);
+
+  const resolveRedirect = (role: "CUSTOMER" | "ADMIN" | "SUPER_ADMIN") => {
+    const isAdmin = role === "ADMIN" || role === "SUPER_ADMIN";
+    if (nextPath) {
+      if (isAdmin && nextPath.startsWith("/admin")) {
+        return nextPath;
+      }
+
+      if (!isAdmin && !nextPath.startsWith("/admin")) {
+        return nextPath;
+      }
+    }
+
+    return isAdmin ? "/admin_overview_dashboard" : CUSTOMER_ROUTES.HOME;
+  };
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -53,7 +71,7 @@ export function AuthClient() {
 
         if (response.ok && data.success && data.user?.id) {
           const role = data.user.role ?? "CUSTOMER";
-          router.replace(role === "ADMIN" || role === "SUPER_ADMIN" ? "/admin_overview_dashboard" : "/");
+          router.replace(resolveRedirect(role));
         }
       } catch {
         // Ignore transient session check issues on initial load.
@@ -61,7 +79,7 @@ export function AuthClient() {
     };
 
     void verifySession();
-  }, [router]);
+  }, [nextPath, router]);
 
   useEffect(() => {
     const requestedMode = searchParams.get("mode");
@@ -82,11 +100,13 @@ export function AuthClient() {
 
   const toggleMode = () => {
     if (mode === "login") {
-      router.push("/auth?mode=register");
+      const nextQuery = nextPath ? `&next=${encodeURIComponent(nextPath)}` : "";
+      router.push(`${CUSTOMER_ROUTES.AUTH}?mode=register${nextQuery}`);
       return;
     }
 
-    router.push("/auth");
+    const nextQuery = nextPath ? `?next=${encodeURIComponent(nextPath)}` : "";
+    router.push(`${CUSTOMER_ROUTES.AUTH}${nextQuery}`);
   };
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -155,7 +175,7 @@ export function AuthClient() {
       };
 
       const role = mePayload.user?.role ?? "CUSTOMER";
-      router.push(role === "ADMIN" || role === "SUPER_ADMIN" ? "/admin_overview_dashboard" : "/");
+      router.push(resolveRedirect(role));
     } catch {
       toast.error("Network issue while signing in. Please retry.");
     } finally {

@@ -1,16 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { CUSTOMER_ROUTES } from "../constants/routes";
 import { useCartStore } from "../store/cart-store";
+import { AuthLink } from "./auth/auth-link";
 
 export default function CartBadge() {
   const totalItems = useCartStore((s) => s.totalItems);
   const reduceMotion = useReducedMotion();
 
   return (
-    <Link href={CUSTOMER_ROUTES.CART_CHECKOUT} aria-label="Bag" className="relative">
+    <AuthLink href={CUSTOMER_ROUTES.CART_CHECKOUT} requiresAuth ariaLabel="Bag" className="relative">
       <span className="material-symbols-outlined">shopping_bag</span>
       <motion.span
         key={totalItems}
@@ -21,6 +21,6 @@ export default function CartBadge() {
       >
         {totalItems}
       </motion.span>
-    </Link>
+    </AuthLink>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { kineticEase } from "./motion-config";
 
 const heroStagger = {
@@ -59,6 +59,12 @@ export function HeroItem({ children, className }: { children: React.ReactNode; c
 
 export function HeroBackground() {
   const reduceMotion = useReducedMotion();
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 600], [0, -80]);
+  const glowOneY = useTransform(scrollY, [0, 600], [0, 120]);
+  const glowTwoY = useTransform(scrollY, [0, 600], [0, -60]);
+  const glowTwoX = useTransform(scrollY, [0, 600], [0, 40]);
+  const glowOpacity = useTransform(scrollY, [0, 400], [1, 0.75]);
 
   if (reduceMotion) {
     return (
@@ -73,16 +79,19 @@ export function HeroBackground() {
         initial={{ scale: 1.08, opacity: 0.6 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 1.2, ease: kineticEase }}
+        style={{ y: bgY, opacity: glowOpacity }}
       />
       <motion.div
         className="pointer-events-none absolute -right-32 top-1/4 h-[420px] w-[420px] rounded-full bg-[#65f3de]/10 blur-[100px]"
         animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.08, 1] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        style={{ y: glowOneY }}
       />
       <motion.div
         className="pointer-events-none absolute -left-24 bottom-0 h-[360px] w-[360px] rounded-full bg-[#497cff]/15 blur-[90px]"
         animate={{ opacity: [0.3, 0.55, 0.3], x: [0, 20, 0] }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        style={{ x: glowTwoX, y: glowTwoY }}
       />
     </>
   );

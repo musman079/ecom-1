@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useRouter, useSearchParams } from "next/navigation";
+        setImageDirection(0);
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 import { useCartStore } from "../../src/store/cart-store";
 import CartBadge from "../../src/components/CartBadge";
@@ -10,6 +12,7 @@ import { FadeIn } from "../../src/components/motion/fade-in";
 import { Stagger, StaggerItem } from "../../src/components/motion/stagger";
 import { ProductCard } from "../../src/components/product-card";
 import { kineticEase } from "../../src/components/motion/motion-config";
+import { buildAuthHref } from "../../src/lib/auth-redirect";
 
 type ProductCard = {
   id: string;
@@ -48,6 +51,7 @@ function getDetailTone(index: number) {
 
 export function ProductDetailsClient() {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const router = useRouter();
   const [selectedColor, setSelectedColor] = useState("Black");
   const [selectedSize, setSelectedSize] = useState("M");
@@ -67,12 +71,40 @@ export function ProductDetailsClient() {
   const [addToCartMessage, setAddToCartMessage] = useState<string | null>(null);
   const [addToCartError, setAddToCartError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [imageDirection, setImageDirection] = useState(0);
   const reduceMotion = useReducedMotion();
   const setCart = useCartStore((state) => state.setCart);
-  const addToCartLocal = useCartStore((state) => state.addToCart);
 
   const productIdOrSlug = useMemo(() => searchParams.get("product")?.trim() ?? "", [searchParams]);
   const hasProductImages = Boolean(product?.images && product.images.length > 0);
+  const imageCount = product?.images?.length ?? 0;
+  const nextPath = useMemo(() => {
+    const query = searchParams.toString();
+    return query ? `${pathname}?${query}` : pathname;
+  }, [pathname, searchParams]);
+  const authRedirect = useMemo(() => buildAuthHref(nextPath), [nextPath]);
+  const imageVariants = {
+    enter: (direction: number) => ({
+      opacity: 0,
+      x: direction > 0 ? 24 : -24,
+      scale: 1.02,
+    }),
+    center: { opacity: 1, x: 0, scale: 1 },
+    exit: (direction: number) => ({
+      opacity: 0,
+      x: direction > 0 ? -24 : 24,
+      scale: 0.98,
+    }),
+  };
+
+  const updateImageIndex = (nextIndex: number) => {
+    if (nextIndex === activeImageIndex) {
+      return;
+    }
+
+    setImageDirection(nextIndex > activeImageIndex ? 1 : -1);
+    setActiveImageIndex(nextIndex);
+  };
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -121,6 +153,7 @@ export function ProductDetailsClient() {
         }
         setProduct(product ?? null);
         setActiveImageIndex(0);
+        setImageDirection(0);
       } catch {
         setProduct(null);
         setDetailError("Failed to load product details.");
@@ -208,21 +241,7 @@ export function ProductDetailsClient() {
       });
 
       if (response.status === 401) {
-        // Guest fallback: update client-only cart so badge updates in real-time
-        addToCartLocal(
-          {
-            productId: product.id,
-            title: product.title,
-            sku: product.sku ?? product.slug ?? product.id,
-            price: product.price,
-            stockQuantity: product.stockQuantity ?? 9999,
-            thumbnail:
-              Array.isArray(product.images) && product.images.length > 0 ? product.images[0] ?? null : null,
-          },
-          1,
-        );
-
-        setAddToCartMessage("Added to cart (guest). Please sign in to persist cart.");
+        router.push(authRedirect);
         return;
       }
 
@@ -263,17 +282,17 @@ export function ProductDetailsClient() {
       <header className="fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 md:px-8">
           <div className="flex items-center gap-4">
-            <a href={CUSTOMER_ROUTES.HOME} aria-label="Menu" className="transition hover:opacity-70 active:scale-95">
+            <Link href={CUSTOMER_ROUTES.HOME} aria-label="Menu" className="transition hover:opacity-70 active:scale-95">
               <span className="material-symbols-outlined">menu</span>
-            </a>
+            </Link>
             <span className="text-xl font-black uppercase tracking-tight">KINETIC</span>
           </div>
 
           <div className="flex items-center gap-6">
             <nav className="hidden items-center gap-8 md:flex">
-              <a href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="text-sm font-bold uppercase tracking-tight">Shop</a>
-              <a href={CUSTOMER_ROUTES.PRODUCT_DETAILS} className="text-sm uppercase tracking-tight text-neutral-500 hover:opacity-70">Editorial</a>
-              <a href={CUSTOMER_ROUTES.PRODUCT_DETAILS} className="text-sm uppercase tracking-tight text-neutral-500 hover:opacity-70">Archive</a>
+              <Link href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="text-sm font-bold uppercase tracking-tight">Shop</Link>
+              <Link href={CUSTOMER_ROUTES.PRODUCT_DETAILS} className="text-sm uppercase tracking-tight text-neutral-500 hover:opacity-70">Editorial</Link>
+              <Link href={CUSTOMER_ROUTES.PRODUCT_DETAILS} className="text-sm uppercase tracking-tight text-neutral-500 hover:opacity-70">Archive</Link>
             </nav>
             <CartBadge />
           </div>
@@ -286,18 +305,23 @@ export function ProductDetailsClient() {
             <div className="relative">
               {hasProductImages ? (
                 <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-[#f3f3f4] md:aspect-square">
-                  <AnimatePresence mode="wait">
+                  <AnimatePresence mode="wait" custom={imageDirection}>
                     <motion.img
                       key={product?.images?.[activeImageIndex] ?? activeImageIndex}
                       src={product?.images?.[activeImageIndex] ?? ""}
                       alt={`Gallery ${activeImageIndex + 1}`}
-                      initial={reduceMotion ? false : { opacity: 0, scale: 1.03 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={reduceMotion ? undefined : { opacity: 0, scale: 0.98 }}
+                      custom={imageDirection}
+                      variants={imageVariants}
+                      initial={reduceMotion ? false : "enter"}
+                      animate="center"
+                      exit="exit"
                       transition={{ duration: 0.45, ease: kineticEase }}
                       className="h-full w-full object-cover"
                     />
                   </AnimatePresence>
+                  <div className="absolute bottom-4 right-4 rounded-full bg-black/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">
+                    {activeImageIndex + 1}/{imageCount}
+                  </div>
                 </div>
               ) : (
                 <div className={`flex aspect-[4/5] flex-col justify-between overflow-hidden rounded-xl bg-gradient-to-br ${getDetailTone(0)} p-8 md:aspect-square`}>
@@ -324,7 +348,7 @@ export function ProductDetailsClient() {
                   <motion.button
                     key={image}
                     type="button"
-                    onClick={() => setActiveImageIndex(idx)}
+                    onClick={() => updateImageIndex(idx)}
                     whileHover={reduceMotion ? undefined : { scale: 1.03 }}
                     whileTap={reduceMotion ? undefined : { scale: 0.97 }}
                     className={`aspect-square overflow-hidden rounded-lg transition ${
@@ -377,9 +401,30 @@ export function ProductDetailsClient() {
                     <span className="text-xs text-neutral-500">{selectedColor === "Black" ? "Obsidian Black" : selectedColor}</span>
                   </div>
                   <div className="flex gap-4">
-                    <button type="button" onClick={() => setSelectedColor("Black")} className={`h-10 w-10 rounded-full bg-black ${selectedColor === "Black" ? "ring-2 ring-black ring-offset-2" : "ring-1 ring-neutral-300 ring-offset-2"}`} aria-label="Black" />
-                    <button type="button" onClick={() => setSelectedColor("White")} className={`h-10 w-10 rounded-full bg-white ${selectedColor === "White" ? "ring-2 ring-black ring-offset-2" : "ring-1 ring-neutral-300 ring-offset-2"}`} aria-label="White" />
-                    <button type="button" onClick={() => setSelectedColor("Blue")} className={`h-10 w-10 rounded-full bg-[#2563EB] ${selectedColor === "Blue" ? "ring-2 ring-black ring-offset-2" : ""}`} aria-label="Blue" />
+                    <motion.button
+                      type="button"
+                      onClick={() => setSelectedColor("Black")}
+                      whileHover={reduceMotion ? undefined : { scale: 1.06 }}
+                      whileTap={reduceMotion ? undefined : { scale: 0.95 }}
+                      className={`h-10 w-10 rounded-full bg-black ${selectedColor === "Black" ? "ring-2 ring-black ring-offset-2" : "ring-1 ring-neutral-300 ring-offset-2"}`}
+                      aria-label="Black"
+                    />
+                    <motion.button
+                      type="button"
+                      onClick={() => setSelectedColor("White")}
+                      whileHover={reduceMotion ? undefined : { scale: 1.06 }}
+                      whileTap={reduceMotion ? undefined : { scale: 0.95 }}
+                      className={`h-10 w-10 rounded-full bg-white ${selectedColor === "White" ? "ring-2 ring-black ring-offset-2" : "ring-1 ring-neutral-300 ring-offset-2"}`}
+                      aria-label="White"
+                    />
+                    <motion.button
+                      type="button"
+                      onClick={() => setSelectedColor("Blue")}
+                      whileHover={reduceMotion ? undefined : { scale: 1.06 }}
+                      whileTap={reduceMotion ? undefined : { scale: 0.95 }}
+                      className={`h-10 w-10 rounded-full bg-[#2563EB] ${selectedColor === "Blue" ? "ring-2 ring-black ring-offset-2" : ""}`}
+                      aria-label="Blue"
+                    />
                   </div>
                 </div>
 
@@ -394,6 +439,7 @@ export function ProductDetailsClient() {
                         key={size}
                         type="button"
                         onClick={() => setSelectedSize(size)}
+                        whileHover={reduceMotion ? undefined : { y: -2 }}
                         whileTap={reduceMotion ? undefined : { scale: 0.95 }}
                         className={`rounded-lg py-4 text-sm uppercase transition ${
                           selectedSize === size ? "bg-black font-bold text-white" : "bg-[#eeeeee]"
@@ -475,7 +521,7 @@ export function ProductDetailsClient() {
           <AnimatePresence mode="wait">
             <Stagger key={`${page}-${sort}-${searchText}`} className="grid grid-cols-2 gap-6 md:grid-cols-4">
               {listItems.map((item, index) => (
-                <StaggerItem key={item.id}>
+                <StaggerItem key={item.id} layout>
                   <ProductCard
                     item={{
                       id: item.id,

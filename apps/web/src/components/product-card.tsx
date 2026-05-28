@@ -46,6 +46,10 @@ export function ProductCard({ item, index, href, variant = "dark", className = "
   const displayName = item.name || item.title || "Product";
   const tone = getTone(index, variant);
   const isDark = variant === "dark" || variant === "compact";
+  const revealPillClass = isDark ? "bg-white/85 text-[#0b1220]" : "bg-black/80 text-white";
+  const revealOutlineClass = isDark
+    ? "border border-white/30 bg-black/40 text-white"
+    : "border border-black/15 bg-white/85 text-neutral-700";
 
   const content = (
     <>
@@ -74,10 +78,20 @@ export function ProductCard({ item, index, href, variant = "dark", className = "
           </div>
         )}
         <div
-          className={`absolute inset-0 ${
-            item.thumbnail ? "bg-gradient-to-t from-black/70 via-black/20 to-transparent" : "bg-black/10"
+          className={`absolute inset-0 transition duration-500 ${
+            item.thumbnail
+              ? "bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-70 group-hover:opacity-100"
+              : "bg-black/10"
           }`}
         />
+        <div className="pointer-events-none absolute inset-0 flex items-end justify-between p-5 opacity-0 transition duration-500 group-hover:opacity-100">
+          <span className={`rounded-full px-3 py-1 text-[9px] font-bold uppercase tracking-[0.18em] ${revealPillClass}`}>
+            View
+          </span>
+          <span className={`rounded-full px-3 py-1 text-[9px] font-bold uppercase tracking-[0.18em] ${revealOutlineClass}`}>
+            Details
+          </span>
+        </div>
         {variant !== "light" ? (
           <div className="relative flex h-full w-full flex-col justify-between rounded-[1.25rem] border border-white/10 bg-white/5 p-5 backdrop-blur-sm transition duration-500 group-hover:-translate-y-0.5">
             <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/65">
@@ -128,7 +142,8 @@ export function ProductCard({ item, index, href, variant = "dark", className = "
 
   return (
     <motion.div
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -6, scale: 1.01 }}
+      whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.35, ease: kineticEase }}
     >
       <Link href={href} className={linkClass}>

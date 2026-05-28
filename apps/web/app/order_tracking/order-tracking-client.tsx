@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
+import { buildAuthHref } from "../../src/lib/auth-redirect";
 
 type OrderSummary = {
   id: string;
@@ -121,6 +122,7 @@ function getStatusPill(status: string) {
 export function OrderTrackingClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [orderNumber, setOrderNumber] = useState("");
   const [lookupLoading, setLookupLoading] = useState(false);
@@ -130,13 +132,18 @@ export function OrderTrackingClient() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
+  const nextPath = useMemo(() => {
+    const query = searchParams.toString();
+    return query ? `${pathname}?${query}` : pathname;
+  }, [pathname, searchParams]);
+  const authRedirect = useMemo(() => buildAuthHref(nextPath), [nextPath]);
 
   const loadOrders = useCallback(async () => {
     setError(null);
     try {
       const response = await fetch("/api/orders", { cache: "no-store" });
       if (response.status === 401) {
-        router.replace(CUSTOMER_ROUTES.AUTH);
+        router.replace(authRedirect);
         return;
       }
 
@@ -189,7 +196,7 @@ export function OrderTrackingClient() {
       const response = await fetch(`/api/orders/track/${encodeURIComponent(normalized)}`, { cache: "no-store" });
 
       if (response.status === 401) {
-        router.replace(CUSTOMER_ROUTES.AUTH);
+        router.replace(authRedirect);
         return;
       }
 
@@ -224,7 +231,7 @@ export function OrderTrackingClient() {
       });
 
       if (response.status === 401) {
-        router.replace(CUSTOMER_ROUTES.AUTH);
+        router.replace(authRedirect);
         return;
       }
 

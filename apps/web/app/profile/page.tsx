@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FadeIn } from "../../src/components/motion/fade-in";
 import { Stagger, StaggerItem } from "../../src/components/motion/stagger";
 
 import AdminLogoutButton from "../../src/components/admin-logout-button";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
+import { buildAuthHref } from "../../src/lib/auth-redirect";
 
 type ApiProfile = {
   id: string;
@@ -116,6 +117,8 @@ function getNotificationHref(item: UserNotification) {
 
 export default function ProfilePage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const reduceMotion = useReducedMotion();
 
   const [loading, setLoading] = useState(true);
@@ -134,6 +137,11 @@ export default function ProfilePage() {
     emailEnabled: true,
   });
   const [form, setForm] = useState({ fullName: "", phone: "" });
+  const nextPath = useMemo(() => {
+    const query = searchParams.toString();
+    return query ? `${pathname}?${query}` : pathname;
+  }, [pathname, searchParams]);
+  const authRedirect = useMemo(() => buildAuthHref(nextPath), [nextPath]);
 
   useEffect(() => {
     const loadAccount = async () => {
@@ -154,7 +162,7 @@ export default function ProfilePage() {
           notificationsResponse.status === 401 ||
           preferencesResponse.status === 401
         ) {
-          router.replace(CUSTOMER_ROUTES.AUTH);
+          router.replace(authRedirect);
           return;
         }
 
@@ -250,7 +258,7 @@ export default function ProfilePage() {
       });
 
       if (response.status === 401) {
-        router.replace(CUSTOMER_ROUTES.AUTH);
+        router.replace(authRedirect);
         return;
       }
 
@@ -291,7 +299,7 @@ export default function ProfilePage() {
       });
 
       if (response.status === 401) {
-        router.replace(CUSTOMER_ROUTES.AUTH);
+        router.replace(authRedirect);
         return;
       }
 
@@ -324,7 +332,7 @@ export default function ProfilePage() {
       });
 
       if (response.status === 401) {
-        router.replace(CUSTOMER_ROUTES.AUTH);
+        router.replace(authRedirect);
         return;
       }
 

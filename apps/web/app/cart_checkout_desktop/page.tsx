@@ -1,8 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
+import { AuthLink } from "../../src/components/auth/auth-link";
+import { buildAuthHref } from "../../src/lib/auth-redirect";
 import { FadeIn } from "../../src/components/motion/fade-in";
+import { Stagger, StaggerItem } from "../../src/components/motion/stagger";
 
 const navLinks = [
   { label: 'New Arrivals', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
@@ -11,6 +17,8 @@ const navLinks = [
   { label: 'Archive', href: CUSTOMER_ROUTES.PRODUCT_DETAILS },
   { label: 'Sustainability', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
 ];
+
+const checkoutSteps = ["Bag", "Shipping", "Payment"] as const;
 
 const cartItems = [
   {
@@ -37,9 +45,18 @@ const cartItems = [
 ];
 
 export default function CartCheckoutDesktopPage() {
+  const reduceMotion = useReducedMotion();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [quantities, setQuantities] = useState<number[]>(() => cartItems.map(() => 1));
   const [selectedPayment, setSelectedPayment] = useState<"card" | "cod">("cod");
   const [checkoutMessage, setCheckoutMessage] = useState("Checkout ready.");
+  const nextPath = useMemo(() => {
+    const query = searchParams.toString();
+    return query ? `${pathname}?${query}` : pathname;
+  }, [pathname, searchParams]);
+  const authRedirect = useMemo(() => buildAuthHref(nextPath), [nextPath]);
 
   const parsePrice = (value: string) => Number(value.replace(/[^0-9.]/g, "")) || 0;
 
@@ -47,6 +64,8 @@ export default function CartCheckoutDesktopPage() {
     () => quantities.reduce((sum, qty) => sum + qty, 0),
     [quantities],
   );
+  const activeStep = totalItems === 0 ? 1 : 2;
+  const progress = (activeStep - 1) / (checkoutSteps.length - 1);
 
   const subtotal = useMemo(
     () => cartItems.reduce((sum, item, index) => sum + parsePrice(item.price) * (quantities[index] ?? 0), 0),
@@ -56,6 +75,21 @@ export default function CartCheckoutDesktopPage() {
   const shipping = 0;
   const taxes = Number((subtotal * 0.09).toFixed(2));
   const total = subtotal + shipping + taxes;
+
+  useEffect(() => {
+    const ensureAuth = async () => {
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        if (!response.ok) {
+          router.replace(authRedirect);
+        }
+      } catch {
+        router.replace(authRedirect);
+      }
+    };
+
+    void ensureAuth();
+  }, [authRedirect, router]);
 
   const increment = (index: number) => {
     setQuantities((previous) => previous.map((qty, idx) => (idx === index ? qty + 1 : qty)));
@@ -82,20 +116,20 @@ export default function CartCheckoutDesktopPage() {
 
           <nav className="hidden items-center gap-8 md:flex">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.label}
                 href={link.href}
                 className="text-xs font-semibold uppercase tracking-[0.15em] text-white/60 transition-colors hover:text-white"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </nav>
 
           <div className="flex items-center gap-5">
-            <a href={CUSTOMER_ROUTES.CART_CHECKOUT} aria-label="Shopping Bag" className="material-symbols-outlined cursor-pointer text-2xl text-white">shopping_bag</a>
-            <a href={CUSTOMER_ROUTES.REVIEWS} aria-label="Favorite" className="material-symbols-outlined cursor-pointer text-2xl text-white/75">favorite</a>
-            <a href={CUSTOMER_ROUTES.PROFILE} aria-label="Profile" className="material-symbols-outlined cursor-pointer text-2xl text-white/75">person</a>
+            <AuthLink href={CUSTOMER_ROUTES.CART_CHECKOUT} requiresAuth ariaLabel="Shopping Bag" className="material-symbols-outlined cursor-pointer text-2xl text-white">shopping_bag</AuthLink>
+            <AuthLink href={CUSTOMER_ROUTES.REVIEWS} requiresAuth ariaLabel="Reviews" className="material-symbols-outlined cursor-pointer text-2xl text-white/75">favorite</AuthLink>
+            <AuthLink href={CUSTOMER_ROUTES.PROFILE} requiresAuth ariaLabel="Profile" className="material-symbols-outlined cursor-pointer text-2xl text-white/75">person</AuthLink>
           </div>
         </div>
       </header>
@@ -109,51 +143,80 @@ export default function CartCheckoutDesktopPage() {
           </div>
         </FadeIn>
 
+        <FadeIn as="section" className="mb-16 rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-5 backdrop-blur-xl">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/45">
+            {checkoutSteps.map((step, index) => (
+              <span key={step} className={index + 1 <= activeStep ? "text-white" : "text-white/35"}>
+                {step}
+              </span>
+            ))}
+          </div>
+          <div className="mt-4 h-1 w-full rounded-full bg-white/10">
+            {reduceMotion ? (
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[#65f3de] via-[#4a8dff] to-[#3f7dff]"
+                style={{ width: `${progress * 100}%` }}
+              />
+            ) : (
+              <motion.div
+                className="h-full rounded-full bg-gradient-to-r from-[#65f3de] via-[#4a8dff] to-[#3f7dff]"
+                initial={{ width: "0%" }}
+                animate={{ width: `${progress * 100}%` }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              />
+            )}
+          </div>
+        </FadeIn>
+
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-12">
-          <section className="flex flex-col gap-12 lg:col-span-7">
-            {cartItems.map((item, index) => {
-              const quantity = quantities[index];
-              if (quantity === 0) {
-                return null;
-              }
+          <section className="lg:col-span-7">
+            <Stagger className="flex flex-col gap-12">
+              {cartItems.map((item, index) => {
+                const quantity = quantities[index];
+                if (quantity === 0) {
+                  return null;
+                }
 
-              return (
-              <article key={item.name} className="group flex flex-col gap-6 md:flex-row md:gap-8">
-                <div className="aspect-[3/4] w-full overflow-hidden rounded-lg bg-[#eeeeee] md:w-48">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                </div>
+                return (
+                  <StaggerItem key={item.name}>
+                    <article className="group flex flex-col gap-6 md:flex-row md:gap-8">
+                      <div className="aspect-[3/4] w-full overflow-hidden rounded-lg bg-[#eeeeee] md:w-48">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      </div>
 
-                <div className="flex flex-1 flex-col justify-between py-2">
-                  <div>
-                    <div className="mb-2 flex items-start justify-between gap-4">
-                      <h3 className="text-2xl font-bold uppercase tracking-tight md:text-xl">{item.name}</h3>
-                      <span className="text-xl font-bold md:text-lg">{item.price}</span>
-                    </div>
-                    <p className="mb-4 text-sm text-[#5c5f60]">{item.details}</p>
+                      <div className="flex flex-1 flex-col justify-between py-2">
+                        <div>
+                          <div className="mb-2 flex items-start justify-between gap-4">
+                            <h3 className="text-2xl font-bold uppercase tracking-tight md:text-xl">{item.name}</h3>
+                            <span className="text-xl font-bold md:text-lg">{item.price}</span>
+                          </div>
+                          <p className="mb-4 text-sm text-[#5c5f60]">{item.details}</p>
 
-                    <div className="flex items-center gap-4">
-                      <button type="button" onClick={() => decrement(index)} className="flex h-8 w-8 items-center justify-center rounded-full border border-black/10 transition-all hover:bg-black hover:text-white">
-                        <span className="material-symbols-outlined text-sm">remove</span>
-                      </button>
-                      <span className="font-mono text-sm">{String(quantity).padStart(2, "0")}</span>
-                      <button type="button" onClick={() => increment(index)} className="flex h-8 w-8 items-center justify-center rounded-full border border-black/10 transition-all hover:bg-black hover:text-white">
-                        <span className="material-symbols-outlined text-sm">add</span>
-                      </button>
-                    </div>
-                  </div>
+                          <div className="flex items-center gap-4">
+                            <button type="button" onClick={() => decrement(index)} className="flex h-8 w-8 items-center justify-center rounded-full border border-black/10 transition-all hover:bg-black hover:text-white">
+                              <span className="material-symbols-outlined text-sm">remove</span>
+                            </button>
+                            <span className="font-mono text-sm">{String(quantity).padStart(2, "0")}</span>
+                            <button type="button" onClick={() => increment(index)} className="flex h-8 w-8 items-center justify-center rounded-full border border-black/10 transition-all hover:bg-black hover:text-white">
+                              <span className="material-symbols-outlined text-sm">add</span>
+                            </button>
+                          </div>
+                        </div>
 
-                  <button type="button" onClick={() => removeItem(index)} className="mt-6 inline-flex items-center gap-2 text-left text-xs uppercase tracking-widest text-[#5c5f60] transition-colors hover:text-[#ba1a1a]">
-                    <span className="material-symbols-outlined text-sm">delete</span>
-                    Remove from bag
-                  </button>
-                </div>
-              </article>
-            );
-            })}
+                        <button type="button" onClick={() => removeItem(index)} className="mt-6 inline-flex items-center gap-2 text-left text-xs uppercase tracking-widest text-[#5c5f60] transition-colors hover:text-[#ba1a1a]">
+                          <span className="material-symbols-outlined text-sm">delete</span>
+                          Remove from bag
+                        </button>
+                      </div>
+                    </article>
+                  </StaggerItem>
+                );
+              })}
+            </Stagger>
           </section>
 
           <aside className="lg:col-span-5">
@@ -252,9 +315,9 @@ export default function CartCheckoutDesktopPage() {
                   <p className="mt-3 text-xs font-semibold text-white/60">Choose either payment option to continue checkout.</p>
                 </div>
 
-                <a href={CUSTOMER_ROUTES.ORDER_TRACKING} className="block w-full rounded-full bg-gradient-to-br from-[#65f3de] via-[#4a8dff] to-[#3f7dff] py-6 text-center text-sm font-bold uppercase tracking-[0.3em] text-[#0b1220] shadow-xl transition-transform hover:scale-[1.02]">
+                <AuthLink href={CUSTOMER_ROUTES.ORDER_TRACKING} requiresAuth className="block w-full rounded-full bg-gradient-to-br from-[#65f3de] via-[#4a8dff] to-[#3f7dff] py-6 text-center text-sm font-bold uppercase tracking-[0.3em] text-[#0b1220] shadow-xl transition-transform hover:scale-[1.02]">
                   Complete Order
-                </a>
+                </AuthLink>
 
                 <div className="flex items-center justify-center gap-3 text-white/60">
                   <span className="material-symbols-outlined text-sm">lock</span>
@@ -275,8 +338,12 @@ export default function CartCheckoutDesktopPage() {
 
           <div className="flex flex-col gap-4">
             <h4 className="mb-2 text-xs font-black uppercase tracking-widest">Support</h4>
-            <a href={CUSTOMER_ROUTES.AUTH} className="text-xs tracking-widest text-white/60 underline underline-offset-4">Customer Care</a>
-            <a href={CUSTOMER_ROUTES.RETURNS_REFUNDS} className="text-xs tracking-widest text-white/60">Shipping &amp; Returns</a>
+            <AuthLink href={CUSTOMER_ROUTES.ORDER_TRACKING} requiresAuth className="text-xs tracking-widest text-white/60 underline underline-offset-4">
+              Customer Care
+            </AuthLink>
+            <AuthLink href={CUSTOMER_ROUTES.RETURNS_REFUNDS} requiresAuth className="text-xs tracking-widest text-white/60">
+              Shipping &amp; Returns
+            </AuthLink>
             <a href={CUSTOMER_ROUTES.HOME} className="text-xs tracking-widest text-white/60">Store Locator</a>
           </div>
 

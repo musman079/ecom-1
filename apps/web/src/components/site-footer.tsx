@@ -3,10 +3,15 @@
 import Link from "next/link";
 import { FadeIn } from "./motion/fade-in";
 import { CUSTOMER_ROUTES } from "../constants/routes";
+import { AuthLink } from "./auth/auth-link";
 
 export function SiteFooter() {
   return (
-    <FadeIn as="footer" className="border-t border-white/10 bg-[#0d1627]">
+    <FadeIn as="footer" className="relative overflow-hidden border-t border-white/10 bg-[#0d1627]">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-36 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#65f3de]/10 blur-[120px]" />
+        <div className="absolute bottom-[-180px] right-[-80px] h-72 w-72 rounded-full bg-[#4f8cff]/10 blur-[120px]" />
+      </div>
       <div className="mx-auto grid w-full max-w-[1400px] grid-cols-1 gap-12 px-6 py-20 md:grid-cols-4 xl:px-12">
         <div>
           <h5 className="text-2xl font-black">KINETIC</h5>
@@ -17,8 +22,15 @@ export function SiteFooter() {
 
         <div className="space-y-4 text-xs tracking-[0.14em] text-white/55">
           <h6 className="mb-2 font-bold uppercase text-white">Service</h6>
-          <p className="transition hover:text-white">Customer Care</p>
-          <p className="transition hover:text-white">Shipping &amp; Returns</p>
+          <AuthLink href={CUSTOMER_ROUTES.ORDER_TRACKING} requiresAuth className="block transition hover:text-white">
+            Order Tracking
+          </AuthLink>
+          <AuthLink href={CUSTOMER_ROUTES.RETURNS_REFUNDS} requiresAuth className="block transition hover:text-white">
+            Returns &amp; Refunds
+          </AuthLink>
+          <AuthLink href={CUSTOMER_ROUTES.REVIEWS} requiresAuth className="block transition hover:text-white">
+            Reviews
+          </AuthLink>
           <Link href={CUSTOMER_ROUTES.PRIVACY_POLICY} className="block transition hover:text-white">
             Privacy Policy
           </Link>
