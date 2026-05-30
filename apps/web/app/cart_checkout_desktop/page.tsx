@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -44,7 +44,7 @@ const cartItems = [
   },
 ];
 
-export default function CartCheckoutDesktopPage() {
+function CartCheckoutDesktopContent() {
   const reduceMotion = useReducedMotion();
   const router = useRouter();
   const pathname = usePathname();
@@ -370,5 +370,13 @@ export default function CartCheckoutDesktopPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function CartCheckoutDesktopPage() {
+  return (
+    <Suspense fallback={null}>
+      <CartCheckoutDesktopContent />
+    </Suspense>
   );
 }

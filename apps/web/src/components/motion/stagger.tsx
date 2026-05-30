@@ -1,16 +1,17 @@
 "use client";
 
-import type { HTMLAttributes } from "react";
+import type { ComponentType, HTMLAttributes, ReactNode } from "react";
 import { motion, useReducedMotion, type HTMLMotionProps } from "framer-motion";
 import { defaultViewport, staggerContainer, staggerItem } from "./motion-config";
 
-type StaggerProps = HTMLMotionProps<"div"> & {
+type StaggerProps = Omit<HTMLMotionProps<"div">, "children"> & {
+  children?: ReactNode;
   as?: "div" | "ul" | "section";
 };
 
 export function Stagger({ children, className, as = "div", ...props }: StaggerProps) {
   const reduceMotion = useReducedMotion();
-  const Component = motion[as];
+  const Component = motion[as] as ComponentType<StaggerProps>;
 
   if (reduceMotion) {
     const Tag = as;
@@ -35,7 +36,11 @@ export function Stagger({ children, className, as = "div", ...props }: StaggerPr
   );
 }
 
-export function StaggerItem({ children, className, ...props }: HTMLMotionProps<"div">) {
+type StaggerItemProps = Omit<HTMLMotionProps<"div">, "children"> & {
+  children?: ReactNode;
+};
+
+export function StaggerItem({ children, className, ...props }: StaggerItemProps) {
   const reduceMotion = useReducedMotion();
 
   if (reduceMotion) {

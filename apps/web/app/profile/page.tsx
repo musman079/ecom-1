@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FadeIn } from "../../src/components/motion/fade-in";
@@ -115,7 +115,7 @@ function getNotificationHref(item: UserNotification) {
   return CUSTOMER_ROUTES.PROFILE;
 }
 
-export default function ProfilePage() {
+function ProfileContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -224,7 +224,7 @@ export default function ProfilePage() {
     };
 
     void loadAccount();
-  }, [router]);
+  }, [authRedirect, router]);
 
   const summary = useMemo(() => {
     return {
@@ -585,5 +585,13 @@ export default function ProfilePage() {
         </FadeIn>
       </section>
     </main>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={null}>
+      <ProfileContent />
+    </Suspense>
   );
 }

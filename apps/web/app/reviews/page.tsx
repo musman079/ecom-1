@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
+import { Suspense, useEffect, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 import { buildAuthHref } from "../../src/lib/auth-redirect";
 
-export default function ReviewsPage() {
+function ReviewsContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -41,5 +41,13 @@ export default function ReviewsPage() {
         Browse Products
       </Link>
     </main>
+  );
+}
+
+export default function ReviewsPage() {
+  return (
+    <Suspense fallback={null}>
+      <ReviewsContent />
+    </Suspense>
   );
 }

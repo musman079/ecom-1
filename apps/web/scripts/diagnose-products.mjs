@@ -16,10 +16,10 @@ async function loadEnv() {
       const [key, ...valueParts] = line.split("=");
       const value = valueParts.join("=").trim();
       if (!process.env[key?.trim()]) {
-        process.env[key?.trim()] = value.replace(/^["']|["']scripts/diagnose-products.mjs/g, "");
+        process.env[key?.trim()] = value.replace(/^["']|["']$/g, "");
       }
     }
-  } catch (e) {
+  } catch {
     console.warn("No .env file found");
   }
 }
@@ -33,12 +33,12 @@ const prisma = new PrismaClient();
 
 try {
   console.log("\n2. Checking database connection...");
-  await prisma.scripts/diagnose-products.mjsqueryRawSELECT 1;
+  await prisma.$queryRaw`SELECT 1`;
   console.log("✅ Database connected!");
 
   console.log("\n3. Checking if products exist...");
   const count = await prisma.product.count();
-  console.log(✅ Found  products);
+  console.log(`✅ Found ${count} products`);
 
   if (count === 0) {
     console.log("\n❌ WARNING: Database is empty!");
@@ -55,5 +55,5 @@ try {
   console.error("\n❌ Error:", error.message);
   process.exit(1);
 } finally {
-  await prisma.scripts/diagnose-products.mjsdisconnect();
+  await prisma.$disconnect();
 }

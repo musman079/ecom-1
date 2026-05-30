@@ -1,10 +1,11 @@
 "use client";
 
-import type { HTMLAttributes } from "react";
+import type { HTMLAttributes, ReactNode } from "react";
 import { motion, useReducedMotion, type HTMLMotionProps } from "framer-motion";
 import { defaultViewport, fadeUp, kineticEase } from "./motion-config";
 
-type FadeInProps = HTMLMotionProps<"div"> & {
+type FadeInProps = Omit<HTMLMotionProps<"div">, "children"> & {
+  children?: ReactNode;
   delay?: number;
   duration?: number;
   y?: number;

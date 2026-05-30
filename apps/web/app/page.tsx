@@ -2,6 +2,8 @@ import { HomePageClient } from "../src/components/home/home-page-client";
 import { listPublicProducts } from "../src/lib/products";
 import type { ProductCardData } from "../src/components/product-card";
 
+export const dynamic = "force-dynamic";
+
 function formatDashboardPrice(price: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",

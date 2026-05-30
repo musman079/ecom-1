@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useForm } from "react-hook-form";
@@ -38,7 +38,7 @@ type AppliedCoupon = {
   finalSubtotal: number;
 };
 
-export default function CartCheckoutPage() {
+function CartCheckoutContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -124,7 +124,7 @@ export default function CartCheckoutPage() {
     };
 
     void loadCart();
-  }, [router, setCart]);
+  }, [authRedirect, router, setCart]);
 
   const discountAmount = appliedCoupon?.discountAmount ?? 0;
   const discountedSubtotal = useMemo(() => Number(Math.max(0, cart.subtotal - discountAmount).toFixed(2)), [cart.subtotal, discountAmount]);
@@ -604,5 +604,13 @@ export default function CartCheckoutPage() {
       </main>
 
     </div>
+  );
+}
+
+export default function CartCheckoutPage() {
+  return (
+    <Suspense fallback={null}>
+      <CartCheckoutContent />
+    </Suspense>
   );
 }

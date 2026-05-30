@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import type { MotionStyle } from "framer-motion";
 import { CUSTOMER_ROUTES } from "../constants/routes";
 import CartBadge from "./CartBadge";
 import { AuthLink } from "./auth/auth-link";
 
 const navLinks = [
-  { label: "Shop", href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
+  { label: "Shop", href: CUSTOMER_ROUTES.BROWSE_PRODUCTS, requiresAuth: false },
   { label: "Cart", href: CUSTOMER_ROUTES.CART_CHECKOUT, requiresAuth: true },
 ] as const;
 
@@ -34,17 +35,11 @@ export default function Header() {
     return null;
   }
 
-  const HeaderTag = reduceMotion ? "header" : motion.header;
-
-  return (
-    <HeaderTag
-      className="fixed inset-x-0 top-0 z-50 border-b border-white/10 backdrop-blur-xl transition-[height] duration-300 relative"
-      style={
-        reduceMotion
-          ? { backgroundColor: "rgba(13, 22, 39, 0.85)" }
-          : { backgroundColor: headerBg, boxShadow: headerShadow }
-      }
-    >
+  const headerStyle: MotionStyle = reduceMotion
+    ? { backgroundColor: "rgba(13, 22, 39, 0.85)" }
+    : { backgroundColor: headerBg, boxShadow: headerShadow };
+  const headerContent = (
+    <>
       <div className="mx-auto flex h-20 w-full max-w-[1400px] items-center justify-between px-6 xl:px-12">
         <Link href={CUSTOMER_ROUTES.HOME} className="group">
           <motion.h1
@@ -95,6 +90,26 @@ export default function Header() {
           style={{ opacity: headerLineOpacity }}
         />
       )}
-    </HeaderTag>
+    </>
+  );
+
+  if (reduceMotion) {
+    return (
+      <header
+        className="fixed inset-x-0 top-0 z-50 border-b border-white/10 backdrop-blur-xl transition-[height] duration-300 relative"
+        style={{ backgroundColor: "rgba(13, 22, 39, 0.85)" }}
+      >
+        {headerContent}
+      </header>
+    );
+  }
+
+  return (
+    <motion.header
+      className="fixed inset-x-0 top-0 z-50 border-b border-white/10 backdrop-blur-xl transition-[height] duration-300 relative"
+      style={headerStyle}
+    >
+      {headerContent}
+    </motion.header>
   );
 }

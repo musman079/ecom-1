@@ -12,12 +12,14 @@ const navItems = [
     href: CUSTOMER_ROUTES.HOME,
     icon: "home",
     match: ["/"] as const,
+    requiresAuth: false,
   },
   {
     label: "Shop",
     href: CUSTOMER_ROUTES.BROWSE_PRODUCTS,
     icon: "search",
     match: [CUSTOMER_ROUTES.BROWSE_PRODUCTS, CUSTOMER_ROUTES.PRODUCT_DETAILS] as const,
+    requiresAuth: false,
   },
   {
     label: "Cart",

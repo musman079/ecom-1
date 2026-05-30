@@ -20,7 +20,7 @@ async function loadEnv() {
         process.env[key?.trim()] = value;
       }
     }
-  } catch (e) {
+  } catch {
     console.error("❌ .env file not found");
     process.exit(1);
   }

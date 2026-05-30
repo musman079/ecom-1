@@ -169,7 +169,7 @@ export function ReturnsRefundsClient() {
     };
 
     void loadData();
-  }, [router, searchParams]);
+  }, [authRedirect, router, searchParams]);
 
   const activeRequests = useMemo(
     () => returns.filter((item) => ["requested", "approved", "in_transit"].includes(item.status)).length,

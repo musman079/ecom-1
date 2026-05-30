@@ -161,7 +161,7 @@ export function OrderTrackingClient() {
     } catch {
       setError("Unable to load order tracking right now.");
     }
-  }, [router]);
+  }, [authRedirect, router]);
 
   useEffect(() => {
     const init = async () => {
@@ -218,7 +218,7 @@ export function OrderTrackingClient() {
     } finally {
       setLookupLoading(false);
     }
-  }, [router]);
+  }, [authRedirect, router]);
 
   const cancelOrder = async (orderId: string, orderNumber: string) => {
     setError(null);

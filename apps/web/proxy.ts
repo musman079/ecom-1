@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-import { getAdminEmails } from "./src/lib/auth";
+import { AUTH_COOKIE_NAME, getAdminEmails, verifyAuthToken } from "./src/lib/auth";
 
 function unauthorizedResponse(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/api/")) {
@@ -21,11 +21,14 @@ function forbiddenResponse(request: NextRequest) {
   return NextResponse.redirect(new URL("/", request.url));
 }
 
-export async function middleware(request: NextRequest) {
-  const token = await getToken({
+export async function proxy(request: NextRequest) {
+  const nextAuthToken = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET ?? process.env.JWT_SECRET,
   });
+  const customTokenValue = request.cookies.get(AUTH_COOKIE_NAME)?.value ?? null;
+  const customToken = customTokenValue ? await verifyAuthToken(customTokenValue) : null;
+  const token = nextAuthToken ?? customToken;
 
   if (!token || typeof token.email !== "string") {
     return unauthorizedResponse(request);

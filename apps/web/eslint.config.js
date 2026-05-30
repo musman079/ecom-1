@@ -12,4 +12,22 @@ export default [
 			"react/no-unknown-property": "off",
 		},
 	},
+	{
+		files: ["scripts/**/*.mjs", "check-db.js"],
+		languageOptions: {
+			globals: {
+				console: "readonly",
+				process: "readonly",
+				Buffer: "readonly",
+				__dirname: "readonly",
+				__filename: "readonly",
+				require: "readonly",
+				module: "readonly",
+			},
+		},
+		rules: {
+			"@typescript-eslint/no-require-imports": "off",
+			"turbo/no-undeclared-env-vars": "off",
+		},
+	},
 ];

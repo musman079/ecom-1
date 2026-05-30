@@ -1,6 +1,4 @@
-import { getServerSession } from "next-auth";
-
-import { authOptions } from "./next-auth";
+import { getCurrentUserFromRequest } from "./get-current-user";
 
 export type SessionUser = {
   userId: string;
@@ -15,34 +13,17 @@ export class AuthError extends Error {
   }
 }
 
-type RawServerSession = {
-  user?: {
-    id?: string;
-    email?: string | null;
-    role?: "CUSTOMER" | "ADMIN" | "SUPER_ADMIN";
-    roles?: Array<"CUSTOMER" | "ADMIN" | "SUPER_ADMIN">;
-  };
-};
-
-function toSessionUser(session: RawServerSession | null) {
-  if (!session?.user?.id || !session.user.email) {
+export async function getSessionFromRequest(request: Request) {
+  const user = await getCurrentUserFromRequest(request);
+  if (!user) {
     return null;
   }
 
-  const fallbackRole = session.user.role ?? "CUSTOMER";
-  const roles = Array.isArray(session.user.roles) ? session.user.roles : [fallbackRole];
-
   return {
-    userId: session.user.id,
-    email: session.user.email,
-    roles,
+    userId: user.id,
+    email: user.email,
+    roles: user.roles,
   } satisfies SessionUser;
-}
-
-export async function getSessionFromRequest(request: Request) {
-  void request;
-  const session = (await getServerSession(authOptions)) as RawServerSession | null;
-  return toSessionUser(session);
 }
 
 export async function requireSession(request: Request) {

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 import { getSafeNextPath } from "../../src/lib/auth-redirect";
+import { writeAuthStatusCache } from "../../src/hooks/use-auth-status";
 
 type AuthMode = "login" | "register";
 
@@ -30,7 +31,7 @@ export function AuthClient() {
   const searchParams = useSearchParams();
   const nextPath = useMemo(() => getSafeNextPath(searchParams.get("next")), [searchParams]);
 
-  const resolveRedirect = (role: "CUSTOMER" | "ADMIN" | "SUPER_ADMIN") => {
+  const resolveRedirect = useCallback((role: "CUSTOMER" | "ADMIN" | "SUPER_ADMIN") => {
     const isAdmin = role === "ADMIN" || role === "SUPER_ADMIN";
     if (nextPath) {
       if (isAdmin && nextPath.startsWith("/admin")) {
@@ -43,7 +44,7 @@ export function AuthClient() {
     }
 
     return isAdmin ? "/admin_overview_dashboard" : CUSTOMER_ROUTES.HOME;
-  };
+  }, [nextPath]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -79,7 +80,7 @@ export function AuthClient() {
     };
 
     void verifySession();
-  }, [nextPath, router]);
+  }, [resolveRedirect, router]);
 
   useEffect(() => {
     const requestedMode = searchParams.get("mode");
@@ -160,6 +161,7 @@ export function AuthClient() {
         return;
       }
 
+      writeAuthStatusCache("authenticated");
       toast.success(mode === "login" ? "Login successful. Redirecting..." : "Account created. Redirecting...");
 
       const meResponse = await fetch("/api/auth/me", { cache: "no-store" });
@@ -175,7 +177,8 @@ export function AuthClient() {
       };
 
       const role = mePayload.user?.role ?? "CUSTOMER";
-      router.push(resolveRedirect(role));
+      router.replace(resolveRedirect(role));
+      router.refresh();
     } catch {
       toast.error("Network issue while signing in. Please retry.");
     } finally {

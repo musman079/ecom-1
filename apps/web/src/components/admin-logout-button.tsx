@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { writeAuthStatusCache } from "../hooks/use-auth-status";
 
 type AdminLogoutButtonProps = {
   className?: string;
@@ -21,7 +22,9 @@ export default function AdminLogoutButton(props: AdminLogoutButtonProps) {
 
     setLoading(true);
     try {
+      await fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
       await signOut({ redirect: false, callbackUrl: "/auth" });
+      writeAuthStatusCache("guest");
       router.replace("/auth");
       router.refresh();
     } catch {

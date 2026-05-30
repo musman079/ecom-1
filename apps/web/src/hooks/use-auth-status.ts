@@ -34,7 +34,7 @@ function readCache(): AuthStatus | null {
   }
 }
 
-function writeCache(status: AuthStatus) {
+export function writeAuthStatusCache(status: AuthStatus) {
   if (typeof window === "undefined") {
     return;
   }
@@ -46,6 +46,18 @@ function writeCache(status: AuthStatus) {
     );
   } catch {
     // Ignore cache write failures.
+  }
+}
+
+export function clearAuthStatusCache() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.sessionStorage.removeItem(CACHE_KEY);
+  } catch {
+    // Ignore cache clear failures.
   }
 }
 
@@ -74,7 +86,7 @@ async function fetchAuthStatus(): Promise<AuthStatus> {
     });
 
   const status = await inFlight;
-  writeCache(status);
+  writeAuthStatusCache(status);
   return status;
 }
 
