@@ -1887,20 +1887,37 @@ async function placePrismaOrderFromItems(userId: string, payload: PlaceOrderPayl
   }
 
   const productIds = Array.from(mergedByProduct.keys());
-  const products = await prisma.product.findMany({
+  const products = (await prisma.product.findMany({
     where: {
       id: { in: productIds },
       status: PrismaProductStatus.PUBLISHED,
     },
-    include: {
+    select: {
+      id: true,
+      title: true,
       variants: {
         where: { isActive: true },
         orderBy: { createdAt: "asc" },
         take: 1,
+        select: {
+          id: true,
+          sku: true,
+          priceInCents: true,
+          stockQuantity: true,
+        },
       },
     },
-  });
-  const productById = new Map(products.map((product) => [product.id, product]));
+  })) as Array<{
+    id: string;
+    title: string;
+    variants: Array<{
+      id: string;
+      sku: string;
+      priceInCents: number;
+      stockQuantity: number;
+    }>;
+  }>;
+  const productById = new Map<string, (typeof products)[number]>(products.map((product) => [product.id, product]));
 
   const orderItems: OrderItemSnapshot[] = [];
   for (const [productId, quantity] of mergedByProduct.entries()) {
