@@ -1905,9 +1905,12 @@ async function placePrismaOrderFromItems(userId: string, payload: PlaceOrderPayl
   const orderItems: OrderItemSnapshot[] = [];
   for (const [productId, quantity] of mergedByProduct.entries()) {
     const product = productById.get(productId);
-    const variant = product?.variants[0] ?? null;
+    if (!product) {
+      return { error: "One or more products are no longer available." as const };
+    }
 
-    if (!product || !variant) {
+    const variant = product.variants.at(0);
+    if (!variant) {
       return { error: "One or more products are no longer available." as const };
     }
 
