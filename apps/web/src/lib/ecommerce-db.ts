@@ -1909,7 +1909,7 @@ async function placePrismaOrderFromItems(userId: string, payload: PlaceOrderPayl
       return { error: "One or more products are no longer available." as const };
     }
 
-    const variant = product.variants.at(0);
+    const variant = product.variants[0];
     if (!variant) {
       return { error: "One or more products are no longer available." as const };
     }
