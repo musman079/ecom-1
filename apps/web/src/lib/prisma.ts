@@ -29,9 +29,10 @@ function getPrismaClient() {
       dns.setServers(["8.8.8.8", "1.1.1.1"]);
       console.warn("[prisma] Overriding DNS servers for dev (8.8.8.8,1.1.1.1)");
     }
-  } catch (e) {
+  } catch (e: unknown) {
     // Non-fatal — continue and let the normal resolver run.
-    console.warn("[prisma] Failed to set DNS servers", e?.message ?? e);
+    const message = e instanceof Error ? e.message : e;
+    console.warn("[prisma] Failed to set DNS servers", message);
   }
   const resolvedDatabaseUrl = process.env.DATABASE_URL ?? process.env.MONGODB_URL;
   if (!process.env.DATABASE_URL && resolvedDatabaseUrl) {

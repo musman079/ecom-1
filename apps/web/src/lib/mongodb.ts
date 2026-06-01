@@ -17,8 +17,9 @@ try {
     dns.setServers(["8.8.8.8", "1.1.1.1"]);
     console.warn("[mongodb] Overriding DNS servers for dev (8.8.8.8,1.1.1.1)");
   }
-} catch (e) {
-  console.warn("[mongodb] Failed to set DNS servers", e?.message ?? e);
+} catch (e: unknown) {
+  const message = e instanceof Error ? e.message : e;
+  console.warn("[mongodb] Failed to set DNS servers", message);
 }
 
 declare global {
@@ -36,21 +37,23 @@ function getMongoClientPromise() {
   const clientPromise = (async () => {
     try {
       return await new MongoClient(getMongoUrl(), { maxPoolSize: 10 }).connect();
-    } catch (err) {
+    } catch (err: unknown) {
       try {
         // Only handle SRV query failures — rethrow other errors.
         // Node dns reports this as syscall === 'querySrv' and code === 'ECONNREFUSED'.
-        if ((err && (err.syscall === 'querySrv' || err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED'))) {
+        const mongoErr = err as NodeJS.ErrnoException;
+        if (mongoErr && (mongoErr.syscall === "querySrv" || mongoErr.code === "ENOTFOUND" || mongoErr.code === "ECONNREFUSED")) {
           try {
-            dns.setServers(['8.8.8.8', '1.1.1.1']);
-            console.warn('[mongodb] Retry: forcing public DNS servers and reconnecting');
-          } catch (e) {
-            console.warn('[mongodb] Failed to set DNS servers for retry', e?.message ?? e);
+            dns.setServers(["8.8.8.8", "1.1.1.1"]);
+            console.warn("[mongodb] Retry: forcing public DNS servers and reconnecting");
+          } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : e;
+            console.warn("[mongodb] Failed to set DNS servers for retry", message);
           }
 
           return await new MongoClient(getMongoUrl(), { maxPoolSize: 10 }).connect();
         }
-      } catch (retryErr) {
+      } catch {
         // If retry failed, surface original error below.
       }
 

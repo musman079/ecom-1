@@ -79,7 +79,7 @@ try {
     try {
       const meJson = await meRes.json();
       console.log('me body:', JSON.stringify(meJson, null, 2).slice(0, 2000));
-    } catch (e) {
+    } catch {
       console.log('me response not json or empty');
     }
   } else {
@@ -95,7 +95,7 @@ try {
     try {
       const sJson = await sRes.json();
       console.log('session body:', JSON.stringify(sJson, null, 2).slice(0, 2000));
-    } catch (e) {
+    } catch {
       console.log('session response not json or empty');
     }
   }
