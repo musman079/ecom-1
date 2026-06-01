@@ -1,14 +1,5 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "apps/web/package.json",
-      "use": "@vercel/next@latest",
-      "config": {
-        "maxLambdaSize": "50mb",
-        "maxDuration": 60
-      }
-    }
-  ],
-  "installCommand": "pnpm install --shamefully-hoist"
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "pnpm install",
+  "buildCommand": "turbo run build --filter=web"
 }
