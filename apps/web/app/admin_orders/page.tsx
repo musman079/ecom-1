@@ -90,7 +90,7 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     const verifyAdmin = async () => {
       try {
-        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        const response = await fetch("/api/auth/me", { cache: "no-store", credentials: "include" });
         if (!response.ok) {
           router.replace("/auth");
           return;
@@ -125,7 +125,7 @@ export default function AdminOrdersPage() {
     const loadOrders = async () => {
       setError(null);
       try {
-        const response = await fetch("/api/admin/orders?limit=80", { cache: "no-store" });
+        const response = await fetch("/api/admin/orders?limit=80", { cache: "no-store", credentials: "include" });
         if (!response.ok) {
           throw new Error("Unable to load orders.");
         }

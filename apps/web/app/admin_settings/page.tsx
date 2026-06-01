@@ -59,9 +59,9 @@ export default function AdminSettingsPage() {
     const loadSettings = async () => {
       try {
         const [meResponse, profileResponse, preferencesResponse] = await Promise.all([
-          fetch("/api/auth/me", { cache: "no-store" }),
-          fetch("/api/profile", { cache: "no-store" }),
-          fetch("/api/notifications/preferences", { cache: "no-store" }),
+          fetch("/api/auth/me", { cache: "no-store", credentials: "include" }),
+          fetch("/api/profile", { cache: "no-store", credentials: "include" }),
+          fetch("/api/notifications/preferences", { cache: "no-store", credentials: "include" }),
         ]);
 
         if (meResponse.status === 401 || profileResponse.status === 401 || preferencesResponse.status === 401) {
@@ -126,6 +126,7 @@ export default function AdminSettingsPage() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({ fullName: form.fullName, phone: form.phone }),
       });
 
@@ -139,6 +140,7 @@ export default function AdminSettingsPage() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(preferences),
       });
 

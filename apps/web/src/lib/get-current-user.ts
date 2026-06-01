@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 
 import { prisma } from "./prisma";
 import { authOptions } from "./next-auth";
-import { readAuthTokenFromCookieHeader, readAuthTokenFromRequest, verifyAuthToken, type AuthRole } from "./auth";
+import { getAdminEmails, readAuthTokenFromCookieHeader, readAuthTokenFromRequest, verifyAuthToken, type AuthRole } from "./auth";
 
 export type SanitizedAuthUser = {
   id: string;
@@ -27,6 +27,20 @@ function highestRole(roles: string[]): AuthRole {
   return "CUSTOMER";
 }
 
+function normalizeUserRoles(email: string, roles: string[], fallbackRole: AuthRole) {
+  const normalizedRoles = roles.filter((role) => role === "CUSTOMER" || role === "ADMIN" || role === "SUPER_ADMIN");
+
+  if (normalizedRoles.length === 0) {
+    normalizedRoles.push(fallbackRole);
+  }
+
+  if (getAdminEmails().includes(email.trim().toLowerCase()) && !normalizedRoles.includes("ADMIN")) {
+    normalizedRoles.push("ADMIN");
+  }
+
+  return Array.from(new Set(normalizedRoles));
+}
+
 export function sanitizeAuthUser(input: {
   id: string;
   email: string;
@@ -35,14 +49,14 @@ export function sanitizeAuthUser(input: {
   role: AuthRole;
   roles?: string[];
 }): SanitizedAuthUser {
-  const normalizedRoles = Array.isArray(input.roles) ? input.roles : [input.role];
+  const normalizedRoles = normalizeUserRoles(input.email, Array.isArray(input.roles) ? input.roles : [input.role], input.role);
 
   return {
     id: input.id,
     email: input.email,
     fullName: input.fullName,
     phone: input.phone ?? "",
-    role: input.role,
+    role: highestRole(normalizedRoles),
     roles: normalizedRoles,
   };
 }
@@ -119,32 +133,68 @@ async function resolveUserByIdentity(identity: { id?: string | null; email?: str
 }
 
 export async function getCurrentUserFromRequest(request: Request): Promise<SanitizedAuthUser | null> {
-  const nextAuthToken = await getToken({
-    req: {
-      headers: {
-        cookie: request.headers.get("cookie") ?? "",
-      },
-    } as never,
-    secret: process.env.NEXTAUTH_SECRET ?? process.env.JWT_SECRET,
-  });
-
-  if (nextAuthToken) {
-    const nextAuthUser = await resolveUserByIdentity({
-      id: typeof nextAuthToken.sub === "string" ? nextAuthToken.sub : null,
-      email: typeof nextAuthToken.email === "string" ? nextAuthToken.email : null,
+  try {
+    const nextAuthToken = await getToken({
+      req: {
+        headers: {
+          cookie: request.headers.get("cookie") ?? "",
+        },
+      } as never,
+      secret: process.env.NEXTAUTH_SECRET ?? process.env.JWT_SECRET,
     });
 
-    if (nextAuthUser) {
-      return nextAuthUser;
+    console.log("[GET_CURRENT_USER] NextAuth token:", nextAuthToken ? "FOUND" : "NOT FOUND");
+    if (nextAuthToken) {
+      console.log("[GET_CURRENT_USER] Token email:", nextAuthToken.email, "role:", nextAuthToken.role);
     }
-  }
 
-  const token = readAuthTokenFromRequest(request);
-  if (!token) {
+    if (nextAuthToken) {
+      const nextAuthUser = await resolveUserByIdentity({
+        id: typeof nextAuthToken.sub === "string" ? nextAuthToken.sub : null,
+        email: typeof nextAuthToken.email === "string" ? nextAuthToken.email : null,
+      });
+
+      console.log("[GET_CURRENT_USER] User resolved from NextAuth token:", nextAuthUser ? "YES" : "NO");
+      if (nextAuthUser) {
+        return nextAuthUser;
+      }
+    }
+
+    // Fallback: some environments/cookie configurations may prevent getToken() from
+    // reading the session cookie directly. In that case, call NextAuth's session
+    // endpoint with the request cookies as a fallback to obtain the session.
+    try {
+      const cookieHeader = request.headers.get("cookie") ?? "";
+      if (cookieHeader) {
+        const sessionUrl = process.env.NEXTAUTH_URL ? `${process.env.NEXTAUTH_URL.replace(/\/$/, "")}/api/auth/session` : `/api/auth/session`;
+        const sessionRes = await fetch(sessionUrl, { headers: { cookie: cookieHeader, Accept: "application/json" } });
+        if (sessionRes.ok) {
+          const sessionJson = await sessionRes.json();
+          if (sessionJson?.user) {
+            const sessUser = await resolveUserByIdentity({ id: sessionJson.user.id ?? null, email: sessionJson.user.email ?? null });
+            if (sessUser) {
+              console.log("[GET_CURRENT_USER] Resolved user via session endpoint");
+              return sessUser;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("[GET_CURRENT_USER] Session endpoint fallback failed", e);
+    }
+
+    const token = readAuthTokenFromRequest(request);
+    console.log("[GET_CURRENT_USER] Custom token:", token ? "FOUND" : "NOT FOUND");
+    if (!token) {
+      console.log("[GET_CURRENT_USER] No token found at all");
+      return null;
+    }
+
+    return resolveUserByToken(token);
+  } catch (error) {
+    console.error("[GET_CURRENT_USER] Error:", error);
     return null;
   }
-
-  return resolveUserByToken(token);
 }
 
 export async function getCurrentUser(): Promise<SanitizedAuthUser | null> {

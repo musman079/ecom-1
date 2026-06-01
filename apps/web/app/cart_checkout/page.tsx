@@ -92,7 +92,7 @@ function CartCheckoutContent() {
   useEffect(() => {
     const loadCart = async () => {
       try {
-        const response = await fetch("/api/cart", { cache: "no-store" });
+        const response = await fetch("/api/cart", { cache: "no-store", credentials: "include" });
 
         if (response.status === 401) {
           router.push(authRedirect);
@@ -156,6 +156,7 @@ function CartCheckoutContent() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({ productId, quantity }),
       });
 
@@ -240,6 +241,7 @@ function CartCheckoutContent() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           shippingAddress: shippingForm,
           paymentMethod,

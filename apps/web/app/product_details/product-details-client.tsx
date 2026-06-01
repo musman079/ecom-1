@@ -233,8 +233,7 @@ export function ProductDetailsClient() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+        },        credentials: "include",        body: JSON.stringify({
           productId: product.id,
           quantity: 1,
         }),

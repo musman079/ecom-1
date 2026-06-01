@@ -201,6 +201,24 @@ type WishlistItemDocument = {
   updatedAt: Date;
 };
 
+type PlaceOrderPayload = {
+  items: Array<{
+    productId: string;
+    quantity: number;
+  }>;
+  shippingAddress: {
+    fullName: string;
+    phone: string;
+    line1: string;
+    city: string;
+    postalCode: string;
+    country: string;
+  };
+  paymentMethod: "card" | "cod";
+  notes?: string;
+  couponCode?: string;
+};
+
 const DEFAULT_SHIPPING_RULES: ShippingRateRule[] = [
   { countries: ["US", "United States"], states: ["CA", "NY"], minSubtotal: 0, rate: 9.5, freeOver: 150, courier: "Priority Ground" },
   { countries: ["US", "United States"], minSubtotal: 0, rate: 12, freeOver: 120, courier: "Standard Ground" },
@@ -1660,27 +1678,13 @@ export async function checkoutCart(userId: string, payload: {
 
 export async function placeOrderFromItems(
   userId: string,
-  payload: {
-    items: Array<{
-      productId: string;
-      quantity: number;
-    }>;
-    shippingAddress: {
-      fullName: string;
-      phone: string;
-      line1: string;
-      city: string;
-      postalCode: string;
-      country: string;
-    };
-    paymentMethod: "card" | "cod";
-    notes?: string;
-    couponCode?: string;
-  },
+  payload: PlaceOrderPayload,
 ) {
   const userObjectId = toObjectId(userId);
-  if (!userObjectId) {
-    return null;
+  const allProductIdsAreLegacyMongoIds = payload.items.every((item) => Boolean(toObjectId(item.productId)));
+
+  if (!userObjectId || !allProductIdsAreLegacyMongoIds) {
+    return placePrismaOrderFromItems(userId, payload);
   }
 
   if (!Array.isArray(payload.items) || payload.items.length === 0) {
@@ -1807,6 +1811,221 @@ export async function placeOrderFromItems(
   await createNotifications([
     {
       userId: userObjectId,
+      audience: "customer",
+      kind: "order_created",
+      title: `Order ${order.orderNumber} confirmed`,
+      message: `Your order has been placed successfully. Current status: ${order.status}.`,
+      metadata: {
+        orderId: orderResult.insertedId.toHexString(),
+        orderNumber: order.orderNumber,
+      },
+    },
+  ]);
+
+  if (couponCode) {
+    const coupons = await couponsCollection();
+    await coupons.updateOne(
+      { code: couponCode },
+      {
+        $inc: { usedCount: 1 },
+        $set: { updatedAt: new Date() },
+      },
+    );
+  }
+
+  return {
+    orderId: orderResult.insertedId.toHexString(),
+    orderNumber: order.orderNumber,
+    status: order.status,
+    subtotal: order.subtotal,
+    discountAmount: order.discountAmount ?? 0,
+    couponCode: order.couponCode ?? null,
+    shippingCost: order.shippingCost,
+    taxAmount: order.taxAmount,
+    total: order.total,
+    paymentStatus: order.paymentStatus,
+    items: order.items.map((item) => ({
+      productId: orderItemProductIdForApi(item.productId),
+      title: item.title,
+      sku: item.sku,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      lineTotal: item.lineTotal,
+    })),
+    createdAt: now.toISOString(),
+  };
+}
+
+async function placePrismaOrderFromItems(userId: string, payload: PlaceOrderPayload) {
+  const user = await prisma.user.findFirst({
+    where: { id: userId, isActive: true },
+    select: { id: true },
+  });
+
+  if (!user) {
+    return null;
+  }
+
+  if (!Array.isArray(payload.items) || payload.items.length === 0) {
+    return { error: "Cart items are required." as const };
+  }
+
+  const mergedByProduct = new Map<string, number>();
+  for (const item of payload.items) {
+    const productId = item.productId?.trim();
+    const quantity = Math.max(1, Math.floor(Number(item.quantity)));
+
+    if (!productId || !Number.isFinite(quantity)) {
+      continue;
+    }
+
+    mergedByProduct.set(productId, (mergedByProduct.get(productId) ?? 0) + quantity);
+  }
+
+  if (mergedByProduct.size === 0) {
+    return { error: "Invalid cart items supplied." as const };
+  }
+
+  const productIds = Array.from(mergedByProduct.keys());
+  const products = await prisma.product.findMany({
+    where: {
+      id: { in: productIds },
+      status: PrismaProductStatus.PUBLISHED,
+    },
+    include: {
+      variants: {
+        where: { isActive: true },
+        orderBy: { createdAt: "asc" },
+        take: 1,
+      },
+    },
+  });
+  const productById = new Map(products.map((product) => [product.id, product]));
+
+  const orderItems: OrderItemSnapshot[] = [];
+  for (const [productId, quantity] of mergedByProduct.entries()) {
+    const product = productById.get(productId);
+    const variant = product?.variants[0] ?? null;
+
+    if (!product || !variant) {
+      return { error: "One or more products are no longer available." as const };
+    }
+
+    if (variant.stockQuantity < quantity) {
+      return { error: `Insufficient stock for ${product.title}.` as const };
+    }
+
+    const unitPrice = variant.priceInCents / 100;
+    orderItems.push({
+      productId: product.id,
+      variantId: variant.id,
+      title: product.title,
+      sku: variant.sku,
+      quantity,
+      unitPrice,
+      lineTotal: Number((unitPrice * quantity).toFixed(2)),
+    });
+  }
+
+  const subtotal = Number(orderItems.reduce((sum, item) => sum + item.lineTotal, 0).toFixed(2));
+
+  let couponCode: string | undefined;
+  let discountAmount = 0;
+
+  if (payload.couponCode?.trim()) {
+    const couponResult = await applyCouponCode({
+      code: payload.couponCode,
+      subtotal,
+    });
+
+    if ("error" in couponResult) {
+      return { error: couponResult.error };
+    }
+
+    couponCode = couponResult.code;
+    discountAmount = couponResult.discountAmount;
+  }
+
+  const pricing = calculateCheckoutPricing({
+    subtotal,
+    discountAmount,
+    shippingAddress: payload.shippingAddress,
+  });
+  const now = new Date();
+  const order = {
+    orderNumber: buildOrderNumber(),
+    userId: user.id,
+    status: "processing" as const,
+    items: orderItems,
+    subtotal,
+    discountAmount,
+    couponCode,
+    shippingCost: pricing.shippingCost,
+    taxAmount: pricing.taxAmount,
+    total: pricing.total,
+    shippingAddress: payload.shippingAddress,
+    paymentMethod: payload.paymentMethod,
+    paymentStatus: "pending" as const,
+    estimatedDelivery: new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000),
+    notes: payload.notes,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  const decrementedLines = orderItems.map((item) => ({
+    variantId: item.variantId,
+    quantity: item.quantity,
+    title: item.title,
+  }));
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      for (const line of decrementedLines) {
+        if (!line.variantId) {
+          throw new Error("missing_variant");
+        }
+
+        const result = await tx.productVariant.updateMany({
+          where: { id: line.variantId, stockQuantity: { gte: line.quantity } },
+          data: { stockQuantity: { decrement: line.quantity } },
+        });
+
+        if (result.count !== 1) {
+          throw new Error(`stock_conflict:${line.title}`);
+        }
+      }
+    });
+  } catch {
+    return { error: "Stock changed while placing order. Please refresh and try again." as const };
+  }
+
+  const orders = await ordersCollection();
+  let orderResult: { insertedId: ObjectId };
+
+  try {
+    orderResult = await orders.insertOne(order as never);
+  } catch (error) {
+    console.error("Mongo order insert failed after legacy Prisma order stock decrement.", error);
+
+    await prisma.$transaction(async (tx) => {
+      for (const line of decrementedLines) {
+        if (!line.variantId) {
+          continue;
+        }
+
+        await tx.productVariant.update({
+          where: { id: line.variantId },
+          data: { stockQuantity: { increment: line.quantity } },
+        });
+      }
+    });
+
+    return { error: "Failed to finalize order. Please try again." as const };
+  }
+
+  await createNotifications([
+    {
+      userId: user.id,
       audience: "customer",
       kind: "order_created",
       title: `Order ${order.orderNumber} confirmed`,

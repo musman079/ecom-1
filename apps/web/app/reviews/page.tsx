@@ -19,7 +19,7 @@ function ReviewsContent() {
   useEffect(() => {
     const ensureAuth = async () => {
       try {
-        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        const response = await fetch("/api/auth/me", { cache: "no-store", credentials: "include" });
         if (!response.ok) {
           router.replace(authRedirect);
         }

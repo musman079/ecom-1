@@ -103,8 +103,8 @@ export function ReturnsRefundsClient() {
 
       try {
         const [ordersResponse, returnsResponse] = await Promise.all([
-          fetch("/api/orders/history?limit=30", { cache: "no-store" }),
-          fetch("/api/returns?limit=30", { cache: "no-store" }),
+          fetch("/api/orders/history?limit=30", { cache: "no-store", credentials: "include" }),
+          fetch("/api/returns?limit=30", { cache: "no-store", credentials: "include" }),
         ]);
 
         if (ordersResponse.status === 401 || returnsResponse.status === 401) {

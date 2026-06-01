@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import dns from "node:dns";
 
 declare global {
   var prisma: PrismaClient | undefined;
@@ -11,6 +12,27 @@ function getPrismaClient() {
 
   // Prisma expects DATABASE_URL; reuse MONGODB_URL when only that is configured.
   // Important: this must NOT run at module evaluation time during Next builds.
+  // Development helper: some environments block Node's DNS SRV lookups (used by
+  // MongoDB+SRV URLs). In development we optionally override DNS servers so
+  // `dns.resolveSrv` used by the driver succeeds. Set `MONGODB_DNS_SERVERS`
+  // env var (comma-separated) to control servers, otherwise use public DNS
+  // resolvers in non-production.
+  try {
+    const envServers = process.env.MONGODB_DNS_SERVERS;
+    if (envServers) {
+      const servers = envServers.split(",").map((s) => s.trim()).filter(Boolean);
+      if (servers.length > 0) {
+        dns.setServers(servers);
+        console.warn("[prisma] Using MONGODB_DNS_SERVERS:", servers);
+      }
+    } else if (process.env.NODE_ENV !== "production") {
+      dns.setServers(["8.8.8.8", "1.1.1.1"]);
+      console.warn("[prisma] Overriding DNS servers for dev (8.8.8.8,1.1.1.1)");
+    }
+  } catch (e) {
+    // Non-fatal — continue and let the normal resolver run.
+    console.warn("[prisma] Failed to set DNS servers", e?.message ?? e);
+  }
   const resolvedDatabaseUrl = process.env.DATABASE_URL ?? process.env.MONGODB_URL;
   if (!process.env.DATABASE_URL && resolvedDatabaseUrl) {
     process.env.DATABASE_URL = resolvedDatabaseUrl;

@@ -61,6 +61,12 @@ async function ensureUserRole(userId: string, roleName: SessionRole) {
   });
 }
 
+async function ensureUserRoles(userId: string, roleNames: readonly SessionRole[]) {
+  for (const roleName of roleNames) {
+    await ensureUserRole(userId, roleName);
+  }
+}
+
 async function getRoleSnapshotByEmail(email: string) {
   const normalized = normalizeEmail(email);
   const user = await prisma.user.findUnique({
@@ -93,12 +99,14 @@ async function getRoleSnapshotByEmail(email: string) {
 
 async function ensureOAuthUser(email: string, name?: string | null) {
   const normalizedEmail = normalizeEmail(email);
+    console.log("[AUTHORIZE] Attempting login for:", normalizedEmail);
   const existing = await prisma.user.findUnique({
     where: { email: normalizedEmail },
     select: { id: true },
   });
 
   if (existing) {
+    await ensureUserRoles(existing.id, mapUserRoles(normalizedEmail, ["CUSTOMER"]));
     return existing.id;
   }
 
@@ -129,15 +137,15 @@ const providers: NextAuthOptions["providers"] = [
       password: { label: "Password", type: "password" },
     },
     async authorize(credentials) {
-      const email = normalizeEmail(credentials?.email ?? "");
+      const normalizedEmail = normalizeEmail(credentials?.email ?? "");
       const password = credentials?.password ?? "";
 
-      if (!email || !password) {
+      if (!normalizedEmail || !password) {
         return null;
       }
 
       const user = await prisma.user.findUnique({
-        where: { email },
+        where: { email: normalizedEmail },
         include: {
           roles: {
             include: {
@@ -148,11 +156,13 @@ const providers: NextAuthOptions["providers"] = [
       });
 
       if (!user || !user.isActive || !user.passwordHash) {
+          console.log("[AUTHORIZE] User not found or inactive:", normalizedEmail);
         return null;
       }
 
       const passwordValid = await verifyPassword(password, user.passwordHash);
       if (!passwordValid) {
+          console.log("[AUTHORIZE] Invalid password for:", normalizedEmail);
         return null;
       }
 
@@ -161,11 +171,10 @@ const providers: NextAuthOptions["providers"] = [
         user.roles.map((entry) => entry.role.name),
       );
 
-      if (getAdminEmails().includes(email) && !roleNames.includes("ADMIN")) {
-        await ensureUserRole(user.id, "ADMIN");
-      }
+      await ensureUserRoles(user.id, roleNames);
 
-      const snapshotRoles = mapUserRoles(email, roleNames);
+        const snapshotRoles = mapUserRoles(normalizedEmail, roleNames);
+      console.log("[AUTHORIZE] Login successful for:", normalizedEmail, "roles:", snapshotRoles);
 
       return {
         id: user.id,
@@ -200,6 +209,7 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET ?? process.env.JWT_SECRET,
   session: {
     strategy: "jwt",
+    maxAge: 7 * 24 * 60 * 60, // 7 days
   },
   pages: {
     signIn: "/auth",
@@ -226,10 +236,13 @@ export const authOptions: NextAuthOptions = {
       const email = normalizeEmail((user?.email as string | undefined) ?? (token.email as string | undefined) ?? "");
       if (!email) {
         return token;
+        console.log("[JWT Callback] Processing token for email:", email, "user:", !!user);
       }
 
       const snapshot = await getRoleSnapshotByEmail(email);
       if (!snapshot) {
+          console.log("[JWT Callback] No role snapshot for email:", email);
+          console.log("[JWT Callback] Setting token with roles:", snapshot.roles, "role:", snapshot.role);
         return token;
       }
 

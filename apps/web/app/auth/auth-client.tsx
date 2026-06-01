@@ -57,7 +57,7 @@ export function AuthClient() {
   useEffect(() => {
     const verifySession = async () => {
       try {
-        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        const response = await fetch("/api/auth/me", { cache: "no-store", credentials: "include" });
         if (!response.ok) {
           return;
         }
@@ -164,7 +164,7 @@ export function AuthClient() {
       writeAuthStatusCache("authenticated");
       toast.success(mode === "login" ? "Login successful. Redirecting..." : "Account created. Redirecting...");
 
-      const meResponse = await fetch("/api/auth/me", { cache: "no-store" });
+      const meResponse = await fetch("/api/auth/me", { cache: "no-store", credentials: "include" });
       if (!meResponse.ok) {
         router.push("/");
         return;
@@ -177,8 +177,7 @@ export function AuthClient() {
       };
 
       const role = mePayload.user?.role ?? "CUSTOMER";
-      router.replace(resolveRedirect(role));
-      router.refresh();
+      await router.replace(resolveRedirect(role));
     } catch {
       toast.error("Network issue while signing in. Please retry.");
     } finally {
