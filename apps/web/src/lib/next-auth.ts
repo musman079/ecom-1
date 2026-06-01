@@ -235,16 +235,17 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       const email = normalizeEmail((user?.email as string | undefined) ?? (token.email as string | undefined) ?? "");
       if (!email) {
+        console.log("[JWT Callback] No email available on token or user; returning token");
         return token;
-        console.log("[JWT Callback] Processing token for email:", email, "user:", !!user);
       }
 
       const snapshot = await getRoleSnapshotByEmail(email);
       if (!snapshot) {
-          console.log("[JWT Callback] No role snapshot for email:", email);
-          console.log("[JWT Callback] Setting token with roles:", snapshot.roles, "role:", snapshot.role);
+        console.log("[JWT Callback] No role snapshot for email:", email);
         return token;
       }
+
+      console.log("[JWT Callback] Setting token with roles:", snapshot.roles, "role:", snapshot.role);
 
       token.sub = snapshot.id;
       token.email = snapshot.email;
