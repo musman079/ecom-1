@@ -33,18 +33,21 @@ function formatCurrency(value: number) {
   return `$${value.toFixed(2)}`;
 }
 
-type AdminAnalyticsSearchParams = {
-  months?: string;
-  topProductsLimit?: string;
-};
-
 export const dynamic = "force-dynamic";
 
-export default async function AdminAnalyticsPage({
-  searchParams,
-}: {
-  searchParams: Promise<AdminAnalyticsSearchParams>;
-}) {
+function readSearchParam(value: string | string[] | undefined) {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+
+  return undefined;
+}
+
+export default async function AdminAnalyticsPage({ searchParams }: PageProps<"/admin_analytics">) {
   const params = await searchParams;
   const cookieStore = await cookies();
   const session = await getSessionFromRequest(
@@ -63,9 +66,12 @@ export default async function AdminAnalyticsPage({
     redirect("/");
   }
 
-  const months = Number.isFinite(Number(params.months)) ? Math.max(1, Math.min(Number(params.months), 24)) : 6;
-  const topProductsLimit = Number.isFinite(Number(params.topProductsLimit))
-    ? Math.max(1, Math.min(Number(params.topProductsLimit), 20))
+  const monthsValue = readSearchParam(params.months);
+  const topProductsLimitValue = readSearchParam(params.topProductsLimit);
+
+  const months = Number.isFinite(Number(monthsValue)) ? Math.max(1, Math.min(Number(monthsValue), 24)) : 6;
+  const topProductsLimit = Number.isFinite(Number(topProductsLimitValue))
+    ? Math.max(1, Math.min(Number(topProductsLimitValue), 20))
     : 5;
 
   const [metrics, analytics] = await Promise.all([
