@@ -46,6 +46,11 @@ export function getMongoDatabaseName() {
 }
 
 export function assertRuntimeEnvironment() {
+  // Env vars are not always available during `next build` static generation on CI.
+  if (process.env.NEXT_PHASE === "phase-production-build") {
+    return;
+  }
+
   requireEnv("JWT_SECRET");
   requireEnv("JWT_EXPIRY");
 }
