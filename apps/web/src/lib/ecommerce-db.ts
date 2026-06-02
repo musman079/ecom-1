@@ -405,6 +405,16 @@ type ProductQueryOptions = {
 
 export type AdminOrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
 
+type AuditLogDocument = {
+  _id: ObjectId;
+  adminId: string;
+  action: string;
+  resourceType: "order" | "return_request" | "product" | "coupon" | "user";
+  resourceId: string;
+  changes: Record<string, unknown>;
+  createdAt: Date;
+};
+
 function toObjectId(id: string) {
   if (!ObjectId.isValid(id)) {
     return null;
@@ -478,6 +488,21 @@ async function notificationEmailQueueCollection() {
   const db = await getMongoDb();
   return db.collection<NotificationEmailQueueDocument>("notification_email_queue");
 }
+
+async function adminAuditLogsCollection() {
+  const db = await getMongoDb();
+  return db.collection<AuditLogDocument>("admin_audit_logs");
+}
+
+export async function createAdminAuditLog(input: Omit<AuditLogDocument, "_id" | "createdAt">) {
+  const logs = await adminAuditLogsCollection();
+  await logs.insertOne({
+    _id: new ObjectId(),
+    ...input,
+    createdAt: new Date(),
+  });
+}
+
 
 function notificationPreferenceKey(uid: ObjectId | string) {
   return uid instanceof ObjectId ? uid.toHexString() : uid;
@@ -1197,9 +1222,12 @@ export async function removeFromCart(userId: string, productId: string) {
 }
 
 function buildOrderNumber() {
-  const stamp = Date.now().toString().slice(-8);
-  const random = Math.floor(Math.random() * 900 + 100).toString();
-  return `ORD-${stamp}-${random}`;
+  // Use crypto.randomUUID() for collision-free unique identifiers
+  const date = new Date();
+  const datePart = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}`;
+  // Take first 8 chars of a UUID (without dashes) for brevity
+  const uniquePart = crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase();
+  return `ORD-${datePart}-${uniquePart}`;
 }
 
 async function restockOrderItems(items: OrderItemSnapshot[]) {
@@ -1461,14 +1489,7 @@ export async function checkoutFromPrismaCart(
   ]);
 
   if (couponCode) {
-    const coupons = await couponsCollection();
-    await coupons.updateOne(
-      { code: couponCode },
-      {
-        $inc: { usedCount: 1 },
-        $set: { updatedAt: new Date() },
-      },
-    );
+    await atomicIncrementCouponUsage(couponCode);
   }
 
   return {
@@ -1634,14 +1655,7 @@ export async function checkoutCart(userId: string, payload: {
   ]);
 
   if (couponCode) {
-    const coupons = await couponsCollection();
-    await coupons.updateOne(
-      { code: couponCode },
-      {
-        $inc: { usedCount: 1 },
-        $set: { updatedAt: new Date() },
-      },
-    );
+    await atomicIncrementCouponUsage(couponCode);
   }
 
   await carts.updateOne(
@@ -1823,14 +1837,7 @@ export async function placeOrderFromItems(
   ]);
 
   if (couponCode) {
-    const coupons = await couponsCollection();
-    await coupons.updateOne(
-      { code: couponCode },
-      {
-        $inc: { usedCount: 1 },
-        $set: { updatedAt: new Date() },
-      },
-    );
+    await atomicIncrementCouponUsage(couponCode);
   }
 
   return {
@@ -2058,14 +2065,7 @@ async function placePrismaOrderFromItems(userId: string, payload: PlaceOrderPayl
   ]);
 
   if (couponCode) {
-    const coupons = await couponsCollection();
-    await coupons.updateOne(
-      { code: couponCode },
-      {
-        $inc: { usedCount: 1 },
-        $set: { updatedAt: new Date() },
-      },
-    );
+    await atomicIncrementCouponUsage(couponCode);
   }
 
   return {
@@ -2172,6 +2172,7 @@ export async function listRecentOrdersForAdmin(options?: { limit?: number; statu
 
 export async function updateOrderByAdmin(input: {
   orderId: string;
+  adminId?: string;
   status?: AdminOrderStatus;
   trackingNumber?: string;
   paymentStatus?: "pending" | "paid" | "failed";
@@ -2227,6 +2228,16 @@ export async function updateOrderByAdmin(input: {
     },
   );
 
+  if (input.adminId) {
+    await createAdminAuditLog({
+      adminId: input.adminId,
+      action: "update_order",
+      resourceType: "order",
+      resourceId: orderObjectId.toHexString(),
+      changes: updateSet,
+    });
+  }
+
   const updated = await orders.findOne({ _id: orderObjectId });
   if (!updated) {
     return null;
@@ -2273,6 +2284,28 @@ export async function updateOrderByAdmin(input: {
     paymentStatus: updated.paymentStatus ?? "pending",
     trackingNumber: updated.trackingNumber ?? null,
     updatedAt: updated.updatedAt.toISOString(),
+  };
+}
+
+export async function getOrderByIdForAdmin(orderId: string) {
+  const orderObjectId = toObjectId(orderId);
+  if (!orderObjectId) {
+    return null;
+  }
+
+  const orders = await ordersCollection();
+  const order = await orders.findOne({ _id: orderObjectId });
+  if (!order) {
+    return null;
+  }
+
+  return {
+    id: order._id.toHexString(),
+    orderNumber: order.orderNumber,
+    status: order.status,
+    paymentStatus: order.paymentStatus ?? "pending",
+    trackingNumber: order.trackingNumber ?? null,
+    total: order.total,
   };
 }
 
@@ -2615,6 +2648,7 @@ export async function listReturnRequestsForAdmin(options?: { limit?: number; sta
 
 export async function updateReturnRequestByAdmin(input: {
   returnId: string;
+  adminId?: string;
   status?: ReturnRequestStatus;
   adminNote?: string;
 }) {
@@ -2675,6 +2709,16 @@ export async function updateReturnRequestByAdmin(input: {
       $set: updateSet,
     },
   );
+
+  if (input.adminId) {
+    await createAdminAuditLog({
+      adminId: input.adminId,
+      action: "update_return_request",
+      resourceType: "return_request",
+      resourceId: returnObjectId.toHexString(),
+      changes: updateSet,
+    });
+  }
 
   const updated = await returnRequests.findOne({ _id: returnObjectId });
   if (!updated) {
@@ -3127,3 +3171,38 @@ export async function applyCouponCode(input: { code: string; subtotal: number })
     finalSubtotal: Number((input.subtotal - discountAmount).toFixed(2)),
   };
 }
+
+/**
+ * Atomically increments coupon usedCount with limit enforcement.
+ * Uses MongoDB findOneAndUpdate with conditional filter to prevent race conditions.
+ * Returns true if increment succeeded, false if limit was already reached.
+ */
+export async function atomicIncrementCouponUsage(code: string): Promise<boolean> {
+  const normalizedCode = code.trim().toUpperCase();
+  const coupons = await couponsCollection();
+  const now = new Date();
+
+  // Atomic: only increment if usedCount < usageLimit (or no limit set)
+  const result = await coupons.findOneAndUpdate(
+    {
+      code: normalizedCode,
+      isActive: true,
+      $or: [
+        { usageLimit: { $exists: false } },
+        { $expr: { $lt: ["$usedCount", "$usageLimit"] } },
+      ],
+      $and: [
+        { $or: [{ validFrom: { $exists: false } }, { validFrom: { $lte: now } }] },
+        { $or: [{ validUntil: { $exists: false } }, { validUntil: { $gt: now } }] },
+      ],
+    },
+    {
+      $inc: { usedCount: 1 },
+      $set: { updatedAt: now },
+    },
+    { returnDocument: "after" },
+  );
+
+  return result !== null;
+}
+

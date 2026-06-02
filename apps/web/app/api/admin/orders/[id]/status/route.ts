@@ -38,7 +38,7 @@ export async function PUT(request: Request, context: RouteContext) {
   }
 
   const { id } = await context.params;
-  const order = await updateOrderByAdmin({ orderId: id, status: payload.status });
+  const order = await updateOrderByAdmin({ orderId: id, adminId: session.userId, status: payload.status });
 
   if (!order) {
     return NextResponse.json({ error: "Order not found." }, { status: 404 });

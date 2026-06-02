@@ -143,56 +143,26 @@ export async function getCurrentUserFromRequest(request: Request): Promise<Sanit
       secret: process.env.NEXTAUTH_SECRET ?? process.env.JWT_SECRET,
     });
 
-    console.log("[GET_CURRENT_USER] NextAuth token:", nextAuthToken ? "FOUND" : "NOT FOUND");
-    if (nextAuthToken) {
-      console.log("[GET_CURRENT_USER] Token email:", nextAuthToken.email, "role:", nextAuthToken.role);
-    }
-
     if (nextAuthToken) {
       const nextAuthUser = await resolveUserByIdentity({
         id: typeof nextAuthToken.sub === "string" ? nextAuthToken.sub : null,
         email: typeof nextAuthToken.email === "string" ? nextAuthToken.email : null,
       });
 
-      console.log("[GET_CURRENT_USER] User resolved from NextAuth token:", nextAuthUser ? "YES" : "NO");
       if (nextAuthUser) {
         return nextAuthUser;
       }
     }
 
-    // Fallback: some environments/cookie configurations may prevent getToken() from
-    // reading the session cookie directly. In that case, call NextAuth's session
-    // endpoint with the request cookies as a fallback to obtain the session.
-    try {
-      const cookieHeader = request.headers.get("cookie") ?? "";
-      if (cookieHeader) {
-        const sessionUrl = process.env.NEXTAUTH_URL ? `${process.env.NEXTAUTH_URL.replace(/\/$/, "")}/api/auth/session` : `/api/auth/session`;
-        const sessionRes = await fetch(sessionUrl, { headers: { cookie: cookieHeader, Accept: "application/json" } });
-        if (sessionRes.ok) {
-          const sessionJson = await sessionRes.json();
-          if (sessionJson?.user) {
-            const sessUser = await resolveUserByIdentity({ id: sessionJson.user.id ?? null, email: sessionJson.user.email ?? null });
-            if (sessUser) {
-              console.log("[GET_CURRENT_USER] Resolved user via session endpoint");
-              return sessUser;
-            }
-          }
-        }
-      }
-    } catch (e) {
-      console.warn("[GET_CURRENT_USER] Session endpoint fallback failed", e);
-    }
-
+    // Fallback: custom JWT cookie (for users who logged in via /api/auth/login)
     const token = readAuthTokenFromRequest(request);
-    console.log("[GET_CURRENT_USER] Custom token:", token ? "FOUND" : "NOT FOUND");
     if (!token) {
-      console.log("[GET_CURRENT_USER] No token found at all");
       return null;
     }
 
     return resolveUserByToken(token);
   } catch (error) {
-    console.error("[GET_CURRENT_USER] Error:", error);
+    console.error("[getCurrentUserFromRequest] Auth resolution failed:", error instanceof Error ? error.message : "unknown");
     return null;
   }
 }

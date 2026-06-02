@@ -37,6 +37,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   const { id } = await context.params;
   const requestRow = await updateReturnRequestByAdmin({
     returnId: id,
+    adminId: session.userId,
     status: payload.status,
     adminNote: payload.adminNote,
   });

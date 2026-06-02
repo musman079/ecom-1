@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { AuthError, requireSession } from "../../../src/lib/auth-session";
 import { checkoutFromPrismaCart } from "../../../src/lib/ecommerce-db";
+import { checkoutRateLimiter, rateLimitResponse } from "../../../src/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -109,6 +110,13 @@ type CheckoutPayload = {
 export async function POST(request: Request) {
   try {
     const session = await requireSession(request);
+
+    // Rate limit: 10 checkout attempts per hour per user
+    const rl = checkoutRateLimiter.check(session.userId);
+    if (!rl.allowed) {
+      return rateLimitResponse(rl.resetAt);
+    }
+
     const payload = (await request.json()) as CheckoutPayload;
 
     const address = payload.shippingAddress;

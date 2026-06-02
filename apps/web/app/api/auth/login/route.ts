@@ -12,6 +12,7 @@ import {
 } from "../../../../src/lib/auth";
 import { sanitizeAuthUser } from "../../../../src/lib/get-current-user";
 import { prisma } from "../../../../src/lib/prisma";
+import { getClientIp, loginRateLimiter, rateLimitResponse } from "../../../../src/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,13 @@ function errorResponse(message: string, status: number) {
 }
 
 export async function POST(request: Request) {
+  // Rate limit: 5 attempts per 15 minutes per IP
+  const ip = getClientIp(request);
+  const rl = loginRateLimiter.check(ip);
+  if (!rl.allowed) {
+    return rateLimitResponse(rl.resetAt);
+  }
+
   try {
     assertAuthEnvironment();
   } catch (error) {

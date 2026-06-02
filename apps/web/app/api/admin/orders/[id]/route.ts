@@ -38,6 +38,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   const { id } = await context.params;
   const order = await updateOrderByAdmin({
     orderId: id,
+    adminId: session.userId,
     status: payload.status,
     trackingNumber: payload.trackingNumber,
     paymentStatus: payload.paymentStatus,

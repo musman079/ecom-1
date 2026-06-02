@@ -6,19 +6,15 @@ import { assertRuntimeEnvironment } from "../src/lib/env";
 import Header from "../src/components/Header";
 import MobileNav from "../src/components/MobileNav";
 
-const display = localFont({
+const geist = localFont({
   src: "./fonts/GeistVF.woff",
-  variable: "--font-display",
-});
-
-const body = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-body",
+  variable: "--font-geist",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "KINETIC Store ",
-  description: "E-commerce Web App",
+  title: "KINETIC Store",
+  description: "Premium e-commerce store for the modern shopper. Discover top brands, fast shipping, and exclusive deals.",
 };
 
 export default function RootLayout({
@@ -36,7 +32,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1"
         />
       </head>
-      <body className={`${display.variable} ${body.variable}`}>
+      <body className={geist.variable}>
         <Header />
         <div className="pt-20 pb-24">{children}</div>
         <MobileNav />

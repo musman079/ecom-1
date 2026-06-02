@@ -77,7 +77,27 @@ export function normalizeEmail(email: string) {
 }
 
 export function validatePasswordStrength(password: string) {
-  return password.length >= MIN_PASSWORD_LENGTH;
+  if (password.length < MIN_PASSWORD_LENGTH) return false;
+  if (!/[A-Z]/.test(password)) return false;
+  if (!/[a-z]/.test(password)) return false;
+  if (!/[0-9]/.test(password)) return false;
+  return true;
+}
+
+export function getPasswordStrengthError(password: string): string | null {
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
+  }
+  if (!/[A-Z]/.test(password)) {
+    return "Password must contain at least one uppercase letter.";
+  }
+  if (!/[a-z]/.test(password)) {
+    return "Password must contain at least one lowercase letter.";
+  }
+  if (!/[0-9]/.test(password)) {
+    return "Password must contain at least one number.";
+  }
+  return null;
 }
 
 export function getAdminEmails() {

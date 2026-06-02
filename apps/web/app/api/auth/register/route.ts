@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import {
+  getPasswordStrengthError,
   hashPassword,
   isAdminEmail,
   normalizeEmail,
@@ -9,6 +10,7 @@ import {
 } from "../../../../src/lib/auth";
 import { sanitizeAuthUser } from "../../../../src/lib/get-current-user";
 import { prisma } from "../../../../src/lib/prisma";
+import { getClientIp, rateLimitResponse, registerRateLimiter } from "../../../../src/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +34,13 @@ function errorResponse(message: string, status: number) {
 }
 
 export async function POST(request: Request) {
+  // Rate limit: 3 registrations per hour per IP
+  const ip = getClientIp(request);
+  const rl = registerRateLimiter.check(ip);
+  if (!rl.allowed) {
+    return rateLimitResponse(rl.resetAt);
+  }
+
   let payload: RegisterPayload;
 
   try {
@@ -56,7 +65,8 @@ export async function POST(request: Request) {
   }
 
   if (!validatePasswordStrength(password)) {
-    return errorResponse("Password must be at least 8 characters.", 400);
+    const passwordError = getPasswordStrengthError(password);
+    return errorResponse(passwordError ?? "Password does not meet strength requirements.", 400);
   }
 
   try {

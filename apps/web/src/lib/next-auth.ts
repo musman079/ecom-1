@@ -99,7 +99,6 @@ async function getRoleSnapshotByEmail(email: string) {
 
 async function ensureOAuthUser(email: string, name?: string | null) {
   const normalizedEmail = normalizeEmail(email);
-    console.log("[AUTHORIZE] Attempting login for:", normalizedEmail);
   const existing = await prisma.user.findUnique({
     where: { email: normalizedEmail },
     select: { id: true },
@@ -156,13 +155,11 @@ const providers: NextAuthOptions["providers"] = [
       });
 
       if (!user || !user.isActive || !user.passwordHash) {
-          console.log("[AUTHORIZE] User not found or inactive:", normalizedEmail);
         return null;
       }
 
       const passwordValid = await verifyPassword(password, user.passwordHash);
       if (!passwordValid) {
-          console.log("[AUTHORIZE] Invalid password for:", normalizedEmail);
         return null;
       }
 
@@ -173,8 +170,7 @@ const providers: NextAuthOptions["providers"] = [
 
       await ensureUserRoles(user.id, roleNames);
 
-        const snapshotRoles = mapUserRoles(normalizedEmail, roleNames);
-      console.log("[AUTHORIZE] Login successful for:", normalizedEmail, "roles:", snapshotRoles);
+      const snapshotRoles = mapUserRoles(normalizedEmail, roleNames);
 
       return {
         id: user.id,
@@ -235,17 +231,13 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       const email = normalizeEmail((user?.email as string | undefined) ?? (token.email as string | undefined) ?? "");
       if (!email) {
-        console.log("[JWT Callback] No email available on token or user; returning token");
         return token;
       }
 
       const snapshot = await getRoleSnapshotByEmail(email);
       if (!snapshot) {
-        console.log("[JWT Callback] No role snapshot for email:", email);
         return token;
       }
-
-      console.log("[JWT Callback] Setting token with roles:", snapshot.roles, "role:", snapshot.role);
 
       token.sub = snapshot.id;
       token.email = snapshot.email;

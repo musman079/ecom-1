@@ -46,7 +46,18 @@ const ADMIN_ROUTES = [
 ];
 
 // API routes that require authentication
-const PROTECTED_API_ROUTES = ["/api/admin", "/api/cart", "/api/checkout", "/api/orders", "/api/profile"];
+const PROTECTED_API_ROUTES = [
+  "/api/admin",
+  "/api/cart",
+  "/api/checkout",
+  "/api/orders",
+  "/api/profile",
+  "/api/returns",
+  "/api/wishlist",
+  "/api/reviews",
+  "/api/notifications",
+  "/api/coupons",
+];
 
 // API routes that require ADMIN role
 const ADMIN_API_ROUTES = ["/api/admin"];
