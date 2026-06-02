@@ -84,44 +84,67 @@ function isProtectedApiRoute(pathname: string): boolean {
   return PROTECTED_API_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
+function unauthorizedResponse(request: NextRequest, pathname: string) {
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
+  const loginUrl = new URL("/auth", request.url);
+  loginUrl.searchParams.set("next", pathname);
+  return NextResponse.redirect(loginUrl);
+}
+
+function forbiddenResponse(request: NextRequest, pathname: string) {
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+  }
+
+  return NextResponse.redirect(new URL("/", request.url));
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow static assets and public files
+  // Allow static assets and public files immediately
   if (pathname.startsWith("/_next") || pathname.startsWith("/api/static")) {
     return NextResponse.next();
   }
 
-  // Check if it's a public route
-  if (isPublicRoute(pathname)) {
-    return NextResponse.next();
-  }
+  // Log cookies and path to help identify login/session issues
+  const allCookies = request.cookies.getAll().map((c) => `${c.name}=${c.value.substring(0, 8)}...`).join("; ");
+  console.log(`[PROXY] Request path: ${pathname} | Cookies: ${allCookies || "none"}`);
 
   // Get JWT token (NextAuth or custom cookie fallback)
+  const isSecure = request.url.startsWith("https://");
   const nextAuthToken = await getToken({
-    req: request,
+    req: {
+      headers: {
+        cookie: request.headers.get("cookie") ?? "",
+      },
+    } as any,
+    secureCookie: isSecure,
     secret: process.env.NEXTAUTH_SECRET ?? process.env.JWT_SECRET,
   });
+  
   const customTokenValue = request.cookies.get(AUTH_COOKIE_NAME)?.value ?? null;
   const customToken = customTokenValue ? await verifyAuthToken(customTokenValue) : null;
   const token = nextAuthToken ?? customToken;
 
+  console.log(`[PROXY] resolved nextAuthToken: ${nextAuthToken ? "YES" : "NO"} | customToken: ${customToken ? "YES" : "NO"} | activeToken: ${token ? "YES" : "NO"}`);
+
   // Check if route requires authentication
   const requiresAuth = isProtectedRoute(pathname) || isAdminRoute(pathname) || isProtectedApiRoute(pathname) || isAdminApiRoute(pathname);
 
-  // If no token and requires auth, redirect to login
+  // If no token and requires auth, return unauthorized
   if (!token && requiresAuth) {
-    const loginUrl = new URL("/auth", request.url);
-    loginUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(loginUrl);
+    console.log(`[PROXY] Blocking request to ${pathname} (Requires auth, but token is missing). Redirecting/Responding with 401.`);
+    return unauthorizedResponse(request, pathname);
   }
 
   // If admin route, check role
   if (isAdminRoute(pathname) || isAdminApiRoute(pathname)) {
     if (!token) {
-      const loginUrl = new URL("/auth", request.url);
-      loginUrl.searchParams.set("next", pathname);
-      return NextResponse.redirect(loginUrl);
+      return unauthorizedResponse(request, pathname);
     }
 
     const email = typeof token.email === "string" ? token.email : "";
@@ -138,23 +161,13 @@ export async function proxy(request: NextRequest) {
 
     if (!isAdmin) {
       console.warn(`[PROXY] Unauthorized admin access attempt: ${email} tried to access ${pathname}`);
-      return NextResponse.json(
-        { error: "Unauthorized. Admin access required." },
-        {
-          status: 403,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      return forbiddenResponse(request, pathname);
     }
   }
 
   // If protected route but user not authenticated (already handled above)
   if (isProtectedRoute(pathname) && !token) {
-    const loginUrl = new URL("/auth", request.url);
-    loginUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(loginUrl);
+    return unauthorizedResponse(request, pathname);
   }
 
   return NextResponse.next();

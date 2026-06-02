@@ -140,6 +140,7 @@ export async function getCurrentUserFromRequest(request: Request): Promise<Sanit
           cookie: request.headers.get("cookie") ?? "",
         },
       } as never,
+      secureCookie: request.url.startsWith("https://"),
       secret: process.env.NEXTAUTH_SECRET ?? process.env.JWT_SECRET,
     });
 
