@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireAdminSession } from "../../../../../../src/lib/admin-auth";
-import { AuthError } from "../../../../../../src/lib/auth-session";
+import { AuthError, SessionUser } from "../../../../../../src/lib/auth-session";
 import { updateOrderByAdmin } from "../../../../../../src/lib/ecommerce-db";
 
 export const dynamic = "force-dynamic";
@@ -15,8 +15,9 @@ type RequestPayload = {
 };
 
 export async function PUT(request: Request, context: RouteContext) {
+  let session: SessionUser;
   try {
-    await requireAdminSession(request);
+    session = await requireAdminSession(request);
   } catch (error) {
     if (error instanceof AuthError) {
       const status = error.message === "Forbidden" ? 403 : 401;
