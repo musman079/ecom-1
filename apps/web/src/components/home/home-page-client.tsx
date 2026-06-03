@@ -6,20 +6,18 @@ import { CUSTOMER_ROUTES } from "../../constants/routes";
 import { FadeIn } from "../motion/fade-in";
 import { HeroBackground, HeroItem, HeroMotion } from "../motion/hero-motion";
 import { Stagger, StaggerItem } from "../motion/stagger";
+import { Counter } from "../motion";
 import CartBadge from "../CartBadge";
 import { AuthLink } from "../auth/auth-link";
 import { ProductCard, type ProductCardData } from "../product-card";
 import { SiteFooter } from "../site-footer";
 
-const navLinks = ["New Arrivals", "Designers", "Editorial", "Archive", "Sustainability"] as const;
-
-const navRoutes: Record<(typeof navLinks)[number], string> = {
-  "New Arrivals": CUSTOMER_ROUTES.BROWSE_PRODUCTS,
-  Designers: CUSTOMER_ROUTES.BROWSE_PRODUCTS,
-  Editorial: CUSTOMER_ROUTES.PRODUCT_DETAILS,
-  Archive: CUSTOMER_ROUTES.PRODUCT_DETAILS,
-  Sustainability: CUSTOMER_ROUTES.BROWSE_PRODUCTS,
-};
+const navLinks = [
+  { label: "Shop", href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
+  { label: "About", href: CUSTOMER_ROUTES.ABOUT },
+  { label: "FAQ", href: CUSTOMER_ROUTES.FAQ },
+  { label: "Contact", href: CUSTOMER_ROUTES.CONTACT },
+] as const;
 
 const filters = ["Category", "Size", "Color", "Price Range", "Material"];
 
@@ -37,40 +35,6 @@ export function HomePageClient({ newArrivals, bestSellers }: HomePageClientProps
 
   return (
     <div className="min-h-screen bg-[#070d17] text-[#eaf2ff] -mt-20">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#0d1627]/85 backdrop-blur-xl transition-[background,box-shadow] duration-300">
-        <div className="mx-auto flex h-20 w-full max-w-[1400px] items-center justify-between px-6 xl:px-12">
-          <Link href={CUSTOMER_ROUTES.HOME}>
-            <h1 className="text-3xl font-black tracking-[-0.06em] text-white">KINETIC</h1>
-          </Link>
-
-          <nav className="hidden items-center gap-7 lg:flex">
-            {navLinks.map((link, idx) => (
-              <Link
-                key={link}
-                href={navRoutes[link]}
-                className={`border-b pb-1 text-xs font-semibold uppercase tracking-[0.14em] transition-colors ${
-                  idx === 0
-                    ? "border-[#65f3de] text-white"
-                    : "border-transparent text-white/60 hover:border-white/30 hover:text-white"
-                }`}
-              >
-                {link}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-5 text-lg">
-            <CartBadge />
-            <AuthLink href={CUSTOMER_ROUTES.REVIEWS} requiresAuth ariaLabel="Reviews">
-              <span className="material-symbols-outlined">favorite</span>
-            </AuthLink>
-            <AuthLink href={CUSTOMER_ROUTES.PROFILE} requiresAuth ariaLabel="Profile">
-              <span className="material-symbols-outlined">person</span>
-            </AuthLink>
-          </div>
-        </div>
-      </header>
-
       <main className="pt-20">
         <section className="relative flex h-[88vh] min-h-[700px] items-end overflow-hidden px-6 pb-14 lg:px-16 xl:px-24">
           <HeroBackground />
@@ -78,7 +42,7 @@ export function HomePageClient({ newArrivals, bestSellers }: HomePageClientProps
           <HeroMotion className="relative max-w-4xl text-white">
             <HeroItem>
               <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[#65f3de]">
-                Welcome to Kinetic
+                Welcome to USolstice
               </p>
             </HeroItem>
             <HeroItem>
@@ -125,6 +89,30 @@ export function HomePageClient({ newArrivals, bestSellers }: HomePageClientProps
               <span className="material-symbols-outlined text-base">expand_more</span>
             </motion.div>
           )}
+        </section>
+
+        <section className="relative overflow-hidden border-y border-white/10 bg-white/[0.02] py-5">
+          <div className="flex w-max animate-marquee whitespace-nowrap text-[10px] font-black uppercase tracking-[0.25em] text-[#65f3de]">
+            <span className="mx-8">FREE SHIPPING OVER $100</span>
+            <span className="mx-8">•</span>
+            <span className="mx-8">NEW ARRIVALS EVERY WEEK</span>
+            <span className="mx-8">•</span>
+            <span className="mx-8">TECHNICAL CRAFTSMANSHIP</span>
+            <span className="mx-8">•</span>
+            <span className="mx-8">CURATED DESIGNER PIECES</span>
+            <span className="mx-8">•</span>
+            <span className="mx-8">24/7 PREMIUM SUPPORT</span>
+            <span className="mx-8">•</span>
+            <span className="mx-8">FREE SHIPPING OVER $100</span>
+            <span className="mx-8">•</span>
+            <span className="mx-8">NEW ARRIVALS EVERY WEEK</span>
+            <span className="mx-8">•</span>
+            <span className="mx-8">TECHNICAL CRAFTSMANSHIP</span>
+            <span className="mx-8">•</span>
+            <span className="mx-8">CURATED DESIGNER PIECES</span>
+            <span className="mx-8">•</span>
+            <span className="mx-8">24/7 PREMIUM SUPPORT</span>
+          </div>
         </section>
 
         <div className="mx-auto flex w-full max-w-[1400px] gap-12 px-6 py-12 xl:px-12">
@@ -229,16 +217,90 @@ export function HomePageClient({ newArrivals, bestSellers }: HomePageClientProps
               </div>
             </FadeIn>
 
+            {/* Animated Stats Section */}
             <FadeIn as="section" className="rounded-xl border border-white/10 bg-white/[0.02] p-10 backdrop-blur-sm lg:p-16">
               <div className="text-center">
                 <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#65f3de]">Why Choose Us</p>
                 <h3 className="mt-4 text-4xl font-black uppercase leading-[0.9] tracking-[-0.05em] text-white">
                   Premium Quality. Fast Delivery.
                 </h3>
-                <p className="mx-auto mt-6 max-w-2xl text-white/70">
-                  Curated collections from world-class designers. Free shipping on orders over $100. Premium customer
-                  support available 24/7.
-                </p>
+              </div>
+              <div className="mt-12 grid grid-cols-2 gap-8 md:grid-cols-4">
+                <div className="flex flex-col items-center text-center">
+                  <span className="text-4xl font-black tracking-tight text-[#65f3de] sm:text-5xl">
+                    <Counter value={50} suffix="K+" />
+                  </span>
+                  <span className="mt-2 text-[9px] font-bold uppercase tracking-widest text-white/50">Happy Customers</span>
+                </div>
+                <div className="flex flex-col items-center text-center">
+                  <span className="text-4xl font-black tracking-tight text-[#65f3de] sm:text-5xl">
+                    <Counter value={2000} suffix="+" />
+                  </span>
+                  <span className="mt-2 text-[9px] font-bold uppercase tracking-widest text-white/50">Premium Products</span>
+                </div>
+                <div className="flex flex-col items-center text-center">
+                  <span className="text-4xl font-black tracking-tight text-[#65f3de] sm:text-5xl">
+                    <Counter value={35} suffix="+" />
+                  </span>
+                  <span className="mt-2 text-[9px] font-bold uppercase tracking-widest text-white/50">Countries Served</span>
+                </div>
+                <div className="flex flex-col items-center text-center">
+                  <span className="text-4xl font-black tracking-tight text-[#65f3de] sm:text-5xl">
+                    <Counter value={99} suffix="%" />
+                  </span>
+                  <span className="mt-2 text-[9px] font-bold uppercase tracking-widest text-white/50">Satisfaction Rate</span>
+                </div>
+              </div>
+            </FadeIn>
+
+            {/* Testimonials Section */}
+            <FadeIn as="section" className="rounded-xl border border-white/10 bg-white/[0.02] p-10 backdrop-blur-sm lg:p-16">
+              <div className="text-center">
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#65f3de]">Testimonials</p>
+                <h3 className="mt-4 text-4xl font-black uppercase leading-[0.9] tracking-[-0.05em] text-white">
+                  Voices of the community
+                </h3>
+              </div>
+              <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
+                <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 backdrop-blur-sm transition-colors hover:bg-white/[0.03]">
+                  <div className="flex gap-1 text-[#65f3de] mb-4">
+                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                  </div>
+                  <p className="text-xs leading-6 text-white/70 italic">
+                    "The tech coat is incredible. Material quality is top-tier, waterproof, and extremely comfortable. Shipping was super fast."
+                  </p>
+                  <p className="mt-6 text-[10px] font-bold uppercase tracking-widest text-[#65f3de]">— Marcus K., Tokyo</p>
+                </div>
+                <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 backdrop-blur-sm transition-colors hover:bg-white/[0.03]">
+                  <div className="flex gap-1 text-[#65f3de] mb-4">
+                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                  </div>
+                  <p className="text-xs leading-6 text-white/70 italic">
+                    "USOLSTICE has completely redefined my digital wardrobe shopping. The editorial visuals are beautiful and the check-out was seamless."
+                  </p>
+                  <p className="mt-6 text-[10px] font-bold uppercase tracking-widest text-[#65f3de]">— Elena R., Milan</p>
+                </div>
+                <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 backdrop-blur-sm transition-colors hover:bg-white/[0.03]">
+                  <div className="flex gap-1 text-[#65f3de] mb-4">
+                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                    <span className="material-symbols-outlined text-sm">star_half</span>
+                  </div>
+                  <p className="text-xs leading-6 text-white/70 italic">
+                    "Outstanding customer service. I had a question about fit, and their team resolved it in minutes. Highly recommend this brand."
+                  </p>
+                  <p className="mt-6 text-[10px] font-bold uppercase tracking-widest text-[#65f3de]">— David L., New York</p>
+                </div>
               </div>
             </FadeIn>
           </div>

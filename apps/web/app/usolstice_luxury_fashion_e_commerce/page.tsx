@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function KineticLuxuryFashionEcommercePage() {
+export default function USolsticeLuxuryFashionEcommercePage() {
   const [showSplash, setShowSplash] = useState(true);
   const router = useRouter();
 
@@ -22,7 +22,7 @@ export default function KineticLuxuryFashionEcommercePage() {
       <main className="flex min-h-screen items-center justify-center bg-white px-6 lg:px-0">
         <div className="w-full max-w-[440px]">
           <header className="mb-12 text-center">
-            <h1 className="mb-2 text-5xl font-black uppercase tracking-[-0.06em]">KINETIC</h1>
+            <h1 className="mb-2 text-5xl font-black uppercase tracking-[-0.06em]">USOLSTICE</h1>
             <p className="text-sm text-neutral-500">Enter your credentials to access the editorial gallery.</p>
           </header>
 
@@ -41,7 +41,7 @@ export default function KineticLuxuryFashionEcommercePage() {
                 <input
                   id="email"
                   type="email"
-                  placeholder="name@kinetic.com"
+                  placeholder="name@usolstice.store"
                   className="w-full border-0 border-b border-[#c6c6cd] bg-transparent px-0 py-4 text-sm placeholder:text-neutral-400 focus:border-[#497cff] focus:outline-none focus:ring-0"
                 />
               </div>
@@ -109,7 +109,7 @@ export default function KineticLuxuryFashionEcommercePage() {
         />
         <div className="absolute bottom-24 right-12 z-20 origin-bottom-right translate-x-full rotate-90">
           <span className="select-none whitespace-nowrap text-[80px] font-black uppercase leading-none tracking-[-0.05em] text-neutral-300/30">
-            KINETIC 2024 COLLECTION
+            USOLSTICE 2024 COLLECTION
           </span>
         </div>
       </aside>
@@ -117,7 +117,7 @@ export default function KineticLuxuryFashionEcommercePage() {
       {showSplash ? (
         <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#111827] text-white">
           <div className="flex flex-col items-center">
-            <h2 className="animate-pulse-soft text-6xl font-black uppercase tracking-[-0.06em]">KINETIC</h2>
+            <h2 className="animate-pulse-soft text-6xl font-black uppercase tracking-[-0.06em]">USOLSTICE</h2>
             <p className="mt-4 text-[10px] font-medium uppercase tracking-[0.3em] text-slate-400">Editorial Movement</p>
           </div>
           <div className="absolute bottom-16 flex flex-col items-center">

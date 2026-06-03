@@ -10,4 +10,8 @@ export const CUSTOMER_ROUTES = {
   TERMS_OF_SERVICE: "/terms_of_service",
   RETURNS_REFUNDS: "/returns_refunds",
   REVIEWS: "/reviews",
+  WISHLIST: "/wishlist",
+  CONTACT: "/contact",
+  FAQ: "/faq",
+  ABOUT: "/about",
 } as const;

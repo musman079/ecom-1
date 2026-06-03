@@ -28,7 +28,7 @@ export default async function Home() {
       const mapped: ProductCardData[] = products.map((product) => ({
         id: product.id,
         slug: product.slug,
-        label: product.categories[0] || "Kinetic Catalog",
+        label: product.categories[0] || "USolstice Catalog",
         category: product.categories[0] || "Collection",
         name: product.title,
         price: formatDashboardPrice(product.price),

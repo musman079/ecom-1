@@ -22,17 +22,17 @@ const navItems = [
     requiresAuth: false,
   },
   {
+    label: "Wishlist",
+    href: CUSTOMER_ROUTES.WISHLIST,
+    icon: "favorite",
+    match: [CUSTOMER_ROUTES.WISHLIST] as const,
+    requiresAuth: true,
+  },
+  {
     label: "Cart",
     href: CUSTOMER_ROUTES.CART_CHECKOUT,
     icon: "shopping_bag",
     match: [CUSTOMER_ROUTES.CART_CHECKOUT, "/cart_checkout_desktop"] as const,
-    requiresAuth: true,
-  },
-  {
-    label: "Orders",
-    href: CUSTOMER_ROUTES.ORDER_TRACKING,
-    icon: "package_2",
-    match: [CUSTOMER_ROUTES.ORDER_TRACKING] as const,
     requiresAuth: true,
   },
   {
@@ -44,7 +44,7 @@ const navItems = [
   },
 ] as const;
 
-const hiddenPrefixes = ["/admin", "/auth", "/kinetic_luxury_fashion_e_commerce"] as const;
+const hiddenPrefixes = ["/admin", "/auth", "/usolstice_luxury_fashion_e_commerce"] as const;
 
 export default function MobileNav() {
   const pathname = usePathname();

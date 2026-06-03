@@ -343,30 +343,6 @@ function CartCheckoutContent() {
         <div className="absolute bottom-[-170px] left-1/3 h-[26rem] w-[26rem] rounded-full bg-[#d7a8ff]/20 blur-3xl" />
       </div>
 
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#0d1627]/70 backdrop-blur-2xl">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-4">
-            <Link href={CUSTOMER_ROUTES.HOME} className="active:scale-95 transition" aria-label="Menu">
-              <span className="material-symbols-outlined">menu</span>
-            </Link>
-            <span className="text-xl font-black uppercase tracking-[0.08em] text-white">KINETIC</span>
-          </div>
-
-          <div className="flex items-center gap-6">
-            <nav className="hidden gap-8 md:flex">
-              <Link href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="text-xs font-bold uppercase tracking-[0.18em] text-white/60">Explore</Link>
-              <AuthLink href={CUSTOMER_ROUTES.CART_CHECKOUT} requiresAuth className="text-xs font-bold uppercase tracking-[0.18em] text-white">Cart</AuthLink>
-            </nav>
-            <AuthLink href={CUSTOMER_ROUTES.CART_CHECKOUT} requiresAuth className="relative active:scale-95 transition" ariaLabel="Cart">
-              <span className="material-symbols-outlined text-white">shopping_bag</span>
-              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-[#65f3de] to-[#3f7dff] text-[8px] font-bold text-[#0c1220]">
-                {cart.totalItems}
-              </span>
-            </AuthLink>
-          </div>
-        </div>
-      </header>
-
       <main className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 gap-12 px-6 pb-32 pt-24 lg:grid-cols-12">
         <section className="lg:col-span-12">
           <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-5 backdrop-blur-xl">

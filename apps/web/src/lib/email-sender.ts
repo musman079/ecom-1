@@ -26,7 +26,7 @@ function isSmtpConfigured() {
 }
 
 function getEmailFrom() {
-  return process.env.EMAIL_FROM?.trim() ?? "noreply@kinetic.store";
+  return process.env.EMAIL_FROM?.trim() ?? "noreply@usolstice.store";
 }
 
 async function sendViaSmtp(message: EmailMessage): Promise<SendResult> {

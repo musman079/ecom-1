@@ -1,8 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { toast } from "sonner";
 import { kineticEase } from "./motion/motion-config";
+import { buildAuthHref } from "../lib/auth-redirect";
+import { useCartStore } from "../store/cart-store";
 
 const cardTones = [
   "from-[#15233b] via-[#101b31] to-[#0e1728]",
@@ -43,6 +48,13 @@ function getTone(index: number, variant: "dark" | "light" | "compact") {
 
 export function ProductCard({ item, index, href, variant = "dark", className = "" }: ProductCardProps) {
   const reduceMotion = useReducedMotion();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const [loading, setLoading] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
   const displayName = item.name || item.title || "Product";
   const tone = getTone(index, variant);
   const isDark = variant === "dark" || variant === "compact";
@@ -50,6 +62,102 @@ export function ProductCard({ item, index, href, variant = "dark", className = "
   const revealOutlineClass = isDark
     ? "border border-white/30 bg-black/40 text-white"
     : "border border-black/15 bg-white/85 text-neutral-700";
+
+  // Check wishlist state on mount
+  useEffect(() => {
+    if (!item.id) return;
+    const checkSaved = async () => {
+      try {
+        const res = await fetch("/api/wishlist", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          const items = data.items || data || [];
+          setIsSaved(items.some((w: any) => w.productId === item.id));
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+    void checkSaved();
+  }, [item.id]);
+
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!item.id) return;
+    setWishlistLoading(true);
+
+    try {
+      const response = await fetch(
+        isSaved ? `/api/wishlist?productId=${encodeURIComponent(item.id)}` : "/api/wishlist",
+        {
+          method: isSaved ? "DELETE" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: isSaved ? undefined : JSON.stringify({ productId: item.id }),
+        }
+      );
+
+      if (response.status === 401) {
+        toast.error("Please login to save items.", {
+          action: {
+            label: "Login",
+            onClick: () => router.push(buildAuthHref(pathname)),
+          },
+        });
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error();
+      }
+
+      setIsSaved(!isSaved);
+      toast.success(isSaved ? "Removed from Wishlist" : "Saved to Wishlist");
+    } catch {
+      toast.error("Failed to update wishlist.");
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!item.id) return;
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: item.id, quantity: 1 }),
+      });
+
+      if (response.status === 401) {
+        toast.error("Please login to checkout.", {
+          action: {
+            label: "Login",
+            onClick: () => router.push(buildAuthHref(pathname)),
+          },
+        });
+        return;
+      }
+
+      const payload = await response.json();
+      if (!response.ok || !payload.cart) {
+        throw new Error(payload.error || "Failed to add.");
+      }
+
+      useCartStore.getState().setCart(payload.cart);
+      toast.success(`${displayName} added to cart!`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add to cart.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const content = (
     <>
@@ -84,6 +192,44 @@ export function ProductCard({ item, index, href, variant = "dark", className = "
               : "bg-black/10"
           }`}
         />
+
+        {/* Quick Wishlist button */}
+        {item.id && (
+          <button
+            onClick={handleWishlistToggle}
+            disabled={wishlistLoading}
+            className={`absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border backdrop-blur-md transition-all duration-300 hover:scale-110 disabled:opacity-40 ${
+              isSaved
+                ? "bg-[#ff496c] border-[#ff496c] text-white"
+                : isDark
+                  ? "bg-black/40 border-white/15 text-white/70 hover:text-white"
+                  : "bg-white/60 border-black/10 text-neutral-700 hover:text-black"
+            }`}
+            aria-label="Save to Wishlist"
+          >
+            <span
+              className="material-symbols-outlined text-base transition-colors"
+              style={{ fontVariationSettings: isSaved ? "'FILL' 1" : "'FILL' 0" }}
+            >
+              favorite
+            </span>
+          </button>
+        )}
+
+        {/* Quick Add to Cart button */}
+        {item.id && (
+          <button
+            onClick={handleAddToCart}
+            disabled={loading}
+            className="absolute bottom-3 right-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-[#65f3de] text-[#081224] opacity-0 shadow-lg transition-all duration-300 translate-y-2 group-hover:translate-y-0 group-hover:opacity-100 hover:scale-105 hover:bg-white disabled:opacity-40"
+            aria-label="Quick Add to Cart"
+          >
+            <span className="material-symbols-outlined text-base font-bold">
+              {loading ? "hourglass_empty" : "shopping_bag"}
+            </span>
+          </button>
+        )}
+
         <div className="pointer-events-none absolute inset-0 flex items-end justify-between p-5 opacity-0 transition duration-500 group-hover:opacity-100">
           <span className={`rounded-full px-3 py-1 text-[9px] font-bold uppercase tracking-[0.18em] ${revealPillClass}`}>
             View

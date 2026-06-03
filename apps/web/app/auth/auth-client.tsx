@@ -195,7 +195,7 @@ export function AuthClient() {
       <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-6 py-12 lg:px-0">
         <div className="w-full max-w-[440px] rounded-2xl border border-white/10 bg-white/[0.04] p-7 backdrop-blur-xl sm:p-8">
           <header className="mb-12 text-center">
-            <h1 className="mb-2 text-5xl font-black uppercase tracking-[-0.06em] text-white">KINETIC</h1>
+            <h1 className="mb-2 text-5xl font-black uppercase tracking-[-0.06em] text-white">USOLSTICE</h1>
             <p className="text-sm text-white/65">
               {mode === "login"
                 ? "Enter your credentials to access the editorial gallery."
@@ -255,7 +255,7 @@ export function AuthClient() {
                   type="email"
                   value={form.email}
                   onChange={(event) => onInputChange("email", event.target.value)}
-                  placeholder="name@kinetic.com"
+                  placeholder="name@usolstice.store"
                   className="w-full border-0 border-b border-white/20 bg-transparent px-0 py-4 text-sm text-white placeholder:text-white/40 focus:border-[#65f3de] focus:outline-none focus:ring-0"
                 />
               </div>
@@ -352,7 +352,7 @@ export function AuthClient() {
         />
         <div className="absolute z-20 origin-bottom-right rotate-90 translate-x-full bottom-24 right-12">
           <span className="select-none whitespace-nowrap text-[80px] font-black uppercase leading-none tracking-[-0.05em] text-neutral-300/30">
-            KINETIC 2024 COLLECTION
+            USOLSTICE 2024 COLLECTION
           </span>
         </div>
       </aside>
@@ -360,7 +360,7 @@ export function AuthClient() {
       {showSplash ? (
         <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0b1638] text-white">
           <div className="flex flex-col items-center">
-            <h2 className="animate-pulse-soft text-7xl font-black uppercase tracking-[-0.06em]">KINETIC</h2>
+            <h2 className="animate-pulse-soft text-7xl font-black uppercase tracking-[-0.06em]">USOLSTICE</h2>
             <p className="mt-4 text-xs font-medium uppercase tracking-[0.3em] text-slate-400">
               Editorial Movement
             </p>

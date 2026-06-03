@@ -2,18 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════
+   USOLSTICE — Premium Design Tokens
+   ═══════════════════════════════════════════════════ */
+
 :root {
   color-scheme: dark;
+
+  /* Core palette */
   --app-bg: #070d17;
   --app-surface: #0f1726;
   --app-surface-2: #131f33;
-  --app-border: rgba(176, 205, 255, 0.2);
+  --app-border: rgba(176, 205, 255, 0.12);
   --app-text: #eaf2ff;
   --app-text-muted: #a8b5d1;
-  --app-primary: #6cebd9;
+  --app-primary: #65f3de;
   --app-primary-2: #4f8cff;
   --app-danger: #ff9aa5;
+  --app-accent: #a78bfa;
+
+  /* Glassmorphism */
+  --glass-bg: rgba(15, 23, 38, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: 20px;
+
+  /* Typography */
+  --font-body: "Inter", var(--font-geist), "Segoe UI", system-ui, sans-serif;
+  --font-display: "Inter", var(--font-geist), "Segoe UI", system-ui, sans-serif;
 }
+
+/* ═══════════════════════════════════════════════════
+   Reset & Base
+   ═══════════════════════════════════════════════════ */
 
 * {
   box-sizing: border-box;
@@ -24,24 +44,20 @@
 body {
   min-height: 100dvh;
   background:
-    radial-gradient(circle at 8% 12%, rgba(79, 140, 255, 0.26) 0%, transparent 36%),
-    radial-gradient(circle at 88% 22%, rgba(108, 235, 217, 0.22) 0%, transparent 42%),
-    radial-gradient(circle at 46% 92%, rgba(162, 112, 255, 0.14) 0%, transparent 38%),
+    radial-gradient(circle at 8% 12%, rgba(79, 140, 255, 0.18) 0%, transparent 36%),
+    radial-gradient(circle at 88% 22%, rgba(101, 243, 222, 0.14) 0%, transparent 42%),
+    radial-gradient(circle at 46% 92%, rgba(167, 139, 250, 0.10) 0%, transparent 38%),
     var(--app-bg);
   color: var(--app-text);
-  font-family: var(--font-body), "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   text-rendering: geometricPrecision;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--font-display), "Segoe UI", sans-serif;
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
   letter-spacing: -0.02em;
 }
 
@@ -50,13 +66,17 @@ html {
 }
 
 ::selection {
-  background: rgba(108, 235, 217, 0.35);
+  background: rgba(101, 243, 222, 0.3);
   color: #0b1220;
 }
 
+/* ═══════════════════════════════════════════════════
+   Scrollbar
+   ═══════════════════════════════════════════════════ */
+
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -66,15 +86,18 @@ html {
 ::-webkit-scrollbar-thumb {
   border-radius: 999px;
   border: 2px solid rgba(10, 18, 34, 0.9);
-  background: linear-gradient(180deg, rgba(108, 235, 217, 0.9) 0%, rgba(79, 140, 255, 0.9) 100%);
+  background: linear-gradient(180deg, rgba(101, 243, 222, 0.7) 0%, rgba(79, 140, 255, 0.7) 100%);
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(79, 140, 255, 0.85) rgba(10, 18, 34, 0.9);
+  scrollbar-color: rgba(79, 140, 255, 0.6) rgba(10, 18, 34, 0.9);
 }
 
-/* Material icons get a cleaner, premium feel across the app */
+/* ═══════════════════════════════════════════════════
+   Material Icons
+   ═══════════════════════════════════════════════════ */
+
 .material-symbols-outlined {
   font-variation-settings: "FILL" 0, "wght" 500, "GRAD" 0, "opsz" 24;
   vertical-align: middle;
@@ -87,20 +110,194 @@ button:hover .material-symbols-outlined {
   color: var(--app-primary);
 }
 
+/* ═══════════════════════════════════════════════════
+   Animations — Keyframes
+   ═══════════════════════════════════════════════════ */
+
+@keyframes fade-lift {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes border-glow {
+  0%, 100% { border-color: rgba(101, 243, 222, 0.15); }
+  50% { border-color: rgba(101, 243, 222, 0.35); }
+}
+
+/* ═══════════════════════════════════════════════════
+   Utility Classes
+   ═══════════════════════════════════════════════════ */
+
 .motion-fade-lift {
   animation: fade-lift 0.7s ease both;
 }
 
-@keyframes fade-lift {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.06) 40%,
+    rgba(255,255,255,0.06) 60%,
+    rgba(255,255,255,0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2.5s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 4s ease-in-out infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-border-glow {
+  animation: border-glow 3s ease-in-out infinite;
+}
+
+/* Staggered animation delays */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
+
+/* Glassmorphism */
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+.glass-strong {
+  background: rgba(15, 23, 38, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #65f3de 0%, #4f8cff 50%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-primary {
+  background: linear-gradient(135deg, #65f3de 0%, #4f8cff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Gradient borders */
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(101,243,222,0.3), rgba(79,140,255,0.3));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Hover glow effect */
+.hover-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.hover-glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(101,243,222,0.08) 0%, transparent 60%);
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.hover-glow:hover::after {
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════
+   Reduced Motion
+   ═══════════════════════════════════════════════════ */
 
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -112,7 +309,10 @@ button:hover .material-symbols-outlined {
   }
 }
 
-/* Broad utility remap so existing pages automatically inherit a premium dark look */
+/* ═══════════════════════════════════════════════════
+   Dark Mode Remaps (for pages using light classes)
+   ═══════════════════════════════════════════════════ */
+
 .bg-white,
 .bg-white\/80,
 .bg-white\/90 {
@@ -146,19 +346,16 @@ button:hover .material-symbols-outlined {
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.32) !important;
 }
 
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
+/* ═══════════════════════════════════════════════════
+   Scrollbar Hiders
+   ═══════════════════════════════════════════════════ */
 
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
+.hide-scrollbar::-webkit-scrollbar,
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
+.hide-scrollbar,
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;

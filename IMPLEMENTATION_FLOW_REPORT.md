@@ -206,7 +206,7 @@ Implemented:
 3. Forgot/Create Account actions wired.
 4. Social login buttons wired.
 
-### apps/web/app/kinetic_luxury_fashion_e_commerce/page.tsx
+### apps/web/app/usolstice_luxury_fashion_e_commerce/page.tsx
 
 Implemented:
 

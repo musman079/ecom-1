@@ -108,7 +108,7 @@ export const useCartStore = create<CartState>()(
       },
     }),
     {
-      name: "kinetic-cart", // localStorage key
+      name: "usolstice-cart", // localStorage key
       storage: createJSONStorage(() => localStorage),
       // Only persist the cart items — not derived state (subtotal, totalItems)
       // These are recalculated on hydration

@@ -297,34 +297,6 @@ export function ProductDetailDesktopClient() {
 
   return (
     <div className="min-h-screen bg-[#f3f3f4] text-[#1a1c1c] -mt-20 pt-20">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-black/5 bg-white/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center justify-between px-4 sm:h-20 sm:px-6 xl:px-12">
-          <h1 className="text-2xl font-black tracking-[-0.06em] sm:text-3xl">KINETIC</h1>
-
-          <nav className="hidden items-center gap-8 lg:flex">
-            {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="border-b border-transparent pb-1 text-xs font-semibold uppercase tracking-[0.15em] text-neutral-500 transition-colors hover:text-black"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-5">
-            <AuthLink href={CUSTOMER_ROUTES.REVIEWS} requiresAuth ariaLabel="Reviews">
-              <span className="material-symbols-outlined">favorite</span>
-            </AuthLink>
-            <CartBadge />
-            <AuthLink href={CUSTOMER_ROUTES.PROFILE} requiresAuth ariaLabel="Profile">
-              <span className="material-symbols-outlined">person</span>
-            </AuthLink>
-          </div>
-        </div>
-      </header>
-
       <main className="pt-16 sm:pt-20">
         <nav className="px-4 py-6 sm:px-6 sm:py-8 xl:px-12">
           <ul className="flex items-center gap-2 overflow-x-auto whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-500">
@@ -332,7 +304,7 @@ export function ProductDetailDesktopClient() {
             <li>/</li>
             <li>Outerwear</li>
             <li>/</li>
-            <li className="text-black">Kinetic 01-Tech Coat</li>
+            <li className="text-black">USolstice 01-Tech Coat</li>
           </ul>
         </nav>
 
@@ -519,7 +491,7 @@ export function ProductDetailDesktopClient() {
           <div className="mb-16 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <h3 className="text-3xl font-black uppercase leading-[0.9] tracking-[-0.05em] sm:text-5xl">Complete The Look</h3>
-              <p className="mt-2 text-sm uppercase tracking-[0.16em] text-neutral-500">Curated by Kinetic Editorial</p>
+              <p className="mt-2 text-sm uppercase tracking-[0.16em] text-neutral-500">Curated by USolstice Editorial</p>
             </div>
             <a href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="self-start border-b-2 border-black pb-1 text-xs font-bold uppercase tracking-[0.2em] md:self-auto">
               Shop All Recommendations
@@ -573,7 +545,7 @@ export function ProductDetailDesktopClient() {
         <footer className="border-t border-black/5 bg-white">
           <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 gap-12 px-6 py-20 md:grid-cols-4 xl:px-12">
             <div className="flex flex-col gap-6">
-              <div className="text-2xl font-black tracking-[-0.04em]">KINETIC</div>
+              <div className="text-2xl font-black tracking-[-0.04em]">USOLSTICE</div>
               <p className="max-w-xs text-xs leading-7 tracking-[0.08em] text-neutral-400">
                 Redefining the digital editorial experience through a fusion of high-fashion aesthetics and technical performance.
               </p>
@@ -607,7 +579,7 @@ export function ProductDetailDesktopClient() {
           </div>
 
           <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-4 border-t border-black/5 px-6 py-8 md:flex-row md:items-center md:justify-between xl:px-12">
-            <span className="text-xs uppercase tracking-[0.14em] text-neutral-400">© 2024 Kinetic Editorial. All Rights Reserved.</span>
+            <span className="text-xs uppercase tracking-[0.14em] text-neutral-400">© 2024 USolstice Editorial. All Rights Reserved.</span>
             <div className="flex gap-8 text-xs tracking-[0.14em] text-neutral-400">
               <a href={CUSTOMER_ROUTES.PRIVACY_POLICY} className="underline underline-offset-4">Privacy Policy</a>
               <a href={CUSTOMER_ROUTES.TERMS_OF_SERVICE} className="underline underline-offset-4">Terms of Use</a>

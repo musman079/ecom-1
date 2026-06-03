@@ -48,7 +48,7 @@ Main pages in app router:
 8. /admin_overview_dashboard -> Admin summary/KPI dashboard
 9. /admin_products -> Admin CRUD page (actual working CRUD)
 10. /admin_post_edit_product -> Admin editor style screen
-11. /kinetic_luxury_fashion_e_commerce -> Editorial/auth-like page
+11. /usolstice_luxury_fashion_e_commerce -> Editorial/auth-like page
 
 Layout + global styles:
 

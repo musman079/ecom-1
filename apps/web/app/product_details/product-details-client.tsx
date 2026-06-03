@@ -62,7 +62,7 @@ export function ProductDetailsClient() {
   const [listItems, setListItems] = useState<ProductCard[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState(() => searchParams.get("q") || searchParams.get("search") || "");
   const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -278,26 +278,6 @@ export function ProductDetailsClient() {
 
   return (
     <div className="min-h-screen bg-[#f9f9f9] text-[#1a1c1c] -mt-20 pt-20">
-      <header className="fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 md:px-8">
-          <div className="flex items-center gap-4">
-            <Link href={CUSTOMER_ROUTES.HOME} aria-label="Menu" className="transition hover:opacity-70 active:scale-95">
-              <span className="material-symbols-outlined">menu</span>
-            </Link>
-            <span className="text-xl font-black uppercase tracking-tight">KINETIC</span>
-          </div>
-
-          <div className="flex items-center gap-6">
-            <nav className="hidden items-center gap-8 md:flex">
-              <Link href={CUSTOMER_ROUTES.BROWSE_PRODUCTS} className="text-sm font-bold uppercase tracking-tight">Shop</Link>
-              <Link href={CUSTOMER_ROUTES.PRODUCT_DETAILS} className="text-sm uppercase tracking-tight text-neutral-500 hover:opacity-70">Editorial</Link>
-              <Link href={CUSTOMER_ROUTES.PRODUCT_DETAILS} className="text-sm uppercase tracking-tight text-neutral-500 hover:opacity-70">Archive</Link>
-            </nav>
-            <CartBadge />
-          </div>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-7xl px-4 pb-36 pt-24 md:px-8">
         <div className="flex flex-col items-start gap-12 lg:flex-row lg:gap-20">
           <section className="w-full space-y-6 lg:w-3/5">
@@ -587,7 +567,7 @@ export function ProductDetailsClient() {
       <footer className="mt-24 bg-[#f3f3f4] px-8 py-20">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 md:grid-cols-4">
           <div className="space-y-6">
-            <span className="text-2xl font-black tracking-tighter">KINETIC</span>
+            <span className="text-2xl font-black tracking-tighter">USOLSTICE</span>
             <p className="max-w-xs text-sm leading-relaxed text-neutral-600">
               Redefining contemporary wardrobe through architectural silhouettes and technical craftsmanship.
             </p>

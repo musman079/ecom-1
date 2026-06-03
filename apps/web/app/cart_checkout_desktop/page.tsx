@@ -29,7 +29,7 @@ const cartItems = [
       'https://lh3.googleusercontent.com/aida-public/AB6AXuBy0dYSkeoG47a13AW2eyJsktTZUKc7wdHzcbHbmAf2ABZN13cFww5w73nNRoe6RnJC_msUNH0NE8U-sazSxeBPTPh6pmNiztxQVmFnM3d72AVuMIU_h84aiRGTAhgWng9TScpq0Oj0TzCpy6Hm9e97JFv3a9YhccTbp2IiTJQEZIwVr7Or7kPqf7261MHhdZA197JVqS-XJ5VkmtnYUCuLtL9ni7W1Zf6E3vXH5Stb0havcGgl_x9ZeQTrPLWI5u26YgIeC1AYbHbv',
   },
   {
-    name: 'KINETIC ORBIT SNEAKERS',
+    name: 'USOLSTICE ORBIT SNEAKERS',
     details: 'Deep Indigo / Size 42',
     price: '€345.00',
     image:
@@ -110,30 +110,6 @@ function CartCheckoutDesktopContent() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_10%_10%,#304d8f_0%,#0b1220_45%,#070c16_100%)] text-[#f2f4f8] -mt-20 pt-20">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#0d1627]/70 backdrop-blur-xl">
-        <div className="mx-auto flex h-20 w-full max-w-[1440px] items-center justify-between px-6 xl:px-12">
-          <h1 className="text-3xl font-black tracking-[-0.02em] text-white">KINETIC</h1>
-
-          <nav className="hidden items-center gap-8 md:flex">
-            {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="text-xs font-semibold uppercase tracking-[0.15em] text-white/60 transition-colors hover:text-white"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-5">
-            <AuthLink href={CUSTOMER_ROUTES.CART_CHECKOUT} requiresAuth ariaLabel="Shopping Bag" className="material-symbols-outlined cursor-pointer text-2xl text-white">shopping_bag</AuthLink>
-            <AuthLink href={CUSTOMER_ROUTES.REVIEWS} requiresAuth ariaLabel="Reviews" className="material-symbols-outlined cursor-pointer text-2xl text-white/75">favorite</AuthLink>
-            <AuthLink href={CUSTOMER_ROUTES.PROFILE} requiresAuth ariaLabel="Profile" className="material-symbols-outlined cursor-pointer text-2xl text-white/75">person</AuthLink>
-          </div>
-        </div>
-      </header>
-
       <main className="mx-auto min-h-screen max-w-[1440px] px-6 pb-24 pt-32 md:px-12">
         <FadeIn as="header" className="mb-16">
           <h2 className="mb-4 text-5xl font-black uppercase tracking-[-0.06em] text-white md:text-7xl">Checkout</h2>
@@ -332,8 +308,8 @@ function CartCheckoutDesktopContent() {
       <footer className="border-t border-white/10 bg-[#0d1627] text-white/75">
         <div className="grid grid-cols-1 gap-12 px-6 py-24 md:grid-cols-4 xl:px-12">
           <div className="flex flex-col gap-6">
-            <div className="text-2xl font-black tracking-[-0.04em] text-white">KINETIC EDITORIAL</div>
-            <p className="text-xs uppercase tracking-widest text-white/50">© 2024 KINETIC EDITORIAL. ALL RIGHTS RESERVED.</p>
+            <div className="text-2xl font-black tracking-[-0.04em] text-white">USOLSTICE EDITORIAL</div>
+            <p className="text-xs uppercase tracking-widest text-white/50">© 2024 USOLSTICE EDITORIAL. ALL RIGHTS RESERVED.</p>
           </div>
 
           <div className="flex flex-col gap-4">

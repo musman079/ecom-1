@@ -173,7 +173,7 @@ export default async function AdminOverviewDashboardPage() {
             <div>
               <h2 className="text-4xl font-black uppercase tracking-[-0.04em]">Overview</h2>
               <p className="mt-1 text-sm text-zinc-600">
-                Real-time product summary for <span className="font-bold text-zinc-900">The Kinetic Editorial</span>
+                Real-time product summary for <span className="font-bold text-zinc-900">The USolstice Editorial</span>
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
