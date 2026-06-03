@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 
 import { prisma } from "./prisma";
 import { authOptions } from "./next-auth";
-import { getAdminEmails, readAuthTokenFromCookieHeader, readAuthTokenFromRequest, verifyAuthToken, type AuthRole } from "./auth";
+import { AUTH_COOKIE_NAME, getAdminEmails, readAuthTokenFromCookieHeader, readAuthTokenFromRequest, verifyAuthToken, type AuthRole } from "./auth";
 
 export type SanitizedAuthUser = {
   id: string;
@@ -134,17 +134,25 @@ async function resolveUserByIdentity(identity: { id?: string | null; email?: str
 
 export async function getCurrentUserFromRequest(request: Request): Promise<SanitizedAuthUser | null> {
   try {
+    const cookieHeader = request.headers.get("cookie") ?? "";
+
+    // Try NextAuth JWT token first
     const nextAuthToken = await getToken({
       req: {
         headers: {
-          cookie: request.headers.get("cookie") ?? "",
+          cookie: cookieHeader,
         },
+        cookies: Object.fromEntries(
+          cookieHeader.split(";").map((c) => {
+            const [k, ...v] = c.trim().split("=");
+            return [k.trim(), decodeURIComponent(v.join("="))];
+          })
+        ),
       } as never,
-      secureCookie: request.url.startsWith("https://"),
-      secret: process.env.NEXTAUTH_SECRET ?? process.env.JWT_SECRET,
+      secret: process.env.NEXTAUTH_SECRET ?? process.env.JWT_SECRET ?? "",
     });
 
-    if (nextAuthToken) {
+    if (nextAuthToken?.sub || nextAuthToken?.email) {
       const nextAuthUser = await resolveUserByIdentity({
         id: typeof nextAuthToken.sub === "string" ? nextAuthToken.sub : null,
         email: typeof nextAuthToken.email === "string" ? nextAuthToken.email : null,
@@ -171,11 +179,11 @@ export async function getCurrentUserFromRequest(request: Request): Promise<Sanit
 export async function getCurrentUser(): Promise<SanitizedAuthUser | null> {
   const session = (await getServerSession(authOptions)) as
     | {
-        user?: {
-          id?: string;
-          email?: string | null;
-        };
-      }
+      user?: {
+        id?: string;
+        email?: string | null;
+      };
+    }
     | null;
 
   if (session?.user?.id || session?.user?.email) {
@@ -190,7 +198,7 @@ export async function getCurrentUser(): Promise<SanitizedAuthUser | null> {
   }
 
   const cookieStore = await cookies();
-  const token = readAuthTokenFromCookieHeader(cookieStore.toString());
+  const token = cookieStore.get(AUTH_COOKIE_NAME)?.value ?? null;
 
   if (!token) {
     return null;

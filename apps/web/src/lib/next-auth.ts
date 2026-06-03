@@ -229,20 +229,26 @@ export const authOptions: NextAuthOptions = {
       }
     },
     async jwt({ token, user }) {
+      // On initial sign-in, 'user' is populated. On subsequent requests, only 'token' is available.
       const email = normalizeEmail((user?.email as string | undefined) ?? (token.email as string | undefined) ?? "");
       if (!email) {
         return token;
       }
 
-      const snapshot = await getRoleSnapshotByEmail(email);
-      if (!snapshot) {
-        return token;
+      try {
+        const snapshot = await getRoleSnapshotByEmail(email);
+        if (snapshot) {
+          token.sub = snapshot.id;
+          token.email = snapshot.email;
+          token.role = snapshot.role;
+          token.roles = snapshot.roles;
+        }
+        // If snapshot is null (user deactivated or not found), preserve existing token
+        // so user isn't silently logged out mid-session due to a transient DB error
+      } catch (error) {
+        console.error("[next-auth jwt callback] DB lookup failed, preserving existing token:", error);
       }
 
-      token.sub = snapshot.id;
-      token.email = snapshot.email;
-      token.role = snapshot.role;
-      token.roles = snapshot.roles;
       return token;
     },
     async session({ session, token }) {
