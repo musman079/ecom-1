@@ -132,22 +132,34 @@ async function resolveUserByIdentity(identity: { id?: string | null; email?: str
   });
 }
 
+function parseCookieString(cookieHeader: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  if (!cookieHeader) return result;
+
+  for (const chunk of cookieHeader.split(";")) {
+    const eqIdx = chunk.indexOf("=");
+    if (eqIdx === -1) continue;
+    const name = chunk.slice(0, eqIdx).trim();
+    const raw = chunk.slice(eqIdx + 1).trim();
+    try {
+      result[name] = decodeURIComponent(raw);
+    } catch {
+      result[name] = raw;
+    }
+  }
+  return result;
+}
+
 export async function getCurrentUserFromRequest(request: Request): Promise<SanitizedAuthUser | null> {
   try {
     const cookieHeader = request.headers.get("cookie") ?? "";
+    const parsedCookies = parseCookieString(cookieHeader);
 
     // Try NextAuth JWT token first
     const nextAuthToken = await getToken({
       req: {
-        headers: {
-          cookie: cookieHeader,
-        },
-        cookies: Object.fromEntries(
-          cookieHeader.split(";").map((c) => {
-            const [k, ...v] = c.trim().split("=");
-            return [k.trim(), decodeURIComponent(v.join("="))];
-          })
-        ),
+        headers: { cookie: cookieHeader },
+        cookies: parsedCookies,
       } as never,
       secret: process.env.NEXTAUTH_SECRET ?? process.env.JWT_SECRET ?? "",
     });
