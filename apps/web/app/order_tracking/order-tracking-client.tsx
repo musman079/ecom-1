@@ -302,14 +302,14 @@ export function OrderTrackingClient() {
               value={orderNumber}
               onChange={(event) => setOrderNumber(event.target.value)}
               placeholder="e.g. ORD-1734567890"
-              className="mt-2 h-11 w-full rounded-lg border border-white/20 bg-[#0d1627] px-3 text-sm font-semibold tracking-normal text-white outline-none focus:border-[#65f3de]"
+              className="mt-2 h-11 w-full rounded-lg border border-white/20 bg-[#12100e] px-3 text-sm font-semibold tracking-normal text-white outline-none focus:border-[#dfb257]"
             />
           </label>
           <button
             type="button"
             onClick={() => void lookupByOrderNumber(orderNumber)}
             disabled={lookupLoading}
-            className="h-11 rounded-full bg-gradient-to-br from-[#65f3de] via-[#4f8cff] to-[#3f7dff] px-6 text-xs font-black uppercase tracking-[0.16em] text-[#081224] transition hover:brightness-110 disabled:opacity-50"
+            className="h-11 rounded-full bg-gradient-to-br from-[#dfb257] via-[#e59a3b] to-[#d97706] px-6 text-xs font-black uppercase tracking-[0.16em] text-[#081224] transition hover:brightness-110 disabled:opacity-50"
           >
             {lookupLoading ? "Checking..." : "Track Order"}
           </button>

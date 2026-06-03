@@ -338,7 +338,7 @@ function CartCheckoutContent() {
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#0b1220] text-[#f2f4f8] -mt-20 pt-20">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-28 -top-24 h-80 w-80 rounded-full bg-[#3f7dff]/30 blur-3xl" />
+        <div className="absolute -left-28 -top-24 h-80 w-80 rounded-full bg-[#d97706]/30 blur-3xl" />
         <div className="absolute right-[-120px] top-44 h-[24rem] w-[24rem] rounded-full bg-[#17c4b3]/20 blur-3xl" />
         <div className="absolute bottom-[-170px] left-1/3 h-[26rem] w-[26rem] rounded-full bg-[#d7a8ff]/20 blur-3xl" />
       </div>
@@ -356,12 +356,12 @@ function CartCheckoutContent() {
             <div className="mt-4 h-1 w-full rounded-full bg-white/10">
               {reduceMotion ? (
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#65f3de] via-[#4a8dff] to-[#3f7dff]"
+                  className="h-full rounded-full bg-gradient-to-r from-[#dfb257] via-[#4a8dff] to-[#d97706]"
                   style={{ width: `${progress * 100}%` }}
                 />
               ) : (
                 <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-[#65f3de] via-[#4a8dff] to-[#3f7dff]"
+                  className="h-full rounded-full bg-gradient-to-r from-[#dfb257] via-[#4a8dff] to-[#d97706]"
                   initial={{ width: "0%" }}
                   animate={{ width: `${progress * 100}%` }}
                   transition={{ duration: 0.6, ease: "easeOut" }}
@@ -415,12 +415,12 @@ function CartCheckoutContent() {
               <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 <input
                   {...register("fullName")}
-                  className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0"
+                  className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#dfb257] focus:ring-0"
                   placeholder="Full Name"
                 />
                 <input
                   {...register("phone")}
-                  className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0"
+                  className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#dfb257] focus:ring-0"
                   placeholder="Phone Number"
                 />
               </div>
@@ -428,24 +428,24 @@ function CartCheckoutContent() {
               {errors.phone ? <p className="text-xs font-semibold text-red-300">{errors.phone.message}</p> : null}
               <input
                 {...register("line1")}
-                className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0"
+                className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#dfb257] focus:ring-0"
                 placeholder="Street Address"
               />
               {errors.line1 ? <p className="text-xs font-semibold text-red-300">{errors.line1.message}</p> : null}
               <div className="grid grid-cols-2 gap-8 md:grid-cols-3">
                 <input
                   {...register("city")}
-                  className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0"
+                  className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#dfb257] focus:ring-0"
                   placeholder="City"
                 />
                 <input
                   {...register("postalCode")}
-                  className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0"
+                  className="w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#dfb257] focus:ring-0"
                   placeholder="Postal Code"
                 />
                 <input
                   {...register("country")}
-                  className="col-span-2 w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0 md:col-span-1"
+                  className="col-span-2 w-full border-0 border-b-2 border-white/20 bg-transparent px-0 py-3 font-medium text-white placeholder:text-white/45 focus:border-[#dfb257] focus:ring-0 md:col-span-1"
                   placeholder="Country"
                 />
               </div>
@@ -469,7 +469,7 @@ function CartCheckoutContent() {
                     onChange={() => setPaymentMethod("card")}
                     className="peer hidden"
                   />
-                  <div className="flex items-center justify-between rounded-xl border border-white/15 bg-[#121b31] p-4 text-white transition-all peer-checked:border-[#65f3de]/50 peer-checked:bg-[#141f36] peer-checked:text-white">
+                  <div className="flex items-center justify-between rounded-xl border border-white/15 bg-[#121b31] p-4 text-white transition-all peer-checked:border-[#dfb257]/50 peer-checked:bg-[#141f36] peer-checked:text-white">
                     <div className="flex items-center gap-4">
                       <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
                         credit_card
@@ -480,7 +480,7 @@ function CartCheckoutContent() {
                       </div>
                     </div>
                     <span className="material-symbols-outlined text-sm opacity-0 peer-checked:opacity-100">check_circle</span>
-                    <span className="rounded-full border border-white/35 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white/85 peer-checked:border-[#65f3de]/60 peer-checked:text-white">
+                    <span className="rounded-full border border-white/35 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white/85 peer-checked:border-[#dfb257]/60 peer-checked:text-white">
                       Available
                     </span>
                   </div>
@@ -494,7 +494,7 @@ function CartCheckoutContent() {
                     onChange={() => setPaymentMethod("cod")}
                     className="peer hidden"
                   />
-                  <div className="flex items-center justify-between rounded-xl border border-white/20 bg-[#0f192d] p-4 text-white/80 transition-all peer-checked:border-[#65f3de]/50 peer-checked:bg-[#141f36] peer-checked:text-white">
+                  <div className="flex items-center justify-between rounded-xl border border-white/20 bg-[#0f192d] p-4 text-white/80 transition-all peer-checked:border-[#dfb257]/50 peer-checked:bg-[#141f36] peer-checked:text-white">
                     <div className="flex items-center gap-4">
                       <span className="material-symbols-outlined">payments</span>
                       <div>
@@ -568,7 +568,7 @@ function CartCheckoutContent() {
                 disabled={placingOrder || cart.items.length === 0}
                 whileHover={reduceMotion ? undefined : { scale: 1.02 }}
                 whileTap={reduceMotion ? undefined : { scale: 0.98 }}
-                className="mt-10 block w-full rounded-full bg-gradient-to-br from-[#65f3de] via-[#4a8dff] to-[#3f7dff] py-5 text-center text-xs font-black uppercase tracking-[0.2em] text-[#081224] transition hover:shadow-[0_10px_35px_rgba(74,141,255,0.35)] disabled:opacity-40"
+                className="mt-10 block w-full rounded-full bg-gradient-to-br from-[#dfb257] via-[#4a8dff] to-[#d97706] py-5 text-center text-xs font-black uppercase tracking-[0.2em] text-[#081224] transition hover:shadow-[0_10px_35px_rgba(74,141,255,0.35)] disabled:opacity-40"
               >
                 {placingOrder ? "Placing Order..." : "Place Order"}
               </motion.button>

@@ -95,7 +95,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
     <div className="border-b border-white/8 last:border-0">
       <button
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between gap-4 py-5 text-left transition hover:text-[#65f3de]"
+        className="flex w-full items-center justify-between gap-4 py-5 text-left transition hover:text-[#dfb257]"
       >
         <span className="text-sm font-semibold leading-6 text-white">{q}</span>
         <motion.span
@@ -127,10 +127,10 @@ export default function FAQPage() {
   const [activeSection, setActiveSection] = useState(0);
 
   return (
-    <div className="min-h-screen bg-[#070d17] text-[#eaf2ff]">
+    <div className="min-h-screen bg-[#0c0a09] text-[#eaf2ff]">
       <main className="mx-auto w-full max-w-[1400px] px-6 py-16 xl:px-12">
         <FadeIn>
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#65f3de]">Help Center</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#dfb257]">Help Center</p>
           <h1 className="mt-3 text-4xl font-black uppercase tracking-[-0.04em] sm:text-5xl">
             Frequently Asked Questions
           </h1>
@@ -148,7 +148,7 @@ export default function FAQPage() {
                 onClick={() => setActiveSection(idx)}
                 className={`flex items-center gap-2.5 rounded-full border px-5 py-2.5 text-xs font-bold uppercase tracking-[0.14em] transition ${
                   activeSection === idx
-                    ? "border-[#65f3de]/40 bg-[#65f3de]/10 text-[#65f3de]"
+                    ? "border-[#dfb257]/40 bg-[#dfb257]/10 text-[#dfb257]"
                     : "border-white/10 bg-white/[0.03] text-white/55 hover:border-white/20 hover:text-white"
                 }`}
               >
@@ -178,7 +178,7 @@ export default function FAQPage() {
         </FadeIn>
 
         {/* CTA */}
-        <FadeIn className="mt-16 rounded-3xl border border-white/10 bg-gradient-to-br from-[#65f3de]/5 to-[#4f8cff]/5 p-10 text-center backdrop-blur-sm">
+        <FadeIn className="mt-16 rounded-3xl border border-white/10 bg-gradient-to-br from-[#dfb257]/5 to-[#e59a3b]/5 p-10 text-center backdrop-blur-sm">
           <span className="material-symbols-outlined text-4xl text-white/20">support_agent</span>
           <h3 className="mt-4 text-xl font-bold">Still have questions?</h3>
           <p className="mx-auto mt-3 max-w-md text-sm text-white/55">
@@ -188,7 +188,7 @@ export default function FAQPage() {
             href="/contact"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.97 }}
-            className="mt-6 inline-block rounded-full bg-[#65f3de] px-8 py-3.5 text-xs font-bold uppercase tracking-[0.18em] text-[#081224] transition hover:bg-white"
+            className="mt-6 inline-block rounded-full bg-[#dfb257] px-8 py-3.5 text-xs font-bold uppercase tracking-[0.18em] text-[#081224] transition hover:bg-white"
           >
             Contact Support
           </motion.a>

@@ -34,14 +34,14 @@ export function HomePageClient({ newArrivals, bestSellers }: HomePageClientProps
   const reduceMotion = useReducedMotion();
 
   return (
-    <div className="min-h-screen bg-[#070d17] text-[#eaf2ff] -mt-20">
+    <div className="min-h-screen bg-[#0c0a09] text-[#eaf2ff] -mt-20">
       <main className="pt-20">
         <section className="relative flex h-[88vh] min-h-[700px] items-end overflow-hidden px-6 pb-14 lg:px-16 xl:px-24">
           <HeroBackground />
 
           <HeroMotion className="relative max-w-4xl text-white">
             <HeroItem>
-              <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[#65f3de]">
+              <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[#dfb257]">
                 Welcome to USolstice
               </p>
             </HeroItem>
@@ -57,7 +57,7 @@ export function HomePageClient({ newArrivals, bestSellers }: HomePageClientProps
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
                   <Link
                     href={CUSTOMER_ROUTES.BROWSE_PRODUCTS}
-                    className="inline-block rounded-full bg-[#65f3de] px-10 py-4 text-sm font-bold text-black transition hover:bg-white"
+                    className="inline-block rounded-full bg-[#dfb257] px-10 py-4 text-sm font-bold text-black transition hover:bg-white"
                   >
                     Shop Now
                   </Link>
@@ -92,7 +92,7 @@ export function HomePageClient({ newArrivals, bestSellers }: HomePageClientProps
         </section>
 
         <section className="relative overflow-hidden border-y border-white/10 bg-white/[0.02] py-5">
-          <div className="flex w-max animate-marquee whitespace-nowrap text-[10px] font-black uppercase tracking-[0.25em] text-[#65f3de]">
+          <div className="flex w-max animate-marquee whitespace-nowrap text-[10px] font-black uppercase tracking-[0.25em] text-[#dfb257]">
             <span className="mx-8">FREE SHIPPING OVER $100</span>
             <span className="mx-8">•</span>
             <span className="mx-8">NEW ARRIVALS EVERY WEEK</span>
@@ -149,7 +149,7 @@ export function HomePageClient({ newArrivals, bestSellers }: HomePageClientProps
                 <div>
                   <h3 className="text-4xl font-black uppercase tracking-[-0.05em] text-white">New Arrivals</h3>
                   <motion.div
-                    className="mt-2 h-1 bg-[#65f3de]"
+                    className="mt-2 h-1 bg-[#dfb257]"
                     initial={reduceMotion ? { width: 48 } : { width: 0 }}
                     whileInView={{ width: 48 }}
                     viewport={{ once: true }}
@@ -158,7 +158,7 @@ export function HomePageClient({ newArrivals, bestSellers }: HomePageClientProps
                 </div>
                 <Link
                   href={CUSTOMER_ROUTES.BROWSE_PRODUCTS}
-                  className="text-xs font-bold uppercase tracking-[0.2em] text-[#65f3de] underline underline-offset-8 transition hover:text-white"
+                  className="text-xs font-bold uppercase tracking-[0.2em] text-[#dfb257] underline underline-offset-8 transition hover:text-white"
                 >
                   Explore All
                 </Link>
@@ -192,7 +192,7 @@ export function HomePageClient({ newArrivals, bestSellers }: HomePageClientProps
                   <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.98 }} className="mt-8 inline-block">
                     <Link
                       href={CUSTOMER_ROUTES.BROWSE_PRODUCTS}
-                      className="inline-block rounded-full bg-gradient-to-br from-[#497cff] to-[#003ea8] px-8 py-3 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-xl shadow-blue-700/20"
+                      className="inline-block rounded-full bg-gradient-to-br from-[#dfb257] to-[#003ea8] px-8 py-3 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-xl shadow-blue-700/20"
                     >
                       View Favorites
                     </Link>
@@ -220,32 +220,32 @@ export function HomePageClient({ newArrivals, bestSellers }: HomePageClientProps
             {/* Animated Stats Section */}
             <FadeIn as="section" className="rounded-xl border border-white/10 bg-white/[0.02] p-10 backdrop-blur-sm lg:p-16">
               <div className="text-center">
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#65f3de]">Why Choose Us</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#dfb257]">Why Choose Us</p>
                 <h3 className="mt-4 text-4xl font-black uppercase leading-[0.9] tracking-[-0.05em] text-white">
                   Premium Quality. Fast Delivery.
                 </h3>
               </div>
               <div className="mt-12 grid grid-cols-2 gap-8 md:grid-cols-4">
                 <div className="flex flex-col items-center text-center">
-                  <span className="text-4xl font-black tracking-tight text-[#65f3de] sm:text-5xl">
+                  <span className="text-4xl font-black tracking-tight text-[#dfb257] sm:text-5xl">
                     <Counter value={50} suffix="K+" />
                   </span>
                   <span className="mt-2 text-[9px] font-bold uppercase tracking-widest text-white/50">Happy Customers</span>
                 </div>
                 <div className="flex flex-col items-center text-center">
-                  <span className="text-4xl font-black tracking-tight text-[#65f3de] sm:text-5xl">
+                  <span className="text-4xl font-black tracking-tight text-[#dfb257] sm:text-5xl">
                     <Counter value={2000} suffix="+" />
                   </span>
                   <span className="mt-2 text-[9px] font-bold uppercase tracking-widest text-white/50">Premium Products</span>
                 </div>
                 <div className="flex flex-col items-center text-center">
-                  <span className="text-4xl font-black tracking-tight text-[#65f3de] sm:text-5xl">
+                  <span className="text-4xl font-black tracking-tight text-[#dfb257] sm:text-5xl">
                     <Counter value={35} suffix="+" />
                   </span>
                   <span className="mt-2 text-[9px] font-bold uppercase tracking-widest text-white/50">Countries Served</span>
                 </div>
                 <div className="flex flex-col items-center text-center">
-                  <span className="text-4xl font-black tracking-tight text-[#65f3de] sm:text-5xl">
+                  <span className="text-4xl font-black tracking-tight text-[#dfb257] sm:text-5xl">
                     <Counter value={99} suffix="%" />
                   </span>
                   <span className="mt-2 text-[9px] font-bold uppercase tracking-widest text-white/50">Satisfaction Rate</span>
@@ -256,14 +256,14 @@ export function HomePageClient({ newArrivals, bestSellers }: HomePageClientProps
             {/* Testimonials Section */}
             <FadeIn as="section" className="rounded-xl border border-white/10 bg-white/[0.02] p-10 backdrop-blur-sm lg:p-16">
               <div className="text-center">
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#65f3de]">Testimonials</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#dfb257]">Testimonials</p>
                 <h3 className="mt-4 text-4xl font-black uppercase leading-[0.9] tracking-[-0.05em] text-white">
                   Voices of the community
                 </h3>
               </div>
               <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
                 <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 backdrop-blur-sm transition-colors hover:bg-white/[0.03]">
-                  <div className="flex gap-1 text-[#65f3de] mb-4">
+                  <div className="flex gap-1 text-[#dfb257] mb-4">
                     <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                     <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                     <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
@@ -273,10 +273,10 @@ export function HomePageClient({ newArrivals, bestSellers }: HomePageClientProps
                   <p className="text-xs leading-6 text-white/70 italic">
                     "The tech coat is incredible. Material quality is top-tier, waterproof, and extremely comfortable. Shipping was super fast."
                   </p>
-                  <p className="mt-6 text-[10px] font-bold uppercase tracking-widest text-[#65f3de]">— Marcus K., Tokyo</p>
+                  <p className="mt-6 text-[10px] font-bold uppercase tracking-widest text-[#dfb257]">— Marcus K., Tokyo</p>
                 </div>
                 <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 backdrop-blur-sm transition-colors hover:bg-white/[0.03]">
-                  <div className="flex gap-1 text-[#65f3de] mb-4">
+                  <div className="flex gap-1 text-[#dfb257] mb-4">
                     <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                     <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                     <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
@@ -286,10 +286,10 @@ export function HomePageClient({ newArrivals, bestSellers }: HomePageClientProps
                   <p className="text-xs leading-6 text-white/70 italic">
                     "USOLSTICE has completely redefined my digital wardrobe shopping. The editorial visuals are beautiful and the check-out was seamless."
                   </p>
-                  <p className="mt-6 text-[10px] font-bold uppercase tracking-widest text-[#65f3de]">— Elena R., Milan</p>
+                  <p className="mt-6 text-[10px] font-bold uppercase tracking-widest text-[#dfb257]">— Elena R., Milan</p>
                 </div>
                 <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 backdrop-blur-sm transition-colors hover:bg-white/[0.03]">
-                  <div className="flex gap-1 text-[#65f3de] mb-4">
+                  <div className="flex gap-1 text-[#dfb257] mb-4">
                     <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                     <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                     <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
@@ -299,7 +299,7 @@ export function HomePageClient({ newArrivals, bestSellers }: HomePageClientProps
                   <p className="text-xs leading-6 text-white/70 italic">
                     "Outstanding customer service. I had a question about fit, and their team resolved it in minutes. Highly recommend this brand."
                   </p>
-                  <p className="mt-6 text-[10px] font-bold uppercase tracking-widest text-[#65f3de]">— David L., New York</p>
+                  <p className="mt-6 text-[10px] font-bold uppercase tracking-widest text-[#dfb257]">— David L., New York</p>
                 </div>
               </div>
             </FadeIn>

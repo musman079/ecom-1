@@ -68,27 +68,27 @@ export function HeroBackground() {
 
   if (reduceMotion) {
     return (
-      <div className="absolute inset-0 bg-gradient-to-br from-[#1a2f5a] via-[#0f1a2e] to-[#050a15]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#382315] via-[#1f140e] to-[#0a0705]" />
     );
   }
 
   return (
     <>
       <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-[#1a2f5a] via-[#0f1a2e] to-[#050a15]"
+        className="absolute inset-0 bg-gradient-to-br from-[#382315] via-[#1f140e] to-[#0a0705]"
         initial={{ scale: 1.08, opacity: 0.6 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 1.2, ease: kineticEase }}
         style={{ y: bgY, opacity: glowOpacity }}
       />
       <motion.div
-        className="pointer-events-none absolute -right-32 top-1/4 h-[420px] w-[420px] rounded-full bg-[#65f3de]/10 blur-[100px]"
+        className="pointer-events-none absolute -right-32 top-1/4 h-[420px] w-[420px] rounded-full bg-[#dfb257]/10 blur-[100px]"
         animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.08, 1] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         style={{ y: glowOneY }}
       />
       <motion.div
-        className="pointer-events-none absolute -left-24 bottom-0 h-[360px] w-[360px] rounded-full bg-[#497cff]/15 blur-[90px]"
+        className="pointer-events-none absolute -left-24 bottom-0 h-[360px] w-[360px] rounded-full bg-[#dfb257]/15 blur-[90px]"
         animate={{ opacity: [0.3, 0.55, 0.3], x: [0, 20, 0] }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
         style={{ x: glowTwoX, y: glowTwoY }}

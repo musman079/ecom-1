@@ -10,14 +10,14 @@
   color-scheme: dark;
 
   /* Core palette */
-  --app-bg: #070d17;
-  --app-surface: #0f1726;
-  --app-surface-2: #131f33;
+  --app-bg: #0c0a09;
+  --app-surface: #171412;
+  --app-surface-2: #1f1a17;
   --app-border: rgba(176, 205, 255, 0.12);
   --app-text: #eaf2ff;
   --app-text-muted: #a8b5d1;
-  --app-primary: #65f3de;
-  --app-primary-2: #4f8cff;
+  --app-primary: #dfb257;
+  --app-primary-2: #e59a3b;
   --app-danger: #ff9aa5;
   --app-accent: #a78bfa;
 
@@ -243,14 +243,14 @@ button:hover .material-symbols-outlined {
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, #65f3de 0%, #4f8cff 50%, #a78bfa 100%);
+  background: linear-gradient(135deg, #dfb257 0%, #e59a3b 50%, #a78bfa 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .gradient-text-primary {
-  background: linear-gradient(135deg, #65f3de 0%, #4f8cff 100%);
+  background: linear-gradient(135deg, #dfb257 0%, #e59a3b 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;

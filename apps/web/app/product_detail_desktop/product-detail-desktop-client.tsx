@@ -370,7 +370,7 @@ export function ProductDetailDesktopClient() {
 
           <FadeIn className="px-4 pt-10 sm:px-6 sm:pt-12 lg:col-span-5 lg:px-0 lg:pl-20 lg:pt-0">
             <div className="lg:sticky lg:top-32 lg:max-w-md">
-              <span className="mb-4 block text-[10px] font-bold uppercase tracking-[0.3em] text-[#497cff]">
+              <span className="mb-4 block text-[10px] font-bold uppercase tracking-[0.3em] text-[#dfb257]">
                 {loading ? "Loading..." : "New Season Collection"}
               </span>
               <h2 className="mb-4 text-4xl font-black uppercase leading-[0.86] tracking-[-0.05em] sm:text-5xl lg:text-6xl">

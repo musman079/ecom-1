@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -18,6 +20,7 @@ type AuthFormState = {
 };
 
 export function AuthClient() {
+  const reduceMotion = useReducedMotion();
   const [showSplash, setShowSplash] = useState(true);
   const [mode, setMode] = useState<AuthMode>("login");
   const [submitting, setSubmitting] = useState(false);
@@ -186,7 +189,7 @@ export function AuthClient() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#070d17] text-[#eaf2ff]">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#0c0a09] text-[#eaf2ff]">
       <div className="fixed inset-0 pointer-events-none -z-10">
         <div className="absolute -left-44 -top-44 h-[500px] w-[500px] rounded-full bg-blue-500/10 blur-[120px]" />
         <div className="absolute -bottom-24 -right-24 h-[400px] w-[400px] rounded-full bg-black/5 blur-[100px]" />
@@ -195,7 +198,15 @@ export function AuthClient() {
       <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-6 py-12 lg:px-0">
         <div className="w-full max-w-[440px] rounded-2xl border border-white/10 bg-white/[0.04] p-7 backdrop-blur-xl sm:p-8">
           <header className="mb-12 text-center">
-            <h1 className="mb-2 text-5xl font-black uppercase tracking-[-0.06em] text-white">USOLSTICE</h1>
+            <Link href="/" className="group inline-block">
+              <motion.h1
+                className="mb-2 text-5xl font-black uppercase tracking-[-0.06em] text-white origin-center"
+                whileHover={reduceMotion ? undefined : { scale: 1.03 }}
+                transition={{ duration: 0.2 }}
+              >
+                USOLSTICE
+              </motion.h1>
+            </Link>
             <p className="text-sm text-white/65">
               {mode === "login"
                 ? "Enter your credentials to access the editorial gallery."
@@ -220,7 +231,7 @@ export function AuthClient() {
                       value={form.fullName}
                       onChange={(event) => onInputChange("fullName", event.target.value)}
                       placeholder="Usman Kousar"
-                      className="w-full border-0 border-b border-white/20 bg-transparent px-0 py-4 text-sm text-white placeholder:text-white/40 focus:border-[#65f3de] focus:outline-none focus:ring-0"
+                      className="w-full border-0 border-b border-white/20 bg-transparent px-0 py-4 text-sm text-white placeholder:text-white/40 focus:border-[#dfb257] focus:outline-none focus:ring-0"
                     />
                   </div>
 
@@ -237,7 +248,7 @@ export function AuthClient() {
                       value={form.phone}
                       onChange={(event) => onInputChange("phone", event.target.value)}
                       placeholder="+92 300 1234567"
-                      className="w-full border-0 border-b border-white/20 bg-transparent px-0 py-4 text-sm text-white placeholder:text-white/40 focus:border-[#65f3de] focus:outline-none focus:ring-0"
+                      className="w-full border-0 border-b border-white/20 bg-transparent px-0 py-4 text-sm text-white placeholder:text-white/40 focus:border-[#dfb257] focus:outline-none focus:ring-0"
                     />
                   </div>
                 </>
@@ -256,7 +267,7 @@ export function AuthClient() {
                   value={form.email}
                   onChange={(event) => onInputChange("email", event.target.value)}
                   placeholder="name@usolstice.store"
-                  className="w-full border-0 border-b border-white/20 bg-transparent px-0 py-4 text-sm text-white placeholder:text-white/40 focus:border-[#65f3de] focus:outline-none focus:ring-0"
+                  className="w-full border-0 border-b border-white/20 bg-transparent px-0 py-4 text-sm text-white placeholder:text-white/40 focus:border-[#dfb257] focus:outline-none focus:ring-0"
                 />
               </div>
 
@@ -273,7 +284,7 @@ export function AuthClient() {
                   value={form.password}
                   onChange={(event) => onInputChange("password", event.target.value)}
                   placeholder="••••••••"
-                  className="w-full border-0 border-b border-white/20 bg-transparent px-0 py-4 text-sm text-white placeholder:text-white/40 focus:border-[#65f3de] focus:outline-none focus:ring-0"
+                  className="w-full border-0 border-b border-white/20 bg-transparent px-0 py-4 text-sm text-white placeholder:text-white/40 focus:border-[#dfb257] focus:outline-none focus:ring-0"
                 />
               </div>
             </div>
@@ -281,7 +292,7 @@ export function AuthClient() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-full bg-gradient-to-br from-[#65f3de] via-[#4f8cff] to-[#3f7dff] py-5 text-xs font-bold uppercase tracking-[0.2em] text-[#081224] transition hover:brightness-110 active:scale-[0.98]"
+              className="w-full rounded-full bg-gradient-to-br from-[#dfb257] via-[#e59a3b] to-[#d97706] py-5 text-xs font-bold uppercase tracking-[0.2em] text-[#081224] transition hover:brightness-110 active:scale-[0.98]"
             >
               {submitting ? "Please wait..." : mode === "login" ? "Login" : "Create Account"}
             </button>
@@ -297,7 +308,7 @@ export function AuthClient() {
               <button
                 type="button"
                 onClick={toggleMode}
-                className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#65f3de] transition hover:underline"
+                className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#dfb257] transition hover:underline"
               >
                 {mode === "login" ? "Create Account" : "Back to Login"}
               </button>
@@ -344,7 +355,7 @@ export function AuthClient() {
       </main>
 
       <aside className="fixed top-0 right-0 hidden w-1/3 h-full overflow-hidden pointer-events-none lg:block">
-        <div className="absolute inset-0 z-10 bg-gradient-to-l from-[#070d17] via-transparent to-transparent" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-l from-[#0c0a09] via-transparent to-transparent" />
         <img
           src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLGFVnXIMmcw4x4Uf7eYTU5frePTneM24seipjrW5wgwHe-T6vCBilasl6-m3oo_pEq3oCrq047gG37VnJeagYmRF1zdUSBTyJrThDw-pulfl8wg_Pkiyhb0UkbgA2UvcLuGj5tXLeGe3viLwt-LVh8WLrC4WH6zF2NT9H_zAi_GlV7PzeLqrs0K6vlwHQvViwMLgP3mgLC-FLKcSdTcbF_apz6OeSltk6wMjDc1NrZXP9xHlw900QYw_clLm5Zwm8ahG3TmkzCdtn"
           alt="Editorial"

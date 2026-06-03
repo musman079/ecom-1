@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export function LoadingScreen() {
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#070d17]">
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0c0a09]">
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -20,7 +20,7 @@ export function LoadingScreen() {
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-0 rounded-full border-2 border-white/5 border-t-[#65f3de]"
+            className="absolute inset-0 rounded-full border-2 border-white/5 border-t-[#dfb257]"
           />
         </div>
       </motion.div>

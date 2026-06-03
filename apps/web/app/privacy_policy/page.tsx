@@ -13,19 +13,19 @@ export default function PrivacyPolicyPage() {
 
         <section className="mt-8 space-y-5 text-sm leading-7 text-white/72">
           <div>
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#65f3de]">Information We Collect</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#dfb257]">Information We Collect</h2>
             <p className="mt-2">We may store your name, email, phone number, shipping details, account preferences, order history, and support messages. We also keep product browsing and cart state necessary for checkout.</p>
           </div>
           <div>
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#65f3de]">How We Use It</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#dfb257]">How We Use It</h2>
             <p className="mt-2">Data is used to authenticate you, process purchases, track orders, manage returns, and improve the storefront experience. We do not sell your personal data.</p>
           </div>
           <div>
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#65f3de]">Sharing</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#dfb257]">Sharing</h2>
             <p className="mt-2">We only share data with systems required to run the app, such as authentication, order storage, and payment or shipping integrations if they are enabled later.</p>
           </div>
           <div>
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#65f3de]">Your Choices</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#dfb257]">Your Choices</h2>
             <p className="mt-2">You can update profile details, control notification settings, and request order support through the account pages already built into the app.</p>
           </div>
         </section>

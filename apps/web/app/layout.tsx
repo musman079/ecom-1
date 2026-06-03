@@ -55,11 +55,11 @@ export default function RootLayout({
             duration: 3500,
             classNames: {
               toast:
-                "!rounded-2xl !border !border-white/10 !bg-[#0f1726]/95 !text-[#eaf2ff] !shadow-[0_24px_80px_rgba(0,0,0,0.35)] !backdrop-blur-xl",
+                "!rounded-2xl !border !border-white/10 !bg-[#171412]/95 !text-[#eaf2ff] !shadow-[0_24px_80px_rgba(0,0,0,0.35)] !backdrop-blur-xl",
               title: "!text-sm !font-bold !tracking-tight",
               description: "!text-sm !text-white/70",
               actionButton:
-                "!rounded-full !bg-[#65f3de] !px-3 !py-2 !text-[11px] !font-bold !uppercase !tracking-[0.14em] !text-[#081224]",
+                "!rounded-full !bg-[#dfb257] !px-3 !py-2 !text-[11px] !font-bold !uppercase !tracking-[0.14em] !text-[#081224]",
               cancelButton:
                 "!rounded-full !border !border-white/15 !bg-white/5 !px-3 !py-2 !text-[11px] !font-bold !uppercase !tracking-[0.14em] !text-white/80",
             },

@@ -13,11 +13,11 @@ const config: Config = {
       },
       colors: {
         kinetic: {
-          bg: "#070d17",
-          surface: "#0f1726",
-          "surface-2": "#131f33",
-          primary: "#65f3de",
-          "primary-2": "#4f8cff",
+          bg: "#0c0a09",
+          surface: "#171412",
+          "surface-2": "#1f1a17",
+          primary: "#dfb257",
+          "primary-2": "#e59a3b",
           accent: "#a78bfa",
           danger: "#ff9aa5",
           text: "#eaf2ff",
@@ -42,8 +42,8 @@ const config: Config = {
         "border-glow": "border-glow 3s ease-in-out infinite",
       },
       backgroundImage: {
-        "gradient-kinetic": "linear-gradient(135deg, #65f3de, #4f8cff, #a78bfa)",
-        "gradient-primary": "linear-gradient(135deg, #65f3de, #4f8cff)",
+        "gradient-kinetic": "linear-gradient(135deg, #dfb257, #e59a3b, #a78bfa)",
+        "gradient-primary": "linear-gradient(135deg, #dfb257, #e59a3b)",
       },
       backdropBlur: {
         xs: "2px",

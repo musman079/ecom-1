@@ -17,7 +17,7 @@ export default function CartBadge() {
         initial={reduceMotion ? false : { scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 500, damping: 22 }}
-        className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-[#65f3de] to-[#3f7dff] text-[8px] font-bold text-[#0c1220]"
+        className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-[#dfb257] to-[#d97706] text-[8px] font-bold text-[#0c1220]"
       >
         {totalItems}
       </motion.span>

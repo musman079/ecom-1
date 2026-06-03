@@ -221,7 +221,7 @@ export function ProductCard({ item, index, href, variant = "dark", className = "
           <button
             onClick={handleAddToCart}
             disabled={loading}
-            className="absolute bottom-3 right-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-[#65f3de] text-[#081224] opacity-0 shadow-lg transition-all duration-300 translate-y-2 group-hover:translate-y-0 group-hover:opacity-100 hover:scale-105 hover:bg-white disabled:opacity-40"
+            className="absolute bottom-3 right-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-[#dfb257] text-[#081224] opacity-0 shadow-lg transition-all duration-300 translate-y-2 group-hover:translate-y-0 group-hover:opacity-100 hover:scale-105 hover:bg-white disabled:opacity-40"
             aria-label="Quick Add to Cart"
           >
             <span className="material-symbols-outlined text-base font-bold">

@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
 export default function USolsticeLuxuryFashionEcommercePage() {
+  const reduceMotion = useReducedMotion();
   const [showSplash, setShowSplash] = useState(true);
   const router = useRouter();
 
@@ -11,6 +14,29 @@ export default function USolsticeLuxuryFashionEcommercePage() {
     const timer = window.setTimeout(() => setShowSplash(false), 2200);
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    const verifySession = async () => {
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store", credentials: "include" });
+        if (response.ok) {
+          const data = (await response.json()) as {
+            success?: boolean;
+            user?: {
+              id: string;
+              role?: "CUSTOMER" | "ADMIN" | "SUPER_ADMIN";
+            } | null;
+          };
+          if (data.success && data.user?.id) {
+            router.replace("/");
+          }
+        }
+      } catch {
+        // Ignore session check issues
+      }
+    };
+    void verifySession();
+  }, [router]);
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#f9f9f9] text-[#1a1c1c] antialiased">
@@ -22,7 +48,15 @@ export default function USolsticeLuxuryFashionEcommercePage() {
       <main className="flex min-h-screen items-center justify-center bg-white px-6 lg:px-0">
         <div className="w-full max-w-[440px]">
           <header className="mb-12 text-center">
-            <h1 className="mb-2 text-5xl font-black uppercase tracking-[-0.06em]">USOLSTICE</h1>
+            <Link href="/" className="group inline-block">
+              <motion.h1
+                className="mb-2 text-5xl font-black uppercase tracking-[-0.06em] origin-center"
+                whileHover={reduceMotion ? undefined : { scale: 1.03 }}
+                transition={{ duration: 0.2 }}
+              >
+                USOLSTICE
+              </motion.h1>
+            </Link>
             <p className="text-sm text-neutral-500">Enter your credentials to access the editorial gallery.</p>
           </header>
 
@@ -42,7 +76,7 @@ export default function USolsticeLuxuryFashionEcommercePage() {
                   id="email"
                   type="email"
                   placeholder="name@usolstice.store"
-                  className="w-full border-0 border-b border-[#c6c6cd] bg-transparent px-0 py-4 text-sm placeholder:text-neutral-400 focus:border-[#497cff] focus:outline-none focus:ring-0"
+                  className="w-full border-0 border-b border-[#c6c6cd] bg-transparent px-0 py-4 text-sm placeholder:text-neutral-400 focus:border-[#dfb257] focus:outline-none focus:ring-0"
                 />
               </div>
 
@@ -54,7 +88,7 @@ export default function USolsticeLuxuryFashionEcommercePage() {
                   id="password"
                   type="password"
                   placeholder="••••••••"
-                  className="w-full border-0 border-b border-[#c6c6cd] bg-transparent px-0 py-4 text-sm placeholder:text-neutral-400 focus:border-[#497cff] focus:outline-none focus:ring-0"
+                  className="w-full border-0 border-b border-[#c6c6cd] bg-transparent px-0 py-4 text-sm placeholder:text-neutral-400 focus:border-[#dfb257] focus:outline-none focus:ring-0"
                 />
               </div>
             </div>
@@ -67,7 +101,7 @@ export default function USolsticeLuxuryFashionEcommercePage() {
               <button type="button" onClick={() => router.push("/auth")} className="text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500 transition hover:text-black">
                 Forgot Password?
               </button>
-              <button type="button" onClick={() => router.push("/auth?mode=register")} className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#497cff] transition hover:underline">
+              <button type="button" onClick={() => router.push("/auth?mode=register")} className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#dfb257] transition hover:underline">
                 Create Account
               </button>
             </div>

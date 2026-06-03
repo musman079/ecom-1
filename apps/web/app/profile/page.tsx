@@ -356,7 +356,7 @@ function ProfileContent() {
   };
 
   return (
-    <main className="min-h-screen bg-[#070d17] px-6 py-10 text-[#eaf2ff] sm:py-12">
+    <main className="min-h-screen bg-[#0c0a09] px-6 py-10 text-[#eaf2ff] sm:py-12">
       <section className="mx-auto w-full max-w-6xl space-y-6">
         <FadeIn className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-xl sm:p-8">
           <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
@@ -385,7 +385,7 @@ function ProfileContent() {
                     <input
                       value={form.fullName}
                       onChange={(event) => setForm((current) => ({ ...current, fullName: event.target.value }))}
-                      className="mt-2 h-11 w-full rounded-lg border border-white/20 bg-[#0d1627] px-3 text-sm font-semibold text-white outline-none focus:border-[#65f3de]"
+                      className="mt-2 h-11 w-full rounded-lg border border-white/20 bg-[#12100e] px-3 text-sm font-semibold text-white outline-none focus:border-[#dfb257]"
                     />
                   </label>
                   <label className="text-xs font-bold uppercase tracking-[0.14em] text-white/60">
@@ -393,13 +393,13 @@ function ProfileContent() {
                     <input
                       value={form.phone}
                       onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
-                      className="mt-2 h-11 w-full rounded-lg border border-white/20 bg-[#0d1627] px-3 text-sm font-semibold text-white outline-none focus:border-[#65f3de]"
+                      className="mt-2 h-11 w-full rounded-lg border border-white/20 bg-[#12100e] px-3 text-sm font-semibold text-white outline-none focus:border-[#dfb257]"
                       placeholder="+92 300 0000000"
                     />
                   </label>
                 </div>
 
-                <div className="rounded-lg border border-white/10 bg-[#0d1627] p-4 text-sm">
+                <div className="rounded-lg border border-white/10 bg-[#12100e] p-4 text-sm">
                   <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/60">Email</p>
                   <p className="mt-1 font-semibold text-white">{profile.email}</p>
                 </div>
@@ -408,7 +408,7 @@ function ProfileContent() {
                   type="button"
                   onClick={() => void saveProfile()}
                   disabled={saving}
-                  className="rounded-full bg-gradient-to-br from-[#65f3de] via-[#4f8cff] to-[#3f7dff] px-6 py-3 text-xs font-bold uppercase tracking-[0.18em] text-[#081224] transition hover:brightness-110 disabled:opacity-50"
+                  className="rounded-full bg-gradient-to-br from-[#dfb257] via-[#e59a3b] to-[#d97706] px-6 py-3 text-xs font-bold uppercase tracking-[0.18em] text-[#081224] transition hover:brightness-110 disabled:opacity-50"
                 >
                   {saving ? "Saving..." : "Save Profile"}
                 </button>
@@ -513,13 +513,13 @@ function ProfileContent() {
             <Stagger className="space-y-3">
               {notifications.map((item) => (
                 <StaggerItem key={item.id}>
-                <article className={`rounded-xl border p-4 transition hover:border-white/25 ${item.isRead ? "border-white/10 bg-white/[0.03]" : "border-[#4f8cff]/40 bg-[#4f8cff]/10"}`}>
+                <article className={`rounded-xl border p-4 transition hover:border-white/25 ${item.isRead ? "border-white/10 bg-white/[0.03]" : "border-[#e59a3b]/40 bg-[#e59a3b]/10"}`}>
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <h3 className="text-sm font-bold text-white">{item.title}</h3>
                     <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/60">{formatProfileDate(item.createdAt)}</span>
                   </div>
                   <p className="mt-1 text-sm text-white/75">{item.message}</p>
-                  <Link href={getNotificationHref(item)} className="mt-2 inline-block text-xs font-bold uppercase tracking-[0.14em] text-[#65f3de] hover:underline">
+                  <Link href={getNotificationHref(item)} className="mt-2 inline-block text-xs font-bold uppercase tracking-[0.14em] text-[#dfb257] hover:underline">
                     View Details
                   </Link>
                 </article>
@@ -565,7 +565,7 @@ function ProfileContent() {
                     {canCreateReturn(order.status) ? (
                       <Link
                         href={`${CUSTOMER_ROUTES.RETURNS_REFUNDS}?orderNumber=${encodeURIComponent(order.orderNumber)}`}
-                        className="mt-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-[#65f3de] hover:underline"
+                        className="mt-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-[#dfb257] hover:underline"
                       >
                         Start Return
                       </Link>
@@ -578,7 +578,7 @@ function ProfileContent() {
           )}
 
           <div className="mt-6 flex items-center justify-between">
-            <Link href={CUSTOMER_ROUTES.HOME} className="text-sm font-semibold text-[#65f3de] hover:underline">
+            <Link href={CUSTOMER_ROUTES.HOME} className="text-sm font-semibold text-[#dfb257] hover:underline">
               Back to home
             </Link>
           </div>

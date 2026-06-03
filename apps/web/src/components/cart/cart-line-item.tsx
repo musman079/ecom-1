@@ -50,7 +50,7 @@ export function CartLineItem({
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#1d2940] to-[#0d1627] text-[10px] font-bold uppercase tracking-[0.18em] text-white/45">
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#1d2940] to-[#12100e] text-[10px] font-bold uppercase tracking-[0.18em] text-white/45">
             No Image
           </div>
         )}
@@ -59,7 +59,7 @@ export function CartLineItem({
       <div className="flex h-40 flex-grow flex-col py-2">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.15em] text-[#65f3de]">In Cart</span>
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.15em] text-[#dfb257]">In Cart</span>
             <h3 className="text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-3xl">{title}</h3>
             <p className="text-sm text-white/60">SKU: {sku}</p>
           </div>

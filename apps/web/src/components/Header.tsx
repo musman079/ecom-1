@@ -79,18 +79,18 @@ export default function Header() {
 
   const textClass = isLight ? "text-neutral-900" : "text-white";
   const navTextClass = isLight ? "text-neutral-500 hover:text-neutral-900" : "text-white/60 hover:text-white";
-  const navActiveTextClass = isLight ? "text-neutral-950 font-bold" : "text-[#65f3de]";
+  const navActiveTextClass = isLight ? "text-neutral-950 font-bold" : "text-[#dfb257]";
   const borderClass = isLight ? "border-black/5" : "border-white/10";
-  const inputBgClass = isLight ? "bg-neutral-100 text-black border-black/15" : "bg-[#121f37] text-white border-white/15";
+  const inputBgClass = isLight ? "bg-neutral-100 text-black border-black/15" : "bg-[#1c1816] text-white border-white/15";
 
   const headerContent = (
     <>
       <div className="mx-auto flex h-20 w-full max-w-[1400px] items-center justify-between px-6 xl:px-12">
-        <Link href={CUSTOMER_ROUTES.HOME} className="group">
+        <Link href={CUSTOMER_ROUTES.HOME} className="group flex items-center">
           <motion.h1
-            className={`text-3xl font-black tracking-[-0.06em] ${textClass}`}
-            whileHover={reduceMotion ? undefined : { letterSpacing: "-0.04em" }}
-            transition={{ duration: 0.25 }}
+            className={`text-3xl font-black tracking-[-0.06em] ${textClass} origin-left`}
+            whileHover={reduceMotion ? undefined : { scale: 1.02 }}
+            transition={{ duration: 0.2 }}
           >
             USOLSTICE
           </motion.h1>
@@ -112,7 +112,7 @@ export default function Header() {
                   {isActive ? (
                     <motion.span
                       layoutId="nav-underline"
-                      className={`absolute -bottom-1 left-0 right-0 h-px ${isLight ? "bg-black" : "bg-[#65f3de]"}`}
+                      className={`absolute -bottom-1 left-0 right-0 h-px ${isLight ? "bg-black" : "bg-[#dfb257]"}`}
                     />
                   ) : null}
                 </Link>
@@ -135,7 +135,7 @@ export default function Header() {
                   onChange={(e) => setSearchVal(e.target.value)}
                   placeholder="Search products..."
                   className={`h-9 w-full rounded-full border px-4 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-offset-0 ${inputBgClass} ${
-                    isLight ? "focus:border-black focus:ring-black" : "focus:border-[#65f3de] focus:ring-[#65f3de]"
+                    isLight ? "focus:border-black focus:ring-black" : "focus:border-[#dfb257] focus:ring-[#dfb257]"
                   }`}
                   style={{ pointerEvents: searchOpen ? "auto" : "none" }}
                 />
@@ -209,7 +209,7 @@ export default function Header() {
           className={`pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r ${
             isLight
               ? "from-transparent via-black/15 to-transparent"
-              : "from-transparent via-[#65f3de]/60 to-transparent"
+              : "from-transparent via-[#dfb257]/60 to-transparent"
           }`}
           style={{ opacity: headerLineOpacity }}
         />
@@ -228,7 +228,7 @@ export default function Header() {
           className={`overflow-hidden border-t md:hidden ${
             isLight
               ? "border-black/5 bg-white/98 text-neutral-900 shadow-lg"
-              : "border-white/10 bg-[#0d1627]/98 text-white shadow-xl"
+              : "border-white/10 bg-[#12100e]/98 text-white shadow-xl"
           }`}
         >
           <nav className="flex flex-col gap-1 px-6 py-4">
@@ -243,7 +243,7 @@ export default function Header() {
                     isActive
                       ? isLight
                         ? "bg-neutral-100 text-black font-extrabold"
-                        : "bg-[#65f3de]/10 text-[#65f3de]"
+                        : "bg-[#dfb257]/10 text-[#dfb257]"
                       : isLight
                         ? "text-neutral-500 hover:bg-neutral-50 hover:text-black"
                         : "text-white/60 hover:bg-white/5 hover:text-white"

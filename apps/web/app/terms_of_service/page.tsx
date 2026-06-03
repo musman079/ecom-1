@@ -13,19 +13,19 @@ export default function TermsOfServicePage() {
 
         <section className="mt-8 space-y-5 text-sm leading-7 text-white/72">
           <div>
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#65f3de]">Orders & Accounts</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#dfb257]">Orders & Accounts</h2>
             <p className="mt-2">You may place orders only with valid contact and shipping details. We may suspend accounts that abuse checkout, spam the platform, or attempt unauthorized access.</p>
           </div>
           <div>
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#65f3de]">Pricing & Availability</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#dfb257]">Pricing & Availability</h2>
             <p className="mt-2">Prices, stock, and product availability can change without notice. We may cancel or adjust an order if pricing or inventory data is clearly incorrect.</p>
           </div>
           <div>
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#65f3de]">Payments</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#dfb257]">Payments</h2>
             <p className="mt-2">Orders placed through checkout are recorded with the payment method selected at the time of purchase. If online card processing is unavailable in your environment, orders may still be accepted and marked for manual confirmation.</p>
           </div>
           <div>
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#65f3de]">Returns</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#dfb257]">Returns</h2>
             <p className="mt-2">Return eligibility depends on order status and product condition. Use the Returns & Refunds page for the current flow and any return request rules.</p>
           </div>
         </section>

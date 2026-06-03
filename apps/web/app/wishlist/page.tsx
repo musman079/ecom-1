@@ -77,10 +77,10 @@ function WishlistContent() {
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 
   return (
-    <div className="min-h-screen bg-[#070d17] text-[#eaf2ff]">
+    <div className="min-h-screen bg-[#0c0a09] text-[#eaf2ff]">
       <main className="mx-auto w-full max-w-[1400px] px-6 py-16 xl:px-12">
         <FadeIn>
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#65f3de]">Your Collection</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#dfb257]">Your Collection</p>
           <h1 className="mt-3 text-4xl font-black uppercase tracking-[-0.04em] sm:text-5xl">Wishlist</h1>
           <p className="mt-4 max-w-xl text-sm leading-7 text-white/60">
             Items you&apos;ve saved for later. When you&apos;re ready, they&apos;re waiting.
@@ -107,7 +107,7 @@ function WishlistContent() {
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} className="mt-8">
               <Link
                 href={CUSTOMER_ROUTES.BROWSE_PRODUCTS}
-                className="inline-block rounded-full bg-[#65f3de] px-8 py-3.5 text-xs font-bold uppercase tracking-[0.18em] text-[#081224] transition hover:bg-white"
+                className="inline-block rounded-full bg-[#dfb257] px-8 py-3.5 text-xs font-bold uppercase tracking-[0.18em] text-[#081224] transition hover:bg-white"
               >
                 Browse Products
               </Link>
@@ -143,7 +143,7 @@ function WishlistContent() {
 
                     <div className="p-5">
                       <h3 className="text-sm font-bold tracking-tight text-white">{item.productTitle}</h3>
-                      <p className="mt-1 text-sm font-medium text-[#65f3de]">
+                      <p className="mt-1 text-sm font-medium text-[#dfb257]">
                         {item.productPrice ? formatPrice(item.productPrice) : "—"}
                       </p>
                     </div>

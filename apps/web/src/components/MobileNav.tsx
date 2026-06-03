@@ -55,12 +55,12 @@ export default function MobileNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#0d1627]/92 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3 backdrop-blur-2xl md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#12100e]/92 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3 backdrop-blur-2xl md:hidden">
       <div className="mx-auto flex w-full max-w-[480px] items-center justify-between px-4">
         {navItems.map((item) => {
           const isActive = item.match.some((match) => pathname === match || pathname.startsWith(`${match}/`));
           const className = `relative flex flex-col items-center gap-1 text-[9px] font-bold uppercase tracking-[0.2em] transition ${
-            isActive ? "text-[#65f3de]" : "text-white/55"
+            isActive ? "text-[#dfb257]" : "text-white/55"
           }`;
 
           const content = (
@@ -73,7 +73,7 @@ export default function MobileNav() {
               </span>
               <span>{item.label}</span>
               {item.label === "Cart" && totalItems > 0 ? (
-                <span className="absolute -right-1 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-[#65f3de] to-[#3f7dff] text-[8px] font-bold text-[#0c1220]">
+                <span className="absolute -right-1 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-[#dfb257] to-[#d97706] text-[8px] font-bold text-[#0c1220]">
                   {totalItems}
                 </span>
               ) : null}

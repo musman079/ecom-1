@@ -9,10 +9,10 @@ export function SiteFooter() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <FadeIn as="footer" className="relative overflow-hidden border-t border-white/10 bg-[#0d1627]">
+    <FadeIn as="footer" className="relative overflow-hidden border-t border-white/10 bg-[#12100e]">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-36 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#65f3de]/10 blur-[120px]" />
-        <div className="absolute bottom-[-180px] right-[-80px] h-72 w-72 rounded-full bg-[#4f8cff]/10 blur-[120px]" />
+        <div className="absolute -top-36 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#dfb257]/10 blur-[120px]" />
+        <div className="absolute bottom-[-180px] right-[-80px] h-72 w-72 rounded-full bg-[#e59a3b]/10 blur-[120px]" />
       </div>
       <div className="mx-auto grid w-full max-w-[1400px] grid-cols-1 gap-12 px-6 py-20 md:grid-cols-4 xl:px-12">
         <div>
@@ -60,7 +60,7 @@ export function SiteFooter() {
         <div>
           <h6 className="text-xs font-bold uppercase tracking-[0.2em] text-white">Newsletter</h6>
           <p className="mt-4 text-xs leading-6 text-white/45">Get updates on new arrivals & exclusive deals.</p>
-          <div className="mt-6 flex items-center border-b border-white/20 pb-2 transition focus-within:border-[#65f3de]/50">
+          <div className="mt-6 flex items-center border-b border-white/20 pb-2 transition focus-within:border-[#dfb257]/50">
             <input
               type="email"
               placeholder="Enter Email"
@@ -70,7 +70,7 @@ export function SiteFooter() {
               onClick={() => {
                 // Newsletter signup toast
               }}
-              className="text-sm transition hover:translate-x-0.5 hover:text-[#65f3de]"
+              className="text-sm transition hover:translate-x-0.5 hover:text-[#dfb257]"
             >
               →
             </button>
@@ -83,8 +83,8 @@ export function SiteFooter() {
           © {currentYear} USolstice Editorial. All Rights Reserved.
         </p>
         <div className="flex gap-4 text-white/45">
-          <span className="material-symbols-outlined text-sm transition hover:text-[#65f3de]">lens_blur</span>
-          <span className="material-symbols-outlined text-sm transition hover:text-[#65f3de]">north_east</span>
+          <span className="material-symbols-outlined text-sm transition hover:text-[#dfb257]">lens_blur</span>
+          <span className="material-symbols-outlined text-sm transition hover:text-[#dfb257]">north_east</span>
         </div>
       </div>
     </FadeIn>

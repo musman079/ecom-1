@@ -130,12 +130,12 @@ function CartCheckoutDesktopContent() {
           <div className="mt-4 h-1 w-full rounded-full bg-white/10">
             {reduceMotion ? (
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[#65f3de] via-[#4a8dff] to-[#3f7dff]"
+                className="h-full rounded-full bg-gradient-to-r from-[#dfb257] via-[#4a8dff] to-[#d97706]"
                 style={{ width: `${progress * 100}%` }}
               />
             ) : (
               <motion.div
-                className="h-full rounded-full bg-gradient-to-r from-[#65f3de] via-[#4a8dff] to-[#3f7dff]"
+                className="h-full rounded-full bg-gradient-to-r from-[#dfb257] via-[#4a8dff] to-[#d97706]"
                 initial={{ width: "0%" }}
                 animate={{ width: `${progress * 100}%` }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
@@ -199,7 +199,7 @@ function CartCheckoutDesktopContent() {
             <div className="flex flex-col gap-10 lg:sticky lg:top-32">
               <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl md:p-10">
                 <h3 className="mb-8 text-sm font-black uppercase tracking-[0.2em]">Summary</h3>
-                <p className="mb-6 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#65f3de]">{checkoutMessage}</p>
+                <p className="mb-6 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#dfb257]">{checkoutMessage}</p>
                 <div className="mb-8 space-y-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-white/65">Subtotal</span>
@@ -226,7 +226,7 @@ function CartCheckoutDesktopContent() {
                   <input
                     type="text"
                     placeholder="DISCOUNT CODE"
-                    className="w-full border-0 border-b border-white/25 bg-transparent px-0 py-4 text-xs uppercase tracking-widest placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0"
+                    className="w-full border-0 border-b border-white/25 bg-transparent px-0 py-4 text-xs uppercase tracking-widest placeholder:text-white/45 focus:border-[#dfb257] focus:ring-0"
                   />
                   <button type="button" onClick={() => setCheckoutMessage("Discount code applied.")} className="absolute right-0 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-widest underline underline-offset-4">
                     Apply
@@ -242,28 +242,28 @@ function CartCheckoutDesktopContent() {
                       <input
                         type="email"
                         placeholder="EMAIL ADDRESS"
-                        className="w-full border-0 border-b border-[#c6c6cd] bg-transparent px-0 py-4 text-xs uppercase tracking-widest focus:border-[#497cff] focus:ring-0"
+                        className="w-full border-0 border-b border-[#c6c6cd] bg-transparent px-0 py-4 text-xs uppercase tracking-widest focus:border-[#dfb257] focus:ring-0"
                       />
                     </div>
                     <div>
                       <input
                         type="text"
                         placeholder="FIRST NAME"
-                        className="w-full border-0 border-b border-[#c6c6cd] bg-transparent px-0 py-4 text-xs uppercase tracking-widest focus:border-[#497cff] focus:ring-0"
+                        className="w-full border-0 border-b border-[#c6c6cd] bg-transparent px-0 py-4 text-xs uppercase tracking-widest focus:border-[#dfb257] focus:ring-0"
                       />
                     </div>
                     <div>
                       <input
                         type="text"
                         placeholder="LAST NAME"
-                        className="w-full border-0 border-b border-[#c6c6cd] bg-transparent px-0 py-4 text-xs uppercase tracking-widest focus:border-[#497cff] focus:ring-0"
+                        className="w-full border-0 border-b border-[#c6c6cd] bg-transparent px-0 py-4 text-xs uppercase tracking-widest focus:border-[#dfb257] focus:ring-0"
                       />
                     </div>
                     <div className="col-span-2">
                       <input
                         type="text"
                         placeholder="SHIPPING ADDRESS"
-                        className="w-full border-0 border-b border-[#c6c6cd] bg-transparent px-0 py-4 text-xs uppercase tracking-widest focus:border-[#497cff] focus:ring-0"
+                        className="w-full border-0 border-b border-[#c6c6cd] bg-transparent px-0 py-4 text-xs uppercase tracking-widest focus:border-[#dfb257] focus:ring-0"
                       />
                     </div>
                   </div>
@@ -272,18 +272,18 @@ function CartCheckoutDesktopContent() {
                 <div>
                   <h3 className="mb-6 text-sm font-black uppercase tracking-[0.2em]">Payment Method</h3>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <button type="button" onClick={() => { setSelectedPayment("card"); setCheckoutMessage("Payment method: Credit / Debit Card."); }} className={`flex flex-col gap-4 rounded-lg p-6 text-left transition ${selectedPayment === "card" ? "border border-[#65f3de]/50 bg-[#121b31] text-white" : "border border-white/20 bg-[#121b31] text-white/70 hover:text-white"}`}>
+                    <button type="button" onClick={() => { setSelectedPayment("card"); setCheckoutMessage("Payment method: Credit / Debit Card."); }} className={`flex flex-col gap-4 rounded-lg p-6 text-left transition ${selectedPayment === "card" ? "border border-[#dfb257]/50 bg-[#121b31] text-white" : "border border-white/20 bg-[#121b31] text-white/70 hover:text-white"}`}>
                       <div className="flex items-center justify-between">
                         <span className="material-symbols-outlined text-2xl">credit_card</span>
-                        <span className={`h-4 w-4 rounded-full ${selectedPayment === "card" ? "border-4 border-[#65f3de]" : "border border-white/40"}`} />
+                        <span className={`h-4 w-4 rounded-full ${selectedPayment === "card" ? "border-4 border-[#dfb257]" : "border border-white/40"}`} />
                       </div>
                       <span className="text-[10px] font-bold uppercase tracking-widest">Credit Card</span>
                     </button>
 
-                    <button type="button" onClick={() => { setSelectedPayment("cod"); setCheckoutMessage("Payment method: Cash on Delivery."); }} className={`flex flex-col gap-4 rounded-lg p-6 text-left transition ${selectedPayment === "cod" ? "border border-[#65f3de]/50 bg-[#121b31] text-white" : "border border-white/20 bg-[#0f192d] text-white/70 hover:text-white"}`}>
+                    <button type="button" onClick={() => { setSelectedPayment("cod"); setCheckoutMessage("Payment method: Cash on Delivery."); }} className={`flex flex-col gap-4 rounded-lg p-6 text-left transition ${selectedPayment === "cod" ? "border border-[#dfb257]/50 bg-[#121b31] text-white" : "border border-white/20 bg-[#0f192d] text-white/70 hover:text-white"}`}>
                       <div className="flex items-center justify-between">
                         <span className="material-symbols-outlined text-2xl">payments</span>
-                        <span className={`h-4 w-4 rounded-full ${selectedPayment === "cod" ? "border-4 border-[#65f3de]" : "border border-white/40"}`} />
+                        <span className={`h-4 w-4 rounded-full ${selectedPayment === "cod" ? "border-4 border-[#dfb257]" : "border border-white/40"}`} />
                       </div>
                       <span className="text-[10px] font-bold uppercase tracking-widest">Cash on Delivery</span>
                     </button>
@@ -291,7 +291,7 @@ function CartCheckoutDesktopContent() {
                   <p className="mt-3 text-xs font-semibold text-white/60">Choose either payment option to continue checkout.</p>
                 </div>
 
-                <AuthLink href={CUSTOMER_ROUTES.ORDER_TRACKING} requiresAuth className="block w-full rounded-full bg-gradient-to-br from-[#65f3de] via-[#4a8dff] to-[#3f7dff] py-6 text-center text-sm font-bold uppercase tracking-[0.3em] text-[#0b1220] shadow-xl transition-transform hover:scale-[1.02]">
+                <AuthLink href={CUSTOMER_ROUTES.ORDER_TRACKING} requiresAuth className="block w-full rounded-full bg-gradient-to-br from-[#dfb257] via-[#4a8dff] to-[#d97706] py-6 text-center text-sm font-bold uppercase tracking-[0.3em] text-[#0b1220] shadow-xl transition-transform hover:scale-[1.02]">
                   Complete Order
                 </AuthLink>
 
@@ -305,7 +305,7 @@ function CartCheckoutDesktopContent() {
         </div>
       </main>
 
-      <footer className="border-t border-white/10 bg-[#0d1627] text-white/75">
+      <footer className="border-t border-white/10 bg-[#12100e] text-white/75">
         <div className="grid grid-cols-1 gap-12 px-6 py-24 md:grid-cols-4 xl:px-12">
           <div className="flex flex-col gap-6">
             <div className="text-2xl font-black tracking-[-0.04em] text-white">USOLSTICE EDITORIAL</div>
@@ -336,7 +336,7 @@ function CartCheckoutDesktopContent() {
               <input
                 type="text"
                 placeholder="ENTER YOUR EMAIL"
-                className="w-full border-0 border-b border-white/20 bg-transparent py-3 text-[10px] uppercase tracking-widest text-white placeholder:text-white/45 focus:border-[#65f3de] focus:ring-0"
+                className="w-full border-0 border-b border-white/20 bg-transparent py-3 text-[10px] uppercase tracking-widest text-white placeholder:text-white/45 focus:border-[#dfb257] focus:ring-0"
               />
               <a href={CUSTOMER_ROUTES.AUTH} className="absolute right-0 top-1/2 -translate-y-1/2">
                 <span className="material-symbols-outlined text-lg">arrow_forward</span>

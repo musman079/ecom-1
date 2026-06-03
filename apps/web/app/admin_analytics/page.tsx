@@ -169,7 +169,7 @@ export default async function AdminAnalyticsPage({ searchParams }: PageProps<"/a
                         </div>
                         <div className="h-3 overflow-hidden rounded-full bg-zinc-100">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-[#65f3de] via-[#4f8cff] to-[#3f7dff]"
+                            className="h-full rounded-full bg-gradient-to-r from-[#dfb257] via-[#e59a3b] to-[#d97706]"
                             style={{ width: `${width}%` }}
                           />
                         </div>
