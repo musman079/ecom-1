@@ -1,313 +1,342 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
-import { CUSTOMER_ROUTES } from "../../constants/routes";
-import { FadeIn } from "../motion/fade-in";
-import { HeroBackground, HeroItem, HeroMotion } from "../motion/hero-motion";
-import { Stagger, StaggerItem } from "../motion/stagger";
-import { Counter } from "../motion";
-import CartBadge from "../CartBadge";
-import { AuthLink } from "../auth/auth-link";
-import { ProductCard, type ProductCardData } from "../product-card";
-import { SiteFooter } from "../site-footer";
+import { ArrowDown } from "lucide-react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import useEmblaCarousel from "embla-carousel-react";
+import { ProductCard, ProductCardData } from "../products/ProductCard";
 
-const navLinks = [
-  { label: "Shop", href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
-  { label: "About", href: CUSTOMER_ROUTES.ABOUT },
-  { label: "FAQ", href: CUSTOMER_ROUTES.FAQ },
-  { label: "Contact", href: CUSTOMER_ROUTES.CONTACT },
-] as const;
-
-const filters = ["Category", "Size", "Color", "Price Range", "Material"];
-
-type HomePageClientProps = {
-  newArrivals: ProductCardData[];
-  bestSellers: ProductCardData[];
-};
-
-function productHref(item: ProductCardData) {
-  return `/product_detail_desktop?product=${encodeURIComponent(item.slug || item.id || item.name)}`;
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
 }
 
-export function HomePageClient({ newArrivals, bestSellers }: HomePageClientProps) {
-  const reduceMotion = useReducedMotion();
+export function HomePageClient({ newArrivals }: { newArrivals: ProductCardData[], bestSellers?: ProductCardData[] }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const heroTextRef = useRef<HTMLDivElement>(null);
+  const heroImgRef = useRef<HTMLImageElement>(null);
+  const statsRef = useRef<HTMLDivElement>(null);
+
+  const [emblaRef] = useEmblaCarousel({ loop: true, align: "start" });
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    const ctx = gsap.context(() => {
+      // 1. PAGE LOAD SEQUENCE
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      
+      // Hero eyebrow
+      tl.fromTo(".hero-eyebrow", 
+        { opacity: 0, y: 20 }, 
+        { opacity: 1, y: 0, duration: 0.4 }, 
+        0.5
+      );
+      
+      // Hero Headline word reveal
+      tl.fromTo(".hero-word", 
+        { clipPath: "inset(0 100% 0 0)" }, 
+        { clipPath: "inset(0 0% 0 0)", duration: 0.8, stagger: 0.08 }, 
+        0.7
+      );
+      
+      // Hero subtext
+      tl.fromTo(".hero-subtext", 
+        { opacity: 0, y: 20 }, 
+        { opacity: 1, y: 0, duration: 0.4 }, 
+        1.1
+      );
+      
+      // CTAs
+      tl.fromTo(".hero-cta", 
+        { opacity: 0, scale: 0.95 }, 
+        { opacity: 1, scale: 1, duration: 0.4, stagger: 0.1 }, 
+        1.3
+      );
+      
+      // Hero image
+      tl.fromTo(heroImgRef.current,
+        { scale: 1.08, opacity: 0 },
+        { scale: 1.0, opacity: 1, duration: 1.8, ease: "power2.out" },
+        1.5
+      );
+
+      // 8. HERO SECTION PARALLAX
+      gsap.to(heroImgRef.current, {
+        yPercent: 40,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".hero-section",
+          start: "top top",
+          end: "bottom top",
+          scrub: true
+        }
+      });
+
+      gsap.to(heroTextRef.current, {
+        yPercent: 10,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".hero-section",
+          start: "top top",
+          end: "bottom top",
+          scrub: true
+        }
+      });
+
+      gsap.to(".hero-cta-container", {
+        opacity: 0,
+        ease: "power2.in",
+        scrollTrigger: {
+          trigger: ".hero-section",
+          start: "top top",
+          end: "center top",
+          scrub: true
+        }
+      });
+
+      // 5. SCROLL REVEAL - SECTIONS
+      const sections = gsap.utils.toArray<HTMLElement>('.reveal-section');
+      sections.forEach(section => {
+        const heading = section.querySelector('.section-heading');
+        const cards = section.querySelectorAll('.luxury-card');
+
+        const tlReveal = gsap.timeline({
+          scrollTrigger: {
+            trigger: section,
+            start: "top 85%",
+          }
+        });
+
+        if (heading) {
+          tlReveal.fromTo(heading,
+            { clipPath: "inset(0 100% 0 0)" },
+            { clipPath: "inset(0 0% 0 0)", duration: 0.8, ease: "power3.out" }
+          );
+        }
+
+        if (cards.length > 0) {
+          tlReveal.fromTo(cards,
+            { opacity: 0, y: 30 },
+            { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: "power2.out" },
+            "-=0.4"
+          );
+        }
+      });
+
+      // Stats Count Up
+      const statNumbers = gsap.utils.toArray<HTMLElement>('.stat-number');
+      statNumbers.forEach(stat => {
+        const target = parseInt(stat.getAttribute('data-target') || '0', 10);
+        gsap.to(stat, {
+          innerHTML: target,
+          duration: 1.5,
+          ease: "power3.out",
+          snap: { innerHTML: 1 },
+          scrollTrigger: {
+            trigger: statsRef.current,
+            start: "top 80%"
+          },
+          onUpdate: function() {
+            stat.innerHTML = Math.round(this.targets()[0].innerHTML) + (stat.getAttribute('data-suffix') || '');
+          }
+        });
+      });
+
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#0c0a09] text-[#eaf2ff] -mt-20">
-      <main className="pt-20">
-        <section className="relative flex h-[88vh] min-h-[700px] items-end overflow-hidden px-6 pb-14 lg:px-16 xl:px-24">
-          <HeroBackground />
-
-          <HeroMotion className="relative max-w-4xl text-white">
-            <HeroItem>
-              <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[#dfb257]">
-                Welcome to USolstice
-              </p>
-            </HeroItem>
-            <HeroItem>
-              <h2 className="mb-8 text-6xl font-black uppercase italic leading-[0.9] tracking-[-0.06em] sm:text-7xl md:text-8xl xl:text-9xl">
-                Premium
-                <br />
-                Fashion
-              </h2>
-            </HeroItem>
-            <HeroItem>
-              <div className="flex flex-wrap gap-4">
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
-                  <Link
-                    href={CUSTOMER_ROUTES.BROWSE_PRODUCTS}
-                    className="inline-block rounded-full bg-[#dfb257] px-10 py-4 text-sm font-bold text-black transition hover:bg-white"
-                  >
-                    Shop Now
-                  </Link>
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                  <Link
-                    href={CUSTOMER_ROUTES.BROWSE_PRODUCTS}
-                    className="inline-block rounded-full border border-white/20 bg-white/5 px-10 py-4 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/15"
-                  >
-                    Browse Collection
-                  </Link>
-                </motion.div>
-              </div>
-            </HeroItem>
-          </HeroMotion>
-
-          {reduceMotion ? (
-            <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 text-[9px] font-bold uppercase tracking-[0.28em] text-white/70">
-              <span>Scroll</span>
-              <span className="material-symbols-outlined text-base">expand_more</span>
+    <div ref={containerRef} className="w-full">
+      
+      {/* --- HERO SECTION --- */}
+      <section className="hero-section relative h-[100dvh] w-full overflow-hidden flex flex-col md:flex-row pt-20">
+        
+        {/* Left: Text */}
+        <div className="w-full md:w-[55%] h-full flex flex-col justify-center px-6 md:px-16 lg:px-24 z-10 relative bg-primary">
+          <div ref={heroTextRef}>
+            <span className="hero-eyebrow font-sans text-[11px] text-gold tracking-[0.25em] uppercase font-semibold mb-6 block">
+              New Collection 2026
+            </span>
+            
+            <h1 className="font-display text-5xl md:text-6xl lg:text-[80px] font-light leading-[1.1] text-text-primary mb-8 tracking-tight">
+              <span className="hero-word block" style={{ clipPath: "inset(0 100% 0 0)" }}>Premium</span>
+              <span className="hero-word block" style={{ clipPath: "inset(0 100% 0 0)" }}>Fashion</span>
+            </h1>
+            
+            <p className="hero-subtext font-sans text-base md:text-[16px] font-light text-text-secondary max-w-md mb-12 leading-relaxed">
+              Curated pieces for the modern wardrobe. Editorial quality, delivered to your doorstep.
+            </p>
+            
+            <div className="hero-cta-container flex flex-col sm:flex-row gap-5">
+              <Link href="/products" className="hero-cta btn-sweep bg-gold text-primary font-sans text-[13px] font-bold uppercase tracking-[0.15em] px-8 py-4 rounded-full text-center transition-transform hover:scale-[0.97]">
+                <span className="relative z-10">Shop Now</span>
+              </Link>
+              <Link href="/collections" className="hero-cta border border-gold text-gold hover:bg-gold hover:text-primary font-sans text-[13px] font-bold uppercase tracking-[0.15em] px-8 py-4 rounded-full text-center transition-all duration-300 hover:scale-[0.97]">
+                Browse Collection
+              </Link>
             </div>
-          ) : (
-            <motion.div
-              className="absolute bottom-6 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 text-[9px] font-bold uppercase tracking-[0.28em] text-white/70"
-              animate={{ y: [0, 10, 0], opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <span>Scroll</span>
-              <span className="material-symbols-outlined text-base">expand_more</span>
-            </motion.div>
-          )}
-        </section>
-
-        <section className="relative overflow-hidden border-y border-white/10 bg-white/[0.02] py-5">
-          <div className="flex w-max animate-marquee whitespace-nowrap text-[10px] font-black uppercase tracking-[0.25em] text-[#dfb257]">
-            <span className="mx-8">FREE SHIPPING OVER $100</span>
-            <span className="mx-8">•</span>
-            <span className="mx-8">NEW ARRIVALS EVERY WEEK</span>
-            <span className="mx-8">•</span>
-            <span className="mx-8">TECHNICAL CRAFTSMANSHIP</span>
-            <span className="mx-8">•</span>
-            <span className="mx-8">CURATED DESIGNER PIECES</span>
-            <span className="mx-8">•</span>
-            <span className="mx-8">24/7 PREMIUM SUPPORT</span>
-            <span className="mx-8">•</span>
-            <span className="mx-8">FREE SHIPPING OVER $100</span>
-            <span className="mx-8">•</span>
-            <span className="mx-8">NEW ARRIVALS EVERY WEEK</span>
-            <span className="mx-8">•</span>
-            <span className="mx-8">TECHNICAL CRAFTSMANSHIP</span>
-            <span className="mx-8">•</span>
-            <span className="mx-8">CURATED DESIGNER PIECES</span>
-            <span className="mx-8">•</span>
-            <span className="mx-8">24/7 PREMIUM SUPPORT</span>
           </div>
-        </section>
 
-        <div className="mx-auto flex w-full max-w-[1400px] gap-12 px-6 py-12 xl:px-12">
-          <FadeIn as="aside" className="sticky top-24 hidden h-[calc(100vh-7rem)] w-72 shrink-0 rounded-xl border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl lg:flex lg:flex-col">
-            <div className="mb-6">
-              <h3 className="text-xs font-bold uppercase tracking-[0.24em]">Filters</h3>
-              <p className="mt-1 text-[9px] uppercase tracking-[0.22em] text-white/50">Refine Selection</p>
-            </div>
-
-            <div className="space-y-2">
-              {filters.map((item, idx) => (
-                <a
-                  key={item}
-                  href={`${CUSTOMER_ROUTES.BROWSE_PRODUCTS}?filter=${encodeURIComponent(item.toLowerCase())}`}
-                  className={`flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-[10px] font-semibold uppercase tracking-[0.2em] transition-colors ${
-                    idx === 0 ? "text-white" : "text-white/55 hover:bg-white/5 hover:text-white"
-                  }`}
-                >
-                  <span>{idx === 0 ? "◈" : "◻"}</span>
-                  <span>{item}</span>
-                </a>
-              ))}
-            </div>
-
-            <div className="mt-auto rounded-lg border border-white/10 bg-[#081222] p-4 text-white">
-              <p className="text-[9px] uppercase tracking-[0.2em] text-white/60">Join the movement</p>
-              <p className="mt-2 text-xs font-bold">Member access to private sales.</p>
-            </div>
-          </FadeIn>
-
-          <div className="min-w-0 flex-1 space-y-24">
-            <FadeIn as="section">
-              <div className="mb-12 flex items-end justify-between">
-                <div>
-                  <h3 className="text-4xl font-black uppercase tracking-[-0.05em] text-white">New Arrivals</h3>
-                  <motion.div
-                    className="mt-2 h-1 bg-[#dfb257]"
-                    initial={reduceMotion ? { width: 48 } : { width: 0 }}
-                    whileInView={{ width: 48 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6, delay: 0.2 }}
-                  />
-                </div>
-                <Link
-                  href={CUSTOMER_ROUTES.BROWSE_PRODUCTS}
-                  className="text-xs font-bold uppercase tracking-[0.2em] text-[#dfb257] underline underline-offset-8 transition hover:text-white"
-                >
-                  Explore All
-                </Link>
-              </div>
-
-              <Stagger className="grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 xl:grid-cols-4">
-                {newArrivals.map((item, idx) => (
-                  <StaggerItem key={item.id || item.name}>
-                    <ProductCard item={item} index={idx} href={productHref(item)} variant="dark" />
-                  </StaggerItem>
-                ))}
-              </Stagger>
-              {newArrivals.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-white/20 bg-white/[0.03] p-8 text-sm text-white/60">
-                  No published products available right now. Publish items in admin to populate this section.
-                </div>
-              ) : null}
-            </FadeIn>
-
-            <FadeIn as="section" className="-mx-6 rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-20 backdrop-blur-xl xl:-mx-12 xl:px-12">
-              <div className="flex flex-col gap-12 lg:flex-row lg:items-center">
-                <div className="w-full lg:w-[34%]">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/60">Curated Selection</p>
-                  <h3 className="mt-4 text-6xl font-black uppercase leading-[0.9] tracking-[-0.06em] text-white">
-                    Featured Picks
-                  </h3>
-                  <p className="mt-6 max-w-md text-sm leading-7 text-white/70">
-                    The foundation of the modern wardrobe. These pieces are pulled directly from published catalog data,
-                    so the storefront feels aligned with the inventory behind it.
-                  </p>
-                  <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.98 }} className="mt-8 inline-block">
-                    <Link
-                      href={CUSTOMER_ROUTES.BROWSE_PRODUCTS}
-                      className="inline-block rounded-full bg-gradient-to-br from-[#dfb257] to-[#003ea8] px-8 py-3 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-xl shadow-blue-700/20"
-                    >
-                      View Favorites
-                    </Link>
-                  </motion.div>
-                </div>
-
-                <Stagger className="no-scrollbar flex w-full gap-8 overflow-x-auto pb-2 lg:w-[66%]">
-                  {bestSellers.map((item, idx) => (
-                    <StaggerItem
-                      key={item.id || item.name}
-                      className={`min-w-[280px] ${idx === 2 ? "opacity-40" : ""}`}
-                    >
-                      <ProductCard item={item} index={idx + 1} href={productHref(item)} variant="compact" />
-                    </StaggerItem>
-                  ))}
-                </Stagger>
-                {bestSellers.length === 0 ? (
-                  <div className="min-w-[280px] rounded-xl border border-dashed border-white/20 bg-white/[0.03] p-6 text-sm text-white/60">
-                    No featured products are live yet.
-                  </div>
-                ) : null}
-              </div>
-            </FadeIn>
-
-            {/* Animated Stats Section */}
-            <FadeIn as="section" className="rounded-xl border border-white/10 bg-white/[0.02] p-10 backdrop-blur-sm lg:p-16">
-              <div className="text-center">
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#dfb257]">Why Choose Us</p>
-                <h3 className="mt-4 text-4xl font-black uppercase leading-[0.9] tracking-[-0.05em] text-white">
-                  Premium Quality. Fast Delivery.
-                </h3>
-              </div>
-              <div className="mt-12 grid grid-cols-2 gap-8 md:grid-cols-4">
-                <div className="flex flex-col items-center text-center">
-                  <span className="text-4xl font-black tracking-tight text-[#dfb257] sm:text-5xl">
-                    <Counter value={50} suffix="K+" />
-                  </span>
-                  <span className="mt-2 text-[9px] font-bold uppercase tracking-widest text-white/50">Happy Customers</span>
-                </div>
-                <div className="flex flex-col items-center text-center">
-                  <span className="text-4xl font-black tracking-tight text-[#dfb257] sm:text-5xl">
-                    <Counter value={2000} suffix="+" />
-                  </span>
-                  <span className="mt-2 text-[9px] font-bold uppercase tracking-widest text-white/50">Premium Products</span>
-                </div>
-                <div className="flex flex-col items-center text-center">
-                  <span className="text-4xl font-black tracking-tight text-[#dfb257] sm:text-5xl">
-                    <Counter value={35} suffix="+" />
-                  </span>
-                  <span className="mt-2 text-[9px] font-bold uppercase tracking-widest text-white/50">Countries Served</span>
-                </div>
-                <div className="flex flex-col items-center text-center">
-                  <span className="text-4xl font-black tracking-tight text-[#dfb257] sm:text-5xl">
-                    <Counter value={99} suffix="%" />
-                  </span>
-                  <span className="mt-2 text-[9px] font-bold uppercase tracking-widest text-white/50">Satisfaction Rate</span>
-                </div>
-              </div>
-            </FadeIn>
-
-            {/* Testimonials Section */}
-            <FadeIn as="section" className="rounded-xl border border-white/10 bg-white/[0.02] p-10 backdrop-blur-sm lg:p-16">
-              <div className="text-center">
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#dfb257]">Testimonials</p>
-                <h3 className="mt-4 text-4xl font-black uppercase leading-[0.9] tracking-[-0.05em] text-white">
-                  Voices of the community
-                </h3>
-              </div>
-              <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
-                <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 backdrop-blur-sm transition-colors hover:bg-white/[0.03]">
-                  <div className="flex gap-1 text-[#dfb257] mb-4">
-                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                  </div>
-                  <p className="text-xs leading-6 text-white/70 italic">
-                    "The tech coat is incredible. Material quality is top-tier, waterproof, and extremely comfortable. Shipping was super fast."
-                  </p>
-                  <p className="mt-6 text-[10px] font-bold uppercase tracking-widest text-[#dfb257]">— Marcus K., Tokyo</p>
-                </div>
-                <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 backdrop-blur-sm transition-colors hover:bg-white/[0.03]">
-                  <div className="flex gap-1 text-[#dfb257] mb-4">
-                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                  </div>
-                  <p className="text-xs leading-6 text-white/70 italic">
-                    "USOLSTICE has completely redefined my digital wardrobe shopping. The editorial visuals are beautiful and the check-out was seamless."
-                  </p>
-                  <p className="mt-6 text-[10px] font-bold uppercase tracking-widest text-[#dfb257]">— Elena R., Milan</p>
-                </div>
-                <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 backdrop-blur-sm transition-colors hover:bg-white/[0.03]">
-                  <div className="flex gap-1 text-[#dfb257] mb-4">
-                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    <span className="material-symbols-outlined text-sm">star_half</span>
-                  </div>
-                  <p className="text-xs leading-6 text-white/70 italic">
-                    "Outstanding customer service. I had a question about fit, and their team resolved it in minutes. Highly recommend this brand."
-                  </p>
-                  <p className="mt-6 text-[10px] font-bold uppercase tracking-widest text-[#dfb257]">— David L., New York</p>
-                </div>
-              </div>
-            </FadeIn>
+          <div className="absolute bottom-8 left-6 md:left-16 lg:left-24 flex items-center gap-3 opacity-60">
+            <span className="font-sans text-[11px] uppercase tracking-widest text-text-primary">Scroll</span>
+            <ArrowDown className="w-4 h-4 text-gold animate-bounce" />
           </div>
         </div>
 
-        <SiteFooter />
-      </main>
+        {/* Right: Image */}
+        <div className="w-full md:w-[45%] h-full absolute md:relative top-0 right-0 z-0 overflow-hidden">
+          {/* Overlay for mobile readability */}
+          <div className="absolute inset-0 bg-primary/60 md:hidden z-10" />
+          <img
+            ref={heroImgRef}
+            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop"
+            alt="Premium Fashion Collection"
+            className="w-full h-full object-cover object-center scale-105"
+            style={{ opacity: 0 }}
+          />
+        </div>
+      </section>
+
+      {/* --- TICKER BAR --- */}
+      <div className="w-full h-12 bg-gold overflow-hidden flex flex-col justify-center border-y border-gold-light">
+        <div className="whitespace-nowrap flex animate-marquee">
+          {[...Array(4)].map((_, i) => (
+            <span key={i} className="font-sans text-[11px] font-bold tracking-[0.2em] uppercase text-primary mx-4">
+              FREE SHIPPING OVER $100 • NEW ARRIVALS EVERY WEEK • PREMIUM QUALITY • CURATED COLLECTIONS •
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* --- NEW ARRIVALS --- */}
+      <section className="reveal-section py-24 md:py-32 px-6 md:px-16 lg:px-24 max-w-[1440px] mx-auto bg-primary">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-16">
+          <div>
+            <span className="font-sans text-[11px] text-gold tracking-[0.2em] uppercase font-semibold mb-4 block">New Arrivals</span>
+            <h2 className="section-heading font-heading text-4xl md:text-5xl text-text-primary" style={{ clipPath: "inset(0 100% 0 0)" }}>
+              Just Dropped
+            </h2>
+          </div>
+          <Link href="/products/new" className="mt-6 md:mt-0 font-sans text-sm font-medium text-gold hover:text-gold-light transition-colors group flex items-center gap-2">
+            Explore All <ArrowDown className="w-4 h-4 -rotate-90 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          {newArrivals.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      </section>
+
+      {/* --- FEATURED PICKS --- */}
+      <section className="reveal-section py-24 bg-secondary">
+        <div className="max-w-[1440px] mx-auto px-6 md:px-16 lg:px-24 flex flex-col lg:flex-row gap-16 items-center">
+          <div className="w-full lg:w-[60%] aspect-[4/3] overflow-hidden rounded-sm relative">
+            <img 
+              src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=2000&auto=format&fit=crop" 
+              alt="Featured Collection"
+              className="w-full h-full object-cover transition-transform duration-[1.5s] hover:scale-105"
+            />
+          </div>
+          <div className="w-full lg:w-[40%] flex flex-col items-start">
+            <div className="w-12 h-[1px] bg-gold mb-8" />
+            <span className="font-sans text-[11px] text-gold tracking-[0.2em] uppercase font-semibold mb-4 block">Featured Picks</span>
+            <h2 className="section-heading font-heading text-4xl md:text-5xl text-text-primary mb-8" style={{ clipPath: "inset(0 100% 0 0)" }}>
+              The Minimalist Edit
+            </h2>
+            <p className="font-sans text-base font-light text-text-secondary leading-relaxed mb-10">
+              Discover our curated selection of elevated basics and timeless silhouettes designed for seamless integration into your existing wardrobe.
+            </p>
+            <Link href="/collections/minimalist" className="btn-sweep bg-transparent border border-gold text-gold font-sans text-[13px] font-bold uppercase tracking-[0.15em] px-8 py-4 rounded-full transition-colors">
+              <span className="relative z-10">View Favorites</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* --- STATS SECTION --- */}
+      <section ref={statsRef} className="py-24 bg-surface border-y border-white/5">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
+          <div className="flex flex-col items-center">
+            <span className="stat-number font-display text-4xl md:text-[56px] text-gold leading-none mb-3" data-target="10" data-suffix="K+">0</span>
+            <span className="font-sans text-[13px] text-text-secondary uppercase tracking-wider">Happy Customers</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="stat-number font-display text-4xl md:text-[56px] text-gold leading-none mb-3" data-target="500" data-suffix="+">0</span>
+            <span className="font-sans text-[13px] text-text-secondary uppercase tracking-wider">Premium Products</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="stat-number font-display text-4xl md:text-[56px] text-gold leading-none mb-3" data-target="50" data-suffix="+">0</span>
+            <span className="font-sans text-[13px] text-text-secondary uppercase tracking-wider">Countries</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="stat-number font-display text-4xl md:text-[56px] text-gold leading-none mb-3" data-target="99" data-suffix="%">0</span>
+            <span className="font-sans text-[13px] text-text-secondary uppercase tracking-wider">Satisfaction</span>
+          </div>
+        </div>
+      </section>
+
+      {/* --- TESTIMONIALS --- */}
+      <section className="reveal-section py-24 md:py-32 px-6 md:px-16 lg:px-24 max-w-[1440px] mx-auto bg-primary overflow-hidden">
+        <div className="text-center mb-16">
+          <span className="font-sans text-[11px] text-gold tracking-[0.2em] uppercase font-semibold mb-4 block">Testimonials</span>
+          <h2 className="section-heading font-heading text-4xl md:text-5xl text-text-primary" style={{ clipPath: "inset(0 100% 0 0)" }}>
+            Client Stories
+          </h2>
+        </div>
+
+        {/* Desktop Grid */}
+        <div className="hidden md:grid grid-cols-3 gap-8">
+          {[1, 2, 3].map((i) => (
+            <TestimonialCard key={i} />
+          ))}
+        </div>
+
+        {/* Mobile Carousel */}
+        <div className="md:hidden overflow-hidden" ref={emblaRef}>
+          <div className="flex">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex-[0_0_100%] min-w-0 pr-4">
+                <TestimonialCard />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+    </div>
+  );
+}
+
+function TestimonialCard() {
+  return (
+    <div className="bg-surface p-10 rounded-sm border border-gold/20 luxury-card h-full flex flex-col justify-between">
+      <div>
+        <div className="flex gap-1 mb-6">
+          {[...Array(5)].map((_, i) => (
+            <svg key={i} className="w-4 h-4 text-gold fill-current" viewBox="0 0 24 24">
+              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+            </svg>
+          ))}
+        </div>
+        <p className="font-display text-[18px] italic text-text-primary leading-relaxed mb-8">
+          &ldquo;The quality is absolutely phenomenal. From the packaging to the stitching, every detail feels considered and incredibly premium. I&apos;m a customer for life.&rdquo;
+        </p>
+      </div>
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 rounded-full bg-secondary overflow-hidden">
+          <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=100&auto=format&fit=crop" alt="User" className="w-full h-full object-cover" />
+        </div>
+        <div>
+          <h4 className="font-sans text-sm font-medium text-text-primary">Eleanor Vance</h4>
+          <span className="font-sans text-[12px] text-text-secondary">New York, USA</span>
+        </div>
+      </div>
     </div>
   );
 }

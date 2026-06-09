@@ -1,24 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 import { useCartStore } from "../../src/store/cart-store";
-import CartBadge from "../../src/components/CartBadge";
+
 import { FadeIn } from "../../src/components/motion/fade-in";
 import { kineticEase } from "../../src/components/motion/motion-config";
 import { AuthLink } from "../../src/components/auth/auth-link";
 import { buildAuthHref } from "../../src/lib/auth-redirect";
 
-const navLinks = [
-  { label: 'New Arrivals', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
-  { label: 'Designers', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
-  { label: 'Editorial', href: CUSTOMER_ROUTES.PRODUCT_DETAILS },
-  { label: 'Archive', href: CUSTOMER_ROUTES.PRODUCT_DETAILS },
-  { label: 'Sustainability', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
-];
+
 
 const lookItems: Array<{ category: string; name: string; price: string; image?: string }> = [];
 

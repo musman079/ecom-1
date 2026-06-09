@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 import { useCartStore } from "../../src/store/cart-store";
-import CartBadge from "../../src/components/CartBadge";
+
 import { FadeIn } from "../../src/components/motion/fade-in";
 import { Stagger, StaggerItem } from "../../src/components/motion/stagger";
 import { ProductCard } from "../../src/components/product-card";

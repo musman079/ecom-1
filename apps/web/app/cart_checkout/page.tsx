@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,7 +11,7 @@ import { CUSTOMER_ROUTES } from "../../src/constants/routes";
 import { useCartStore, type CartItem } from "../../src/store/cart-store";
 import { CartLineItem } from "../../src/components/cart/cart-line-item";
 import { FadeIn } from "../../src/components/motion/fade-in";
-import { AuthLink } from "../../src/components/auth/auth-link";
+
 import { buildAuthHref } from "../../src/lib/auth-redirect";
 
 type ShippingForm = {

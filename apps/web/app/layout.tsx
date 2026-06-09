@@ -1,23 +1,34 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Cormorant_Garamond, Playfair_Display, Inter } from "next/font/google";
 import { Toaster } from "sonner";
+import { Navbar } from "../src/components/layout/Navbar";
+import { Footer } from "../src/components/layout/Footer";
 import "./globals.css";
-import { assertRuntimeEnvironment } from "../src/lib/env";
-import Header from "../src/components/Header";
-import MobileNav from "../src/components/MobileNav";
-import { ScrollProgress } from "../src/components/scroll-progress";
-import { BackToTop } from "../src/components/back-to-top";
 
-const geist = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist",
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-cormorant",
+  display: "swap",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-inter",
   display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "USOLSTICE Store — Premium Fashion & Lifestyle",
   description: "Premium e-commerce store for the modern shopper. Discover curated collections, fast shipping, and exclusive deals on fashion and lifestyle products.",
-  keywords: "premium fashion, online store, designer clothing, fast shipping, exclusive deals",
 };
 
 export default function RootLayout({
@@ -25,28 +36,18 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  assertRuntimeEnvironment();
-
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <head>
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1"
-        />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-          rel="stylesheet"
-        />
+        {/* We can use the fonts defined in Next.js directly */}
       </head>
-      <body className={geist.variable}>
-        <ScrollProgress />
-        <Header />
-        <div className="pt-20 pb-24">{children}</div>
-        <MobileNav />
-        <BackToTop />
+      <body className={`${cormorant.variable} ${playfair.variable} ${inter.variable} font-sans bg-primary text-text-primary antialiased`}>
+        <Navbar />
+        <main className="min-h-screen">
+          {children}
+        </main>
+        <Footer />
+        
         <Toaster
           richColors
           closeButton
@@ -54,14 +55,11 @@ export default function RootLayout({
           toastOptions={{
             duration: 3500,
             classNames: {
-              toast:
-                "!rounded-2xl !border !border-white/10 !bg-[#171412]/95 !text-[#eaf2ff] !shadow-[0_24px_80px_rgba(0,0,0,0.35)] !backdrop-blur-xl",
-              title: "!text-sm !font-bold !tracking-tight",
-              description: "!text-sm !text-white/70",
-              actionButton:
-                "!rounded-full !bg-[#dfb257] !px-3 !py-2 !text-[11px] !font-bold !uppercase !tracking-[0.14em] !text-[#081224]",
-              cancelButton:
-                "!rounded-full !border !border-white/15 !bg-white/5 !px-3 !py-2 !text-[11px] !font-bold !uppercase !tracking-[0.14em] !text-white/80",
+              toast: "!rounded-sm !border !border-white/10 !bg-surface !text-text-primary",
+              title: "!text-sm !font-bold !font-heading",
+              description: "!text-sm !text-text-secondary",
+              actionButton: "!rounded-full !bg-gold !px-3 !py-2 !text-[11px] !font-bold !uppercase !tracking-[0.14em] !text-primary",
+              cancelButton: "!rounded-full !border !border-white/15 !bg-white/5 !px-3 !py-2 !text-[11px] !font-bold !uppercase !tracking-[0.14em] !text-text-primary",
             },
           }}
         />

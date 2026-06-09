@@ -1,6 +1,6 @@
 import { HomePageClient } from "../src/components/home/home-page-client";
 import { listPublicProducts } from "../src/lib/products";
-import type { ProductCardData } from "../src/components/product-card";
+import type { ProductCardData } from "../src/components/products/ProductCard";
 
 export const dynamic = "force-dynamic";
 

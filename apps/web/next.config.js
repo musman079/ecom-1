@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /** @type {import('next').NextConfig} */
 function normalizeNextAuthUrl() {
   const raw = process.env.NEXTAUTH_URL?.trim();

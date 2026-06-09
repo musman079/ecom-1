@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+
 import { motion, useReducedMotion } from "framer-motion";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CUSTOMER_ROUTES } from "../../src/constants/routes";
@@ -10,13 +10,7 @@ import { buildAuthHref } from "../../src/lib/auth-redirect";
 import { FadeIn } from "../../src/components/motion/fade-in";
 import { Stagger, StaggerItem } from "../../src/components/motion/stagger";
 
-const navLinks = [
-  { label: 'New Arrivals', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
-  { label: 'Designers', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
-  { label: 'Editorial', href: CUSTOMER_ROUTES.PRODUCT_DETAILS },
-  { label: 'Archive', href: CUSTOMER_ROUTES.PRODUCT_DETAILS },
-  { label: 'Sustainability', href: CUSTOMER_ROUTES.BROWSE_PRODUCTS },
-];
+
 
 const checkoutSteps = ["Bag", "Shipping", "Payment"] as const;
 

@@ -72,7 +72,7 @@ export function ProductCard({ item, index, href, variant = "dark", className = "
         if (res.ok) {
           const data = await res.json();
           const items = data.items || data || [];
-          setIsSaved(items.some((w: any) => w.productId === item.id));
+          setIsSaved(items.some((w: { productId: string }) => w.productId === item.id));
         }
       } catch {
         /* ignore */
@@ -152,8 +152,8 @@ export function ProductCard({ item, index, href, variant = "dark", className = "
 
       useCartStore.getState().setCart(payload.cart);
       toast.success(`${displayName} added to cart!`);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to add to cart.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to add to cart.");
     } finally {
       setLoading(false);
     }

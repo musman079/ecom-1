@@ -47,6 +47,7 @@ export function getMongoDatabaseName() {
 
 export function assertRuntimeEnvironment() {
   // Env vars are not always available during `next build` static generation on CI.
+  // eslint-disable-next-line turbo/no-undeclared-env-vars
   if (process.env.NEXT_PHASE === "phase-production-build") {
     return;
   }

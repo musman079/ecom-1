@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 
 import { prisma } from "./prisma";
 import { authOptions } from "./next-auth";
-import { AUTH_COOKIE_NAME, getAdminEmails, readAuthTokenFromCookieHeader, readAuthTokenFromRequest, verifyAuthToken, type AuthRole } from "./auth";
+import { AUTH_COOKIE_NAME, getAdminEmails, readAuthTokenFromRequest, verifyAuthToken, type AuthRole } from "./auth";
 
 export type SanitizedAuthUser = {
   id: string;
