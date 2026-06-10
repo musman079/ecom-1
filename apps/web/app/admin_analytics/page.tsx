@@ -1,10 +1,11 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import AdminLogoutButton from "../../src/components/admin-logout-button";
+import { AdminShell } from "@/components/admin/AdminShell";
 import { isAdminSessionUser } from "../../src/lib/admin-auth";
 import { getSessionFromRequest } from "../../src/lib/auth-session";
 import { getAdminAnalytics, getAdminDashboardMetrics } from "../../src/lib/ecommerce-db";
+import { AdminAnalyticsChart } from "../../src/components/admin/AdminAnalyticsChart";
 
 const navItems = [
   { icon: "dashboard", label: "Overview" },
@@ -79,143 +80,73 @@ export default async function AdminAnalyticsPage({ searchParams }: PageProps<"/a
     getAdminAnalytics({ months, topProductsLimit }),
   ]);
 
-  const maxRevenue = Math.max(...analytics.salesByMonth.map((row) => row.revenue), 1);
-
   return (
-    <div className="min-h-screen bg-[#f4f4f5] text-zinc-900">
-      <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-zinc-200 bg-zinc-100/90 p-4 lg:flex">
-        <div className="mb-8 px-3 py-2">
-          <h1 className="text-2xl font-black uppercase tracking-[-0.05em]">Editorial</h1>
-          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-500">Super Admin</p>
-        </div>
-
-        <nav className="space-y-1">
-          {navItems.map((item) => (
-            <a
-              key={item.label}
-              href={getAdminNavHref(item.label)}
-              className={`mx-2 flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition ${
-                item.active ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-200/70"
-              }`}
-            >
-              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-              <span>{item.label}</span>
-            </a>
-          ))}
-        </nav>
-
-        <div className="mt-auto border-t border-zinc-200 pt-4">
-          <AdminLogoutButton
-            className="mx-2 flex w-full items-center gap-3 rounded-full px-4 py-3 text-sm font-medium text-zinc-500 transition hover:bg-zinc-200/70"
-            iconClassName="material-symbols-outlined text-[20px]"
-          />
-        </div>
-      </aside>
-
-      <header className="sticky top-0 z-40 border-b border-zinc-200 bg-[#ffffff]/85 backdrop-blur-xl lg:ml-64">
-        <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-          <div>
-            <h2 className="text-2xl font-black uppercase tracking-[-0.04em]">Analytics</h2>
-            <p className="text-xs font-medium text-zinc-500">Revenue, order velocity, and best sellers</p>
-          </div>
-
-          <AdminLogoutButton
-            className="flex items-center gap-2 rounded-full border border-zinc-200 bg-[#ffffff] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-600"
-            iconClassName="material-symbols-outlined text-sm"
-          />
-        </div>
-      </header>
-
-      <main className="px-4 pb-24 pt-6 sm:px-6 lg:ml-64 lg:px-8 lg:pt-8">
-        <div className="mx-auto max-w-7xl space-y-8">
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {[
-              { label: "Revenue", value: formatCurrency(metrics.totalRevenue), note: `${months} month window` },
-              { label: "Orders", value: String(metrics.totalOrders), note: `${metrics.processingOrders} processing` },
-              { label: "Customers", value: String(metrics.totalCustomers), note: "Active accounts" },
-              { label: "Products", value: String(metrics.totalProducts), note: `${metrics.lowStockProducts} low stock` },
-            ].map((card) => (
-              <article key={card.label} className="rounded-2xl bg-white p-5 shadow-sm">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">{card.label}</p>
-                <div className="mt-2 text-4xl font-black tracking-tight">{card.value}</div>
-                <p className="mt-2 text-xs font-medium text-zinc-500">{card.note}</p>
-              </article>
-            ))}
-          </section>
-
-          <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-            <article className="rounded-2xl bg-white p-6 shadow-sm xl:col-span-2">
-              <div className="mb-6 flex items-end justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-bold">Sales by Month</h3>
-                  <p className="text-xs font-medium text-zinc-500">Revenue and order count over time</p>
-                </div>
-                <div className="text-right text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-400">
-                  {months} months
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {analytics.salesByMonth.length === 0 ? (
-                  <p className="text-sm text-zinc-500">No analytics data yet.</p>
-                ) : (
-                  analytics.salesByMonth.map((row) => {
-                    const width = Math.max(12, Math.round((row.revenue / maxRevenue) * 100));
-
-                    return (
-                      <div key={`${row.year}-${row.month}`} className="grid grid-cols-[72px_1fr_120px] items-center gap-4">
-                        <div className="text-xs font-bold uppercase tracking-[0.14em] text-zinc-500">
-                          {monthNames[row.month - 1] ?? row.month} {row.year}
-                        </div>
-                        <div className="h-3 overflow-hidden rounded-full bg-zinc-100">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-[#dfb257] via-[#e59a3b] to-[#d97706]"
-                            style={{ width: `${width}%` }}
-                          />
-                        </div>
-                        <div className="text-right text-xs font-bold text-zinc-700">
-                          {formatCurrency(row.revenue)} <span className="text-zinc-400">/ {row.orders} orders</span>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+    <AdminShell title="Analytics" subtitle="Revenue, order velocity, and best sellers">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            { label: "Revenue", value: formatCurrency(metrics.totalRevenue), note: `${months} month window` },
+            { label: "Orders", value: String(metrics.totalOrders), note: `${metrics.processingOrders} processing` },
+            { label: "Customers", value: String(metrics.totalCustomers), note: "Active accounts" },
+            { label: "Products", value: String(metrics.totalProducts), note: `${metrics.lowStockProducts} low stock` },
+          ].map((card) => (
+            <article key={card.label} className="bg-[#111111] border border-white/8 rounded-sm p-5">
+              <p className="text-[11px] font-sans uppercase tracking-widest text-white/30">{card.label}</p>
+              <div className="mt-2 text-4xl font-display text-white tracking-tight">{card.value}</div>
+              <p className="mt-2 text-xs font-medium text-white/50">{card.note}</p>
             </article>
+          ))}
+        </section>
 
-            <article className="rounded-2xl bg-white p-6 shadow-sm">
-              <h3 className="text-xl font-bold">Top Products</h3>
-              <p className="text-xs font-medium text-zinc-500">Best sellers in the selected period</p>
+        <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+          <article className="bg-[#111111] border border-white/8 rounded-sm p-6 xl:col-span-2 flex flex-col">
+            <div className="mb-6 flex items-end justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-heading text-white">Sales by Month</h3>
+                <p className="text-xs font-sans text-white/50">Revenue and order count over time</p>
+              </div>
+              <div className="text-right text-[10px] font-sans font-bold uppercase tracking-[0.16em] text-white/40">
+                {months} months
+              </div>
+            </div>
 
-              <div className="mt-6 space-y-4">
-                {analytics.topProducts.length === 0 ? (
-                  <p className="text-sm text-zinc-500">No product sales yet.</p>
-                ) : (
-                  analytics.topProducts.map((product, index) => (
-                    <div key={product.productId} className="rounded-2xl border border-zinc-100 p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-400">#{index + 1}</p>
-                          <h4 className="mt-1 text-sm font-bold">{product.productTitle}</h4>
-                          <p className="text-xs text-zinc-500">SKU {product.sku}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-black">{product.quantitySold}</p>
-                          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400">Sold</p>
-                        </div>
+            <div className="flex-1 mt-4">
+              <AdminAnalyticsChart data={analytics.salesByMonth} />
+            </div>
+          </article>
+
+          <article className="bg-[#111111] border border-white/8 rounded-sm p-6">
+            <h3 className="text-xl font-heading text-white">Top Products</h3>
+            <p className="text-xs font-sans text-white/50">Best sellers in the selected period</p>
+
+            <div className="mt-6 space-y-4">
+              {analytics.topProducts.length === 0 ? (
+                <p className="text-sm text-white/50">No product sales yet.</p>
+              ) : (
+                analytics.topProducts.map((product, index) => (
+                  <div key={product.productId} className="rounded-sm border border-white/5 p-4 bg-white/[0.02]">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[10px] font-sans font-bold uppercase tracking-[0.18em] text-[#C8A96E]">#{index + 1}</p>
+                        <h4 className="mt-1 text-sm font-sans font-bold text-white">{product.productTitle}</h4>
+                        <p className="text-xs font-sans text-white/40">SKU {product.sku}</p>
                       </div>
-                      <div className="mt-3 flex items-center justify-between text-xs text-zinc-500">
-                        <span>Revenue</span>
-                        <span className="font-bold text-zinc-700">{formatCurrency(product.revenue)}</span>
+                      <div className="text-right">
+                        <p className="text-sm font-sans font-bold text-white">{product.quantitySold}</p>
+                        <p className="text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-white/40">Sold</p>
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
-            </article>
-          </section>
-        </div>
-      </main>
-    </div>
+                    <div className="mt-3 flex items-center justify-between text-xs font-sans text-white/50">
+                      <span>Revenue</span>
+                      <span className="font-bold text-white">{formatCurrency(product.revenue)}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </article>
+        </section>
+      </div>
+    </AdminShell>
   );
 }

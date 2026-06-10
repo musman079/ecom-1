@@ -39,6 +39,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.74.0",
+    "recharts": "^3.8.1",
     "sharp": "^0.34.5",
     "sonner": "^2.0.7",
     "stripe": "^12.14.0",

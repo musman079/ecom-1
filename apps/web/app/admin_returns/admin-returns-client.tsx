@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import AdminLogoutButton from "../../src/components/admin-logout-button";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { Loader2 } from "lucide-react";
 
 type AdminReturn = {
   id: string;
@@ -362,79 +363,35 @@ export function AdminReturnsClient() {
 
   if (!allowed) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f4f4f5] text-sm font-medium text-zinc-500">
-        Verifying admin access...
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+        <Loader2 className="w-5 h-5 text-[#C8A96E] animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f4f5] text-zinc-900">
-      <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-zinc-200 bg-zinc-100/90 p-4 lg:flex">
-        <div className="mb-8 px-3 py-2">
-          <h1 className="text-2xl font-black uppercase tracking-[-0.05em]">Editorial</h1>
-          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-500">Super Admin</p>
-        </div>
-
-        <nav className="space-y-1 flex-1">
-          {navItems.map((item) => (
-            <a
-              key={item.label}
-              href={getAdminNavHref(item.label)}
-              className={`mx-2 flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition ${
-                item.active ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-200/70"
-              }`}
-            >
-              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-              <span>{item.label}</span>
-            </a>
-          ))}
-        </nav>
-
-        <div className="mt-auto border-t border-zinc-200 pt-4">
-          <AdminLogoutButton
-            className="mx-2 flex w-full items-center gap-3 rounded-full px-4 py-3 text-sm font-medium text-zinc-500 transition hover:bg-zinc-200/70"
-            iconClassName="material-symbols-outlined text-[20px]"
-          />
-        </div>
-      </aside>
-
-      <header className="sticky top-0 z-40 border-b border-zinc-200 bg-[#ffffff]/85 backdrop-blur-xl lg:ml-64">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">Admin</p>
-            <h1 className="text-3xl font-black uppercase tracking-[-0.05em]">Returns</h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <AdminLogoutButton
-              className="flex items-center gap-2 rounded-full border border-zinc-200 bg-[#ffffff] px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-zinc-600"
-              iconClassName="material-symbols-outlined text-sm"
-            />
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:ml-64">
-        <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <article className="rounded-2xl bg-[#ffffff] p-5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Total Requests</p>
-            <h2 className="mt-2 text-3xl font-black">{totals.total}</h2>
+    <AdminShell title="Returns" subtitle="Process and manage customer return requests">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <article className="bg-[#111111] border border-white/8 rounded-sm p-5">
+            <p className="text-[11px] font-sans uppercase tracking-widest text-white/30">Total Requests</p>
+            <h2 className="mt-2 text-3xl font-display text-white">{totals.total}</h2>
           </article>
-          <article className="rounded-2xl bg-[#ffffff] p-5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Active Cases</p>
-            <h2 className="mt-2 text-3xl font-black">{totals.active}</h2>
+          <article className="bg-[#111111] border border-white/8 rounded-sm p-5">
+            <p className="text-[11px] font-sans uppercase tracking-widest text-white/30">Active Cases</p>
+            <h2 className="mt-2 text-3xl font-display text-white">{totals.active}</h2>
           </article>
-          <article className="rounded-2xl bg-[#ffffff] p-5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Refunded</p>
-            <h2 className="mt-2 text-3xl font-black">{totals.refunded}</h2>
+          <article className="bg-[#111111] border border-white/8 rounded-sm p-5">
+            <p className="text-[11px] font-sans uppercase tracking-widest text-white/30">Refunded</p>
+            <h2 className="mt-2 text-3xl font-display text-white">{totals.refunded}</h2>
           </article>
         </section>
 
-        <section className="mb-6 rounded-2xl bg-[#ffffff] p-5 shadow-sm">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <section className="bg-[#111111] border border-white/8 rounded-sm p-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-white/5 pb-4">
             <div>
-              <h2 className="text-lg font-black uppercase tracking-tight">Admin Notifications</h2>
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">Unread: {unreadNotifications}</p>
+              <h2 className="text-xl font-heading text-white">Admin Notifications</h2>
+              <p className="text-[11px] font-sans uppercase tracking-widest text-[#C8A96E] mt-1">Unread: {unreadNotifications}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <select
@@ -450,7 +407,7 @@ export function AdminReturnsClient() {
                       | "return_status_updated",
                   )
                 }
-                className="rounded-full border border-zinc-300 bg-[#ffffff] px-3 py-2 text-xs font-bold uppercase tracking-[0.12em]"
+                className="bg-[#1A1A1A] border border-white/10 rounded-sm px-3 py-2 text-xs font-sans text-white outline-none focus:border-[#C8A96E]/40 transition-all"
               >
                 <option value="all">All Types</option>
                 <option value="admin_return_requested">Return Queue</option>
@@ -459,11 +416,12 @@ export function AdminReturnsClient() {
                 <option value="return_requested">Return Requested</option>
                 <option value="return_status_updated">Return Updated</option>
               </select>
-              <label className="inline-flex items-center gap-2 rounded-full border border-zinc-300 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em]">
+              <label className="inline-flex items-center gap-2 bg-[#1A1A1A] border border-white/10 rounded-sm px-3 py-2 text-xs font-sans text-white/70">
                 <input
                   type="checkbox"
                   checked={notificationUnreadOnly}
                   onChange={(event) => setNotificationUnreadOnly(event.target.checked)}
+                  className="accent-[#C8A96E]"
                 />
                 Unread Only
               </label>
@@ -471,7 +429,7 @@ export function AdminReturnsClient() {
                 type="button"
                 onClick={() => void markAllAdminNotificationsRead()}
                 disabled={markingAllRead || unreadNotifications === 0}
-                className="rounded-full border border-zinc-300 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] hover:bg-zinc-100 disabled:opacity-50"
+                className="bg-[#C8A96E]/10 border border-[#C8A96E]/20 text-[#C8A96E] rounded-sm px-4 py-2 text-xs font-sans font-bold uppercase tracking-widest transition-all hover:bg-[#C8A96E]/20 disabled:opacity-40"
               >
                 {markingAllRead ? "Updating..." : "Mark All Read"}
               </button>
@@ -479,17 +437,17 @@ export function AdminReturnsClient() {
           </div>
 
           {notifications.length === 0 ? (
-            <p className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600">No notifications yet.</p>
+            <p className="text-sm font-sans text-white/30 py-2">No notifications yet.</p>
           ) : (
             <div className="space-y-3">
               {notifications.map((item) => (
-                <article key={item.id} className={`rounded-xl border p-4 ${item.isRead ? "border-zinc-200 bg-zinc-50" : "border-blue-200 bg-blue-50"}`}>
+                <article key={item.id} className={`rounded-sm border p-4 ${item.isRead ? "border-white/5 bg-white/[0.02]" : "border-[#C8A96E]/30 bg-[#C8A96E]/5"}`}>
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-sm font-bold text-zinc-900">{item.title}</h3>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">{formatDate(item.createdAt)}</p>
+                    <h3 className="text-sm font-sans font-bold text-white">{item.title}</h3>
+                    <p className="text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-white/40">{formatDate(item.createdAt)}</p>
                   </div>
-                  <p className="mt-1 text-xs text-zinc-700">{item.message}</p>
-                  <a href={getAdminNotificationHref(item)} className="mt-2 inline-block text-[11px] font-bold uppercase tracking-[0.14em] text-blue-700 hover:underline">
+                  <p className="mt-1 text-xs font-sans text-white/60">{item.message}</p>
+                  <a href={getAdminNotificationHref(item)} className="mt-2 inline-block text-[11px] font-sans font-bold uppercase tracking-[0.14em] text-[#C8A96E] hover:underline">
                     Open Related
                   </a>
                 </article>
@@ -498,14 +456,17 @@ export function AdminReturnsClient() {
           )}
         </section>
 
-        {error ? <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p> : null}
-        {message ? <p className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">{message}</p> : null}
+        {error ? <p className="rounded-sm border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-sans text-red-400">{error}</p> : null}
+        {message ? <p className="rounded-sm border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm font-sans text-emerald-400">{message}</p> : null}
 
-        <section className="overflow-hidden rounded-2xl bg-[#ffffff] shadow-sm">
+        <section className="bg-[#111111] border border-white/8 rounded-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-white/5">
+            <h2 className="font-heading text-xl text-white">All Return Requests</h2>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1200px] text-left">
               <thead>
-                <tr className="bg-zinc-50">
+                <tr className="border-b border-white/5">
                   {[
                     "Return",
                     "Order",
@@ -517,22 +478,22 @@ export function AdminReturnsClient() {
                     "Updated",
                     "Action",
                   ].map((title) => (
-                    <th key={title} className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">
+                    <th key={title} className="px-4 py-4 text-left font-sans text-[10px] font-bold uppercase tracking-[0.18em] text-white/25">
                       {title}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100">
+              <tbody className="divide-y divide-white/5">
                 {loading ? (
                   <tr>
-                    <td className="px-4 py-6 text-sm text-zinc-500" colSpan={9}>
-                      Loading return requests...
+                    <td className="px-4 py-12 text-center" colSpan={9}>
+                      <span className="inline-block animate-spin w-5 h-5 border-2 border-[#C8A96E] border-t-transparent rounded-full" />
                     </td>
                   </tr>
                 ) : returns.length === 0 ? (
                   <tr>
-                    <td className="px-4 py-6 text-sm text-zinc-500" colSpan={9}>
+                    <td className="px-4 py-12 text-center text-sm font-sans text-white/25" colSpan={9}>
                       No return requests found.
                     </td>
                   </tr>
@@ -545,29 +506,29 @@ export function AdminReturnsClient() {
                       (highlightedReturnNumber && row.returnNumber === highlightedReturnNumber) ||
                       (highlightedOrderNumber && row.orderNumber === highlightedOrderNumber);
                     return (
-                      <tr key={row.id} className={`align-top transition hover:bg-zinc-50/70 ${isHighlighted ? "bg-blue-50/70" : ""}`}>
+                      <tr key={row.id} className={`align-top hover:bg-white/[0.02] transition-colors ${isHighlighted ? "bg-[#C8A96E]/5" : ""}`}>
                         <td className="px-4 py-4">
-                          <p className="text-xs font-black">{row.returnNumber}</p>
-                          <p className="mt-1 text-[10px] text-zinc-500">{formatDate(row.createdAt)}</p>
+                          <p className="text-sm font-sans font-bold text-[#C8A96E]">{row.returnNumber}</p>
+                          <p className="mt-1 text-[11px] font-sans text-white/30">{formatDate(row.createdAt)}</p>
                         </td>
                         <td className="px-4 py-4">
-                          <p className="text-xs font-bold">#{row.orderNumber}</p>
-                          <p className="mt-1 text-[10px] text-zinc-500">{row.orderId.slice(0, 10)}...</p>
-                          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Payment {row.paymentStatus}</p>
+                          <p className="text-sm font-sans font-bold text-white/80">#{row.orderNumber}</p>
+                          <p className="mt-1 text-[11px] font-sans text-white/30">{row.orderId.slice(0, 10)}...</p>
+                          <p className="mt-1 text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-white/40">Payment {row.paymentStatus}</p>
                         </td>
                         <td className="px-4 py-4">
-                          <p className="text-xs font-bold">{row.customerName}</p>
-                          <p className="mt-1 text-[10px] text-zinc-500">{row.customerEmail}</p>
+                          <p className="text-sm font-sans text-white/80">{row.customerName}</p>
+                          <p className="mt-1 text-[11px] font-sans text-white/30">{row.customerEmail}</p>
                         </td>
-                        <td className="px-4 py-4 text-xs text-zinc-700">
-                          <p className="font-semibold">{row.reason}</p>
-                          {row.notes ? <p className="mt-1 text-[10px] text-zinc-500">{row.notes}</p> : null}
+                        <td className="px-4 py-4 text-xs font-sans text-white/70">
+                          <p className="font-bold">{row.reason}</p>
+                          {row.notes ? <p className="mt-1 text-[11px] text-white/40">{row.notes}</p> : null}
                         </td>
                         <td className="px-4 py-4">
-                          <span className="rounded-full bg-zinc-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em]">
+                          <span className="bg-white/5 border border-white/10 rounded-sm px-2 py-1 text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-white/60">
                             {row.resolution}
                           </span>
-                          <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Refund {row.refundStatus}</p>
+                          <p className="mt-2 text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-white/40">Refund {row.refundStatus}</p>
                         </td>
                         <td className="px-4 py-4">
                           <select
@@ -581,7 +542,7 @@ export function AdminReturnsClient() {
                                 },
                               }))
                             }
-                            className="rounded-lg border border-zinc-200 bg-[#ffffff] px-2 py-1 text-xs font-bold"
+                            className="bg-[#1A1A1A] border border-white/10 rounded-sm px-2 py-1.5 text-xs font-sans text-white outline-none focus:border-[#C8A96E]/40 transition-all disabled:opacity-50"
                             disabled={isFinalStatus}
                           >
                             {statusOptions
@@ -592,11 +553,19 @@ export function AdminReturnsClient() {
                               </option>
                               ))}
                           </select>
-                          <span className={`mt-2 inline-block rounded-full px-2 py-1 text-[10px] font-bold uppercase ${statusTone(draft?.status ?? row.status)}`}>
-                            {(draft?.status ?? row.status).replace("_", " ")}
-                          </span>
+                          <div className="mt-2">
+                            <span className={`inline-block px-2 py-0.5 border text-[9px] font-sans font-bold uppercase tracking-wider rounded-full ${
+                              (draft?.status ?? row.status) === "refunded" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
+                              (draft?.status ?? row.status) === "rejected" ? "bg-red-500/10 text-red-400 border-red-500/20" :
+                              (draft?.status ?? row.status) === "in_transit" ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
+                              (draft?.status ?? row.status) === "approved" ? "bg-sky-500/10 text-sky-400 border-sky-500/20" :
+                              "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                            }`}>
+                              {(draft?.status ?? row.status).replace("_", " ")}
+                            </span>
+                          </div>
                           {isFinalStatus ? (
-                            <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                            <p className="mt-2 text-[10px] font-sans font-bold uppercase tracking-[0.12em] text-white/30">
                               Final status
                             </p>
                           ) : null}
@@ -614,17 +583,17 @@ export function AdminReturnsClient() {
                               }))
                             }
                             rows={2}
-                            className="w-full min-w-[220px] rounded-lg border border-zinc-200 bg-[#ffffff] px-2 py-1 text-xs outline-none focus:border-blue-500"
+                            className="w-full min-w-[220px] bg-[#1A1A1A] border border-white/10 rounded-sm px-2 py-1.5 text-xs font-sans text-white outline-none focus:border-[#C8A96E]/40 transition-all placeholder:text-white/20"
                             placeholder="Internal processing note"
                           />
                         </td>
-                        <td className="px-4 py-4 text-xs font-medium text-zinc-500">{formatDate(row.updatedAt)}</td>
+                        <td className="px-4 py-4 text-xs font-sans text-white/30">{formatDate(row.updatedAt)}</td>
                         <td className="px-4 py-4">
                           <button
                             type="button"
                             onClick={() => void onSave(row.id)}
                             disabled={savingId === row.id}
-                            className="rounded-full bg-[#000000] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white disabled:opacity-50"
+                            className="bg-[#C8A96E]/10 border border-[#C8A96E]/20 text-[#C8A96E] rounded-sm px-3 py-2 text-[11px] font-sans font-bold uppercase tracking-wider transition-all hover:bg-[#C8A96E]/20 disabled:opacity-40"
                           >
                             {savingId === row.id ? "Saving..." : "Save"}
                           </button>
@@ -637,25 +606,7 @@ export function AdminReturnsClient() {
             </table>
           </div>
         </section>
-      </main>
-
-      <nav className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-zinc-200 bg-[#ffffff] p-2 shadow-xl lg:hidden">
-        <ul className="grid grid-cols-5 gap-1">
-          {navItems.slice(0, 5).map((item) => (
-            <li key={`mobile-${item.label}`}>
-              <a
-                href={getAdminNavHref(item.label)}
-                className={`flex flex-col items-center justify-center rounded-xl px-1 py-2 text-[10px] font-semibold ${
-                  item.active ? "bg-zinc-900 text-white" : "text-zinc-500"
-                }`}
-              >
-                <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
-                <span className="mt-1 truncate">{item.label}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </div>
+      </div>
+    </AdminShell>
   );
 }

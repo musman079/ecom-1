@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import AdminLogoutButton from "../../src/components/admin-logout-button";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { Loader2 } from "lucide-react";
 
 type ProductStatus = "draft" | "published";
 
@@ -137,8 +138,8 @@ export default function AdminProductsPage() {
 
   if (!allowed) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f4f4f5] text-sm font-medium text-zinc-500">
-        Verifying admin access...
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+        <Loader2 className="w-5 h-5 text-[#C8A96E] animate-spin" />
       </div>
     );
   }
@@ -277,63 +278,24 @@ export default function AdminProductsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#f7f7f8_0%,#ececf0_45%,#e8e8eb_100%)] text-zinc-900">
-      <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-zinc-200 bg-zinc-100/90 p-4 lg:flex">
-        <div className="mb-8 px-3 py-2">
-          <h1 className="text-2xl font-black uppercase tracking-[-0.05em]">Editorial</h1>
-          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-500">Super Admin</p>
-        </div>
-
-        <nav className="space-y-1 flex-1">
-          {navItems.map((item) => (
-            <a
-              key={item.label}
-              href={getAdminNavHref(item.label)}
-              className={`mx-2 flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition ${
-                item.active ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-200/70"
-              }`}
-            >
-              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-              <span>{item.label}</span>
-            </a>
-          ))}
-        </nav>
-
-        <div className="mt-auto border-t border-zinc-200 pt-4">
-          <AdminLogoutButton
-            className="mx-2 flex w-full items-center gap-3 rounded-full px-4 py-3 text-sm font-medium text-zinc-500 transition hover:bg-zinc-200/70"
-            iconClassName="material-symbols-outlined text-[20px]"
-          />
-        </div>
-      </aside>
-
-      <header className="sticky top-0 z-40 border-b border-zinc-200 bg-[#ffffff]/85 backdrop-blur-xl lg:ml-64">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">Admin</p>
-            <h1 className="text-3xl font-black uppercase tracking-[-0.05em]">Products</h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <a href="/admin_post_edit_product" className="rounded-full bg-[#000000] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white">
-              Editor
-            </a>
-            <AdminLogoutButton
-              className="flex items-center gap-2 rounded-full border border-zinc-200 bg-[#ffffff] px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-zinc-600"
-              iconClassName="material-symbols-outlined text-sm"
-            />
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 py-8 sm:px-6 lg:grid-cols-12 lg:px-8 lg:ml-64">
+    <AdminShell 
+      title="Products" 
+      subtitle="Manage your inventory and product listings"
+      actions={
+        <a href="/admin_post_edit_product" className="bg-[#C8A96E]/10 border border-[#C8A96E]/20 text-[#C8A96E] rounded-sm px-4 py-2 text-xs font-sans font-bold uppercase tracking-widest transition-all hover:bg-[#C8A96E]/20">
+          Editor
+        </a>
+      }
+    >
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
         <section className="space-y-6 lg:col-span-5">
-          <div className="rounded-3xl border border-white/80 bg-[#ffffff]/95 p-6 shadow-[0_18px_50px_-28px_rgba(2,6,23,0.45)] backdrop-blur sm:p-8">
+          <div className="bg-[#111111] border border-white/8 rounded-sm p-6 sm:p-8">
             <div className="mb-6 flex items-end justify-between gap-4">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">Create</p>
-                <h2 className="text-2xl font-black uppercase tracking-[-0.04em]">{editingId ? "Edit Product" : "New Product"}</h2>
+                <p className="text-[10px] font-sans font-bold uppercase tracking-[0.24em] text-white/30">Create</p>
+                <h2 className="text-2xl font-heading text-white">{editingId ? "Edit Product" : "New Product"}</h2>
               </div>
-              <span className="rounded-full bg-zinc-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">
+              <span className="bg-white/5 border border-white/10 rounded-sm px-3 py-1 text-[10px] font-sans font-bold uppercase tracking-[0.18em] text-white/40">
                 {saving ? "Saving" : "Ready"}
               </span>
             </div>
@@ -343,13 +305,13 @@ export default function AdminProductsPage() {
                 value={form.title}
                 onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
                 placeholder="Product title"
-                className="w-full border-0 border-b border-zinc-300 bg-transparent px-0 py-3 text-lg font-bold outline-none placeholder:text-zinc-300 focus:border-blue-600"
+                className="w-full bg-transparent border-0 border-b border-white/10 px-0 py-3 text-lg font-heading text-white outline-none placeholder:text-white/20 focus:border-[#C8A96E]/40 transition-all"
               />
               <textarea
                 value={form.description}
                 onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
                 placeholder="Description"
-                className="min-h-28 w-full rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm outline-none placeholder:text-zinc-400 focus:border-blue-500"
+                className="min-h-28 w-full bg-[#1A1A1A] border border-white/10 rounded-sm p-4 text-sm font-sans text-white outline-none placeholder:text-white/20 focus:border-[#C8A96E]/40 transition-all"
               />
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <input
@@ -358,13 +320,13 @@ export default function AdminProductsPage() {
                   placeholder="Price"
                   type="number"
                   step="0.01"
-                  className="rounded-xl border border-zinc-200 bg-[#ffffff] px-4 py-3 text-sm outline-none focus:border-blue-500"
+                  className="bg-[#1A1A1A] border border-white/10 rounded-sm px-4 py-3 text-sm font-sans text-white outline-none focus:border-[#C8A96E]/40 transition-all placeholder:text-white/20"
                 />
                 <input
                   value={form.sku}
                   onChange={(event) => setForm((current) => ({ ...current, sku: event.target.value }))}
                   placeholder="SKU"
-                  className="rounded-xl border border-zinc-200 bg-[#ffffff] px-4 py-3 text-sm outline-none focus:border-blue-500"
+                  className="bg-[#1A1A1A] border border-white/10 rounded-sm px-4 py-3 text-sm font-sans text-white outline-none focus:border-[#C8A96E]/40 transition-all placeholder:text-white/20"
                 />
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -373,15 +335,15 @@ export default function AdminProductsPage() {
                   onChange={(event) => setForm((current) => ({ ...current, stockQuantity: event.target.value }))}
                   placeholder="Stock"
                   type="number"
-                  className="rounded-xl border border-zinc-200 bg-[#ffffff] px-4 py-3 text-sm outline-none focus:border-blue-500"
+                  className="bg-[#1A1A1A] border border-white/10 rounded-sm px-4 py-3 text-sm font-sans text-white outline-none focus:border-[#C8A96E]/40 transition-all placeholder:text-white/20"
                 />
-                <label className="flex items-center justify-between rounded-xl border border-zinc-200 bg-[#ffffff] px-4 py-3 text-sm">
-                  <span className="font-medium text-zinc-600">Low stock alert</span>
+                <label className="flex items-center justify-between bg-[#1A1A1A] border border-white/10 rounded-sm px-4 py-3 text-sm font-sans">
+                  <span className="font-medium text-white/70">Low stock alert</span>
                   <input
                     type="checkbox"
                     checked={form.lowStockAlert}
                     onChange={(event) => setForm((current) => ({ ...current, lowStockAlert: event.target.checked }))}
-                    className="h-4 w-4 accent-black"
+                    className="h-4 w-4 accent-[#C8A96E] bg-[#0D0D0D] border-white/10 rounded-sm"
                   />
                 </label>
               </div>
@@ -389,7 +351,7 @@ export default function AdminProductsPage() {
                 <select
                   value={form.taxCategory}
                   onChange={(event) => setForm((current) => ({ ...current, taxCategory: event.target.value }))}
-                  className="rounded-xl border border-zinc-200 bg-[#ffffff] px-4 py-3 text-sm outline-none focus:border-blue-500"
+                  className="bg-[#1A1A1A] border border-white/10 rounded-sm px-4 py-3 text-sm font-sans text-white outline-none focus:border-[#C8A96E]/40 transition-all"
                 >
                   <option>Standard Goods (20%)</option>
                   <option>Luxury Surcharge (25%)</option>
@@ -398,7 +360,7 @@ export default function AdminProductsPage() {
                 <select
                   value={form.collection}
                   onChange={(event) => setForm((current) => ({ ...current, collection: event.target.value }))}
-                  className="rounded-xl border border-zinc-200 bg-[#ffffff] px-4 py-3 text-sm outline-none focus:border-blue-500"
+                  className="bg-[#1A1A1A] border border-white/10 rounded-sm px-4 py-3 text-sm font-sans text-white outline-none focus:border-[#C8A96E]/40 transition-all"
                 >
                   <option>FW24 Editorial</option>
                   <option>Permanent Collection</option>
@@ -406,8 +368,8 @@ export default function AdminProductsPage() {
                 </select>
               </div>
 
-              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-                <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Product Images</p>
+              <div className="bg-white/[0.02] border border-white/5 rounded-sm p-4">
+                <p className="mb-3 text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-white/30">Product Images</p>
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <input
                     value={imageUrlInput}
@@ -418,13 +380,13 @@ export default function AdminProductsPage() {
                         addImageUrl();
                       }
                     }}
-                    placeholder="Paste image URL e.g. /uploads/product-123.webp"
-                    className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500"
+                    placeholder="Paste image URL e.g. /uploads/product.webp"
+                    className="w-full bg-[#1A1A1A] border border-white/10 rounded-sm px-4 py-3 text-sm font-sans text-white outline-none focus:border-[#C8A96E]/40 transition-all placeholder:text-white/20"
                   />
                   <button
                     type="button"
                     onClick={addImageUrl}
-                    className="rounded-xl bg-zinc-900 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-white transition hover:bg-zinc-800"
+                    className="bg-[#C8A96E]/10 border border-[#C8A96E]/20 text-[#C8A96E] rounded-sm px-4 py-3 text-[10px] font-sans font-bold uppercase tracking-[0.16em] transition-all hover:bg-[#C8A96E]/20"
                   >
                     Add
                   </button>
@@ -436,7 +398,7 @@ export default function AdminProductsPage() {
                         type="button"
                         key={`${image}-${index}`}
                         onClick={() => removeImageUrl(index)}
-                        className="rounded-full border border-zinc-300 bg-white px-3 py-1 text-[10px] font-semibold tracking-[0.14em] text-zinc-600 transition hover:border-red-300 hover:text-red-600"
+                        className="bg-white/5 border border-white/10 rounded-full px-3 py-1 text-[10px] font-sans font-semibold tracking-[0.14em] text-white/60 transition-all hover:border-red-500/50 hover:text-red-400"
                         title="Remove image"
                       >
                         IMG {index + 1}
@@ -444,7 +406,7 @@ export default function AdminProductsPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="mt-2 text-xs text-zinc-500">No images added yet.</p>
+                  <p className="mt-2 text-xs font-sans text-white/30">No images added yet.</p>
                 )}
               </div>
 
@@ -453,7 +415,7 @@ export default function AdminProductsPage() {
                   type="button"
                   onClick={() => void submitProduct("draft")}
                   disabled={saving}
-                  className="rounded-full border border-zinc-200 px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="bg-white/5 border border-white/10 rounded-sm px-5 py-3 text-xs font-sans font-bold uppercase tracking-[0.18em] text-white/60 transition-all hover:bg-white/10 hover:text-white disabled:opacity-40"
                 >
                   Save Draft
                 </button>
@@ -461,7 +423,7 @@ export default function AdminProductsPage() {
                   type="button"
                   onClick={() => void submitProduct("published")}
                   disabled={saving}
-                  className="rounded-full bg-[#000000] px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="bg-[#C8A96E]/10 border border-[#C8A96E]/20 text-[#C8A96E] rounded-sm px-5 py-3 text-xs font-sans font-bold uppercase tracking-[0.18em] transition-all hover:bg-[#C8A96E]/20 disabled:opacity-40"
                 >
                   {editingId ? "Update Product" : "Publish Product"}
                 </button>
@@ -471,16 +433,16 @@ export default function AdminProductsPage() {
                 <button
                   type="button"
                   onClick={cancelEdit}
-                  className="w-full rounded-full border border-zinc-200 px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] transition hover:bg-zinc-50"
+                  className="w-full bg-white/5 border border-white/10 rounded-sm px-5 py-3 text-xs font-sans font-bold uppercase tracking-[0.18em] text-white/60 transition-all hover:bg-white/10 hover:text-white"
                 >
                   Cancel Edit
                 </button>
               ) : null}
 
               {form.images.length > 0 ? (
-                <div className="grid grid-cols-4 gap-2 rounded-2xl border border-zinc-200 bg-white p-3">
+                <div className="grid grid-cols-4 gap-2 bg-[#1A1A1A] border border-white/10 rounded-sm p-3">
                   {form.images.map((image, index) => (
-                    <div key={`${image}-preview-${index}`} className="group relative aspect-square overflow-hidden rounded-lg border border-zinc-200">
+                    <div key={`${image}-preview-${index}`} className="group relative aspect-square overflow-hidden rounded-sm border border-white/10">
                       <img src={image} alt={`Preview ${index + 1}`} className="h-full w-full object-cover" />
                       <button
                         type="button"
@@ -494,8 +456,8 @@ export default function AdminProductsPage() {
                 </div>
               ) : null}
 
-              {error ? <p className="text-sm text-red-600">{error}</p> : null}
-              {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
+              {error ? <p className="text-sm font-sans text-red-400">{error}</p> : null}
+              {message ? <p className="text-sm font-sans text-emerald-400">{message}</p> : null}
             </div>
           </div>
         </section>
@@ -503,53 +465,59 @@ export default function AdminProductsPage() {
         <section className="space-y-6 lg:col-span-7">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">Inventory</p>
-              <h2 className="text-2xl font-black uppercase tracking-[-0.04em]">Saved Products</h2>
+              <p className="text-[10px] font-sans font-bold uppercase tracking-[0.24em] text-white/30">Inventory</p>
+              <h2 className="text-2xl font-heading text-white">Saved Products</h2>
             </div>
-            <a href="/api/admin/products" className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700 underline underline-offset-4">
+            <a href="/api/admin/products" className="text-[10px] font-sans font-bold uppercase tracking-[0.18em] text-[#C8A96E] hover:underline underline-offset-4">
               API
             </a>
           </div>
 
           <div className="space-y-4">
             {loading ? (
-              <div className="rounded-3xl bg-[#ffffff] p-8 text-sm text-zinc-500 shadow-sm">Loading products...</div>
+              <div className="bg-[#111111] border border-white/8 rounded-sm p-8 text-sm font-sans text-white/30 text-center">
+                Loading products...
+              </div>
             ) : products.length === 0 ? (
-              <div className="rounded-3xl bg-[#ffffff] p-8 text-sm text-zinc-500 shadow-sm">No products saved yet. Publish one to begin.</div>
+              <div className="bg-[#111111] border border-white/8 rounded-sm p-8 text-sm font-sans text-white/30 text-center">
+                No products saved yet. Publish one to begin.
+              </div>
             ) : (
               products.map((product) => (
-                <article key={product.id} className="rounded-3xl border border-white/80 bg-[#ffffff]/95 p-6 shadow-[0_16px_42px_-28px_rgba(2,6,23,0.45)] transition hover:-translate-y-0.5">
+                <article key={product.id} className="bg-[#111111] border border-white/8 rounded-sm p-6 transition-all hover:border-white/10 hover:bg-white/[0.02]">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <div className="mb-2 flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">
-                        <span className={`rounded-full px-3 py-1 ${product.status === "published" ? "bg-emerald-50 text-emerald-700" : "bg-zinc-100 text-zinc-600"}`}>
+                      <div className="mb-2 flex flex-wrap gap-2 text-[9px] font-sans font-bold uppercase tracking-[0.18em] text-white/40">
+                        <span className={`px-2 py-0.5 rounded-full border ${product.status === "published" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-white/5 border-white/10"}`}>
                           {product.status}
                         </span>
-                        <span className="rounded-full bg-zinc-100 px-3 py-1">{product.collection}</span>
-                        <span className="rounded-full bg-zinc-100 px-3 py-1">{product.taxCategory}</span>
+                        <span className="px-2 py-0.5 rounded-full border bg-white/5 border-white/10">{product.collection}</span>
+                        <span className="px-2 py-0.5 rounded-full border bg-white/5 border-white/10">{product.taxCategory}</span>
                       </div>
-                      <h3 className="text-2xl font-black uppercase tracking-[-0.04em]">{product.title}</h3>
-                      <p className="mt-2 text-sm leading-relaxed text-zinc-600">{product.description}</p>
+                      <h3 className="text-xl font-heading text-white">{product.title}</h3>
+                      <p className="mt-2 text-sm font-sans leading-relaxed text-white/60">{product.description}</p>
                       
                       {product.images && product.images.length > 0 && (
                         <div className="mt-4 flex gap-2">
                           {product.images.map((img, idx) => (
-                            <img key={idx} src={img} alt="Product img" className="h-16 w-16 object-cover rounded-lg border border-zinc-200" />
+                            <img key={idx} src={img} alt="Product img" className="h-16 w-16 object-cover rounded-sm border border-white/10" />
                           ))}
                         </div>
                       )}
                     </div>
 
                     <div className="text-left sm:text-right">
-                      <p className="text-3xl font-black">${product.price.toFixed(2)}</p>
-                      <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">SKU {product.sku}</p>
-                      <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">Stock {product.stockQuantity}</p>
-                      <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">{product.lowStockAlert ? "Low stock alert on" : "Low stock alert off"}</p>
-                      <div className="mt-3 flex flex-wrap gap-2 sm:justify-end">
+                      <p className="text-2xl font-display text-[#C8A96E]">${product.price.toFixed(2)}</p>
+                      <p className="mt-1 text-[10px] font-sans uppercase tracking-[0.18em] text-white/40">SKU {product.sku}</p>
+                      <p className="text-[10px] font-sans uppercase tracking-[0.18em] text-white/40">Stock {product.stockQuantity}</p>
+                      <p className={`mt-1 text-[9px] font-sans uppercase tracking-[0.18em] ${product.lowStockAlert ? "text-amber-400" : "text-white/20"}`}>
+                        {product.lowStockAlert ? "Low stock alert on" : "Low stock alert off"}
+                      </p>
+                      <div className="mt-4 flex flex-wrap gap-2 sm:justify-end">
                         <button
                           type="button"
                           onClick={() => beginEdit(product)}
-                          className="rounded-full border border-zinc-200 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] transition hover:bg-zinc-50"
+                          className="bg-white/5 border border-white/10 rounded-sm px-3 py-1.5 text-[10px] font-sans font-bold uppercase tracking-[0.16em] text-white/60 transition-all hover:bg-white/10 hover:text-white"
                         >
                           Edit
                         </button>
@@ -557,7 +525,7 @@ export default function AdminProductsPage() {
                           type="button"
                           onClick={() => void removeProduct(product.id)}
                           disabled={deletingId === product.id}
-                          className="rounded-full border border-red-200 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-sm px-3 py-1.5 text-[10px] font-sans font-bold uppercase tracking-[0.16em] transition-all hover:bg-red-500/20 disabled:opacity-40"
                         >
                           {deletingId === product.id ? "Deleting" : "Delete"}
                         </button>
@@ -569,25 +537,7 @@ export default function AdminProductsPage() {
             )}
           </div>
         </section>
-      </main>
-
-      <nav className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-zinc-200 bg-[#ffffff] p-2 shadow-xl lg:hidden">
-        <ul className="grid grid-cols-5 gap-1">
-          {navItems.slice(0, 5).map((item) => (
-            <li key={`mobile-${item.label}`}>
-              <a
-                href={getAdminNavHref(item.label)}
-                className={`flex flex-col items-center justify-center rounded-xl px-1 py-2 text-[10px] font-semibold ${
-                  item.active ? "bg-zinc-900 text-white" : "text-zinc-500"
-                }`}
-              >
-                <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
-                <span className="mt-1 truncate">{item.label}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </div>
+      </div>
+    </AdminShell>
   );
 }

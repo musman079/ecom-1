@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Playfair_Display, Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import { Navbar } from "../src/components/layout/Navbar";
 import { Footer } from "../src/components/layout/Footer";
+import { ConditionalLayout } from "../src/components/layout/ConditionalLayout";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -42,12 +43,13 @@ export default function RootLayout({
         {/* We can use the fonts defined in Next.js directly */}
       </head>
       <body className={`${cormorant.variable} ${playfair.variable} ${inter.variable} font-sans bg-primary text-text-primary antialiased`}>
-        <Navbar />
-        <main className="min-h-screen">
+        <ConditionalLayout
+          navbar={<Navbar />}
+          footer={<Footer />}
+        >
           {children}
-        </main>
-        <Footer />
-        
+        </ConditionalLayout>
+
         <Toaster
           richColors
           closeButton

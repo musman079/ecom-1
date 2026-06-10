@@ -2,44 +2,39 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import AdminLogoutButton from "../../src/components/admin-logout-button";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { Users, ShieldAlert, UserCheck, Loader2, Search, X, Trash2, Ban, CheckCircle2 } from "lucide-react";
 
 type Customer = {
-  id: string;
-  email: string;
-  fullName: string;
-  phone: string | null;
-  roles: string[];
-  totalOrders: number;
-  totalSpent: number;
-  totalSpentFormatted: string;
-  lastOrderDate: string | null;
-  lastOrderStatus: string | null;
-  reviewsCount: number;
-  isActive: boolean;
-  createdAt: string;
+  id: string; email: string; fullName: string; phone: string | null;
+  roles: string[]; totalOrders: number; totalSpent: number;
+  totalSpentFormatted: string; lastOrderDate: string | null;
+  lastOrderStatus: string | null; reviewsCount: number;
+  isActive: boolean; createdAt: string;
 };
 
-const navItems = [
-  { icon: "dashboard", label: "Overview" },
-  { icon: "inventory_2", label: "Products" },
-  { icon: "shopping_cart", label: "Orders" },
-  { icon: "assignment_return", label: "Returns" },
-  { icon: "group", label: "Customers", active: true },
-  { icon: "leaderboard", label: "Analytics" },
-  { icon: "settings", label: "Settings" },
-];
-
-const getAdminNavHref = (label: string) => {
-  if (label === "Overview") return "/admin_overview_dashboard";
-  if (label === "Products") return "/admin_products";
-  if (label === "Orders") return "/admin_orders";
-  if (label === "Returns") return "/admin_returns";
-  if (label === "Customers") return "/admin_customers";
-  if (label === "Analytics") return "/admin_analytics";
-  if (label === "Settings") return "/admin_settings";
-  return "/admin_overview_dashboard";
+const ROLE_STYLES: Record<string, string> = {
+  SUPER_ADMIN: "bg-[#C8A96E]/15 text-[#C8A96E] border-[#C8A96E]/20",
+  ADMIN:       "bg-purple-500/10 text-purple-400 border-purple-500/20",
+  CUSTOMER:    "bg-white/5 text-white/40 border-white/10",
 };
+const STATUS_STYLES: Record<string, string> = {
+  DELIVERED:  "bg-emerald-500/10 text-emerald-400",
+  SHIPPED:    "bg-blue-500/10 text-blue-400",
+  PROCESSING: "bg-amber-500/10 text-amber-400",
+  CONFIRMED:  "bg-sky-500/10 text-sky-400",
+  PENDING:    "bg-white/5 text-white/30",
+  CANCELLED:  "bg-red-500/10 text-red-400",
+};
+
+function fmtDate(iso: string | null) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? "—" : d.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+}
+function initials(name: string) {
+  return name.split(" ").map((w) => w[0]?.toUpperCase() ?? "").join("").slice(0, 2);
+}
 
 export default function AdminCustomersPage() {
   const router = useRouter();
@@ -48,414 +43,195 @@ export default function AdminCustomersPage() {
   const [error, setError] = useState<string | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [actionCustomerId, setActionCustomerId] = useState<string | null>(null);
+  const [actionId, setActionId] = useState<string | null>(null);
 
   useEffect(() => {
-    const verifyAdmin = async () => {
-      try {
-        const response = await fetch("/api/auth/me", { cache: "no-store", credentials: "include" });
-        if (!response.ok) {
-          router.replace("/auth");
-          return;
-        }
-
-        const payload = (await response.json()) as {
-          user?: {
-            role?: "CUSTOMER" | "ADMIN" | "SUPER_ADMIN";
-            roles?: string[];
-          } | null;
-        };
-
-        const roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
-        const role = payload.user?.role;
-        const isAdmin = roles.includes("ADMIN") || role === "ADMIN" || role === "SUPER_ADMIN";
-        if (!isAdmin) {
-          router.replace("/");
-          return;
-        }
-
+    fetch("/api/auth/me", { cache: "no-store", credentials: "include" })
+      .then(async (r) => {
+        if (!r.ok) { router.replace("/auth"); return; }
+        const d = await r.json() as { user?: { role?: string; roles?: string[] } | null };
+        const roles = Array.isArray(d.user?.roles) ? d.user.roles : [];
+        const role = d.user?.role ?? "";
+        if (!roles.includes("ADMIN") && role !== "ADMIN" && role !== "SUPER_ADMIN") { router.replace("/"); return; }
         setAllowed(true);
-      } catch {
-        router.replace("/auth");
-      }
-    };
-
-    void verifyAdmin();
+      })
+      .catch(() => router.replace("/auth"));
   }, [router]);
 
-  useEffect(() => {
-    if (!allowed) {
-      return;
-    }
-
-    const loadCustomers = async () => {
-      setError(null);
-      try {
-        const query = searchTerm ? `?search=${encodeURIComponent(searchTerm)}&limit=100` : "?limit=100";
-        const response = await fetch(`/api/admin/customers${query}`, { cache: "no-store" });
-        if (!response.ok) {
-          throw new Error("Unable to load customers.");
-        }
-
-        const payload = (await response.json()) as { customers?: Customer[] };
-        const rows = Array.isArray(payload.customers) ? payload.customers : [];
-        setCustomers(rows);
-      } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "Unable to load customers.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void loadCustomers();
-  }, [allowed, searchTerm]);
-
-  async function refreshCustomers() {
-    const query = searchTerm ? `?search=${encodeURIComponent(searchTerm)}&limit=100` : "?limit=100";
-    const response = await fetch(`/api/admin/customers${query}`, { cache: "no-store" });
-
-    if (!response.ok) {
-      throw new Error("Unable to load customers.");
-    }
-
-    const payload = (await response.json()) as { customers?: Customer[] };
-    setCustomers(Array.isArray(payload.customers) ? payload.customers : []);
-  }
-
-  async function updateCustomerStatus(customer: Customer, isActive: boolean) {
-    const confirmed = window.confirm(isActive ? `Reopen ${customer.fullName}'s account?` : `Block ${customer.fullName}'s account?`);
-
-    if (!confirmed) {
-      return;
-    }
-
-    setActionCustomerId(customer.id);
-    setError(null);
-
+  const loadCustomers = async (search = searchTerm) => {
+    setLoading(true);
+    const q = search ? `?search=${encodeURIComponent(search)}&limit=100` : "?limit=100";
     try {
-      const response = await fetch(`/api/admin/customers/${customer.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const r = await fetch(`/api/admin/customers${q}`, { cache: "no-store" });
+      if (!r.ok) throw new Error("Load failed");
+      const d = await r.json() as { customers?: Customer[] };
+      setCustomers(Array.isArray(d.customers) ? d.customers : []);
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : "Load failed"); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { if (allowed) void loadCustomers(); }, [allowed]);
+
+  const updateStatus = async (customer: Customer, isActive: boolean) => {
+    if (!confirm(isActive ? `Reopen ${customer.fullName}'s account?` : `Block ${customer.fullName}?`)) return;
+    setActionId(customer.id);
+    try {
+      const r = await fetch(`/api/admin/customers/${customer.id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive }),
       });
+      if (!r.ok) throw new Error("Update failed");
+      await loadCustomers();
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : "Update failed"); }
+    finally { setActionId(null); }
+  };
 
-      if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(payload?.error ?? "Unable to update customer status.");
-      }
-
-      await refreshCustomers();
-    } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Unable to update customer status.");
-    } finally {
-      setActionCustomerId(null);
-    }
-  }
-
-  async function deleteCustomer(customer: Customer) {
-    const confirmed = window.confirm(`Delete ${customer.fullName}'s account? This cannot be undone.`);
-
-    if (!confirmed) {
-      return;
-    }
-
-    setActionCustomerId(customer.id);
-    setError(null);
-
+  const deleteCustomer = async (customer: Customer) => {
+    if (!confirm(`Delete ${customer.fullName}? This cannot be undone.`)) return;
+    setActionId(customer.id);
     try {
-      const response = await fetch(`/api/admin/customers/${customer.id}`, {
-        method: "DELETE",
-      });
+      const r = await fetch(`/api/admin/customers/${customer.id}`, { method: "DELETE" });
+      if (!r.ok) throw new Error("Delete failed");
+      await loadCustomers();
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : "Delete failed"); }
+    finally { setActionId(null); }
+  };
 
-      if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(payload?.error ?? "Unable to delete customer.");
-      }
+  if (!allowed) return (
+    <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+      <Loader2 className="w-5 h-5 text-[#C8A96E] animate-spin" />
+    </div>
+  );
 
-      await refreshCustomers();
-    } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Unable to delete customer.");
-    } finally {
-      setActionCustomerId(null);
-    }
-  }
-
-  function formatDate(iso: string | null) {
-    if (!iso) return "-";
-    const value = new Date(iso);
-    if (Number.isNaN(value.getTime())) {
-      return "-";
-    }
-    return value.toLocaleDateString("en-US", {
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
-    });
-  }
-
-  function getStatusColor(status: string | null) {
-    if (!status) return "bg-zinc-100 text-zinc-600";
-    const statusMap: Record<string, string> = {
-      DELIVERED: "bg-emerald-50 text-emerald-700",
-      SHIPPED: "bg-blue-50 text-blue-700",
-      PROCESSING: "bg-amber-50 text-amber-700",
-      CONFIRMED: "bg-sky-50 text-sky-700",
-      PENDING: "bg-zinc-100 text-zinc-600",
-      CANCELLED: "bg-red-50 text-red-700",
-    };
-    return statusMap[status] || "bg-zinc-100 text-zinc-600";
-  }
-
-  function getRoleColor(role: string) {
-    const roleMap: Record<string, string> = {
-      SUPER_ADMIN: "bg-fuchsia-50 text-fuchsia-700",
-      ADMIN: "bg-indigo-50 text-indigo-700",
-      CUSTOMER: "bg-zinc-100 text-zinc-700",
-    };
-
-    return roleMap[role] || "bg-zinc-100 text-zinc-700";
-  }
-
-  if (!allowed) {
-    return null;
-  }
+  const activeCount = customers.filter((c) => c.isActive).length;
+  const adminCount  = customers.filter((c) => c.roles.includes("ADMIN")).length;
 
   return (
-    <div className="min-h-screen bg-[#f4f4f5] text-zinc-900">
-      <aside className="fixed top-0 left-0 flex-col hidden w-64 h-screen p-4 border-r border-zinc-200 bg-zinc-100/90 lg:flex">
-        <div className="px-3 py-2 mb-8">
-          <h1 className="text-2xl font-black uppercase tracking-[-0.05em]">Editorial</h1>
-          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-500">Super Admin</p>
-        </div>
+    <AdminShell title="Customers" subtitle={`${customers.length} total accounts`}>
+      <div className="max-w-7xl mx-auto space-y-6">
 
-        <nav className="space-y-1">
-          {navItems.map((item) => (
-            <a
-              key={item.label}
-              href={getAdminNavHref(item.label)}
-              className={`mx-2 flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition ${
-                item.active ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-200/70"
-              }`}
-            >
-              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-              <span>{item.label}</span>
-            </a>
+        {/* KPIs */}
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { label: "Total Customers", value: customers.length, icon: Users,       color: "text-[#C8A96E]",  bg: "bg-[#C8A96E]/10" },
+            { label: "Active",          value: activeCount,       icon: UserCheck,   color: "text-emerald-400", bg: "bg-emerald-500/10" },
+            { label: "Admins",          value: adminCount,        icon: ShieldAlert, color: "text-purple-400",  bg: "bg-purple-500/10" },
+          ].map(({ label, value, icon: Icon, color, bg }) => (
+            <div key={label} className="bg-[#111111] border border-white/8 rounded-sm p-5">
+              <div className={`${bg} w-9 h-9 rounded-sm flex items-center justify-center mb-3`}>
+                <Icon className={`w-4 h-4 ${color}`} strokeWidth={1.5} />
+              </div>
+              <p className="font-display text-2xl text-white">{value}</p>
+              <p className="font-sans text-[11px] text-white/30 uppercase tracking-widest mt-1">{label}</p>
+            </div>
           ))}
-        </nav>
-
-        <div className="pt-4 mt-auto border-t border-zinc-200">
-          <AdminLogoutButton
-            className="flex items-center w-full gap-3 px-4 py-3 mx-2 text-sm font-medium transition rounded-full text-zinc-500 hover:bg-zinc-200/70"
-            iconClassName="material-symbols-outlined text-[20px]"
-          />
         </div>
-      </aside>
 
-      <header className="sticky top-0 z-40 border-b border-zinc-200 bg-[#ffffff]/85 backdrop-blur-xl lg:ml-64">
-        <div className="flex items-center justify-between h-16 gap-4 px-4 sm:px-6 lg:px-8">
-          <div className="relative w-full max-w-md">
-            <span className="absolute text-sm -translate-y-1/2 pointer-events-none material-symbols-outlined left-3 top-1/2 text-zinc-400">
-              search
-            </span>
-            <input
-              type="text"
-              placeholder="Search customers..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full py-2 pl-10 pr-4 text-xs font-medium transition border border-transparent rounded-full outline-none bg-zinc-100 ring-zinc-300 focus:ring-1"
-            />
+        {/* Error */}
+        {error && (
+          <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-sm px-4 py-3">
+            <X className="w-4 h-4 text-red-400 flex-shrink-0" />
+            <span className="text-sm text-red-300">{error}</span>
+            <button onClick={() => setError(null)} className="ml-auto"><X className="w-4 h-4 text-red-400/50" /></button>
           </div>
+        )}
 
-          <div className="items-center hidden gap-5 sm:flex">
-            <a href="/admin_overview_dashboard" className="relative transition text-zinc-500 hover:text-zinc-900" aria-label="Notifications">
-              <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute top-0 right-0 w-2 h-2 bg-blue-600 rounded-full" />
-            </a>
-            <a href="/admin_overview_dashboard" className="transition text-zinc-500 hover:text-zinc-900" aria-label="Help">
-              <span className="material-symbols-outlined">help</span>
-            </a>
-            <div className="flex items-center gap-2">
-              <div className="text-right">
-                <p className="text-xs font-bold">Alex Rivera</p>
-                <p className="text-[10px] font-medium text-zinc-500">Head of Editorial</p>
-              </div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-xs font-bold text-white">
-                AR
-              </div>
+        {/* Table */}
+        <div className="bg-[#111111] border border-white/8 rounded-sm overflow-hidden">
+          {/* Search */}
+          <div className="flex items-center gap-4 px-6 py-4 border-b border-white/5">
+            <h2 className="font-heading text-xl text-white flex-shrink-0">All Customers</h2>
+            <div className="flex items-center gap-2 bg-[#1A1A1A] border border-white/8 rounded-sm px-3 py-2 flex-1 max-w-xs ml-auto">
+              <Search className="w-3.5 h-3.5 text-white/25 flex-shrink-0" />
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") void loadCustomers(searchTerm); }}
+                className="bg-transparent text-sm text-white/70 placeholder:text-white/20 outline-none w-full"
+              />
+              {searchTerm && <button onClick={() => { setSearchTerm(""); void loadCustomers(""); }} className="text-white/25 hover:text-white"><X className="w-3.5 h-3.5" /></button>}
             </div>
           </div>
 
-          <AdminLogoutButton
-            className="flex items-center gap-2 rounded-full border border-zinc-200 bg-[#ffffff] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-600"
-            iconClassName="material-symbols-outlined text-sm"
-          />
-        </div>
-      </header>
-
-      <main className="px-4 pt-6 pb-24 sm:px-6 lg:ml-64 lg:px-8 lg:pt-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
-            <div>
-              <h2 className="text-4xl font-black uppercase tracking-[-0.04em]">Customers</h2>
-              <p className="mt-1 text-sm text-zinc-600">
-                Manage and view all <span className="font-bold text-zinc-900">{customers.length}</span> customers
-              </p>
-            </div>
-          </div>
-
-          {error && (
-            <div className="p-4 mb-4 text-sm text-red-700 rounded-lg bg-red-50">
-              {error}
-            </div>
-          )}
-
-          <section className="overflow-hidden rounded-2xl bg-[#ffffff] shadow-sm">
-            <div className="flex items-center justify-between p-5 border-b border-zinc-100 sm:p-6">
-              <h4 className="text-xl font-bold">All Customers</h4>
-              <span className="text-sm font-medium text-zinc-500">{customers.length} total</span>
-            </div>
-
-            {loading ? (
-              <div className="px-6 py-8 text-center">
-                <span className="text-sm text-zinc-500">Loading customers...</span>
-              </div>
-            ) : customers.length === 0 ? (
-              <div className="px-6 py-8 text-center">
-                <span className="text-sm text-zinc-500">No customers found.</span>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[900px] text-left">
-                  <thead>
-                    <tr className="bg-zinc-50">
-                      {[
-                        "Customer",
-                        "Email",
-                        "Roles",
-                        "Phone",
-                        "Total Orders",
-                        "Total Spent",
-                        "Last Order",
-                        "Reviews",
-                        "Status",
-                        "Joined",
-                        "Actions",
-                      ].map((title) => (
-                        <th key={title} className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">
-                          {title}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-100">
-                    {customers.map((customer) => (
-                      <tr key={customer.id} className="transition hover:bg-zinc-50/60">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-200 text-[10px] font-bold text-zinc-600">
-                              {customer.fullName
-                                .split(" ")
-                                .map((word) => word.charAt(0).toUpperCase())
-                                .join("")
-                                .slice(0, 2)}
-                            </div>
-                            <span className="text-xs font-bold">{customer.fullName}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-xs text-zinc-600">{customer.email}</td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-wrap gap-1.5">
-                            {(Array.isArray(customer.roles) && customer.roles.length > 0 ? customer.roles : ["CUSTOMER"]).map((role) => (
-                              <span
-                                key={`${customer.id}-${role}`}
-                                className={`inline-flex rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] ${getRoleColor(role)}`}
-                              >
-                                {role.replaceAll("_", " ")}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-xs text-zinc-600">{customer.phone || "-"}</td>
-                        <td className="px-6 py-4 text-xs font-bold">{customer.totalOrders}</td>
-                        <td className="px-6 py-4 text-xs font-bold">{customer.totalSpentFormatted}</td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col gap-1">
-                            <span className="text-xs font-medium text-zinc-500">{formatDate(customer.lastOrderDate)}</span>
-                            {customer.lastOrderStatus && (
-                              <span
-                                className={`w-fit rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-wide ${getStatusColor(
-                                  customer.lastOrderStatus,
-                                )}`}
-                              >
-                                {customer.lastOrderStatus}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-xs text-zinc-600">{customer.reviewsCount}</td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-wide ${
-                              customer.isActive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
-                            }`}
-                          >
-                            {customer.isActive ? "Active" : "Blocked"}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[900px]">
+              <thead>
+                <tr className="border-b border-white/5">
+                  {["Customer", "Email", "Role", "Orders", "Spent", "Last Order", "Status", "Joined", "Actions"].map((h) => (
+                    <th key={h} className="px-4 py-4 text-left font-sans text-[10px] font-bold uppercase tracking-[0.18em] text-white/25">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {loading ? (
+                  <tr><td colSpan={9} className="py-16 text-center"><Loader2 className="w-5 h-5 text-[#C8A96E] animate-spin mx-auto" /></td></tr>
+                ) : customers.length === 0 ? (
+                  <tr><td colSpan={9} className="py-16 text-center text-sm text-white/25">No customers found.</td></tr>
+                ) : customers.map((c) => (
+                  <tr key={c.id} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-[#1A1A1A] border border-white/10 flex items-center justify-center font-sans text-[11px] font-bold text-white/50 flex-shrink-0">
+                          {initials(c.fullName)}
+                        </div>
+                        <span className="font-sans text-sm text-white/80 truncate max-w-[100px]">{c.fullName}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 font-sans text-xs text-white/40 truncate max-w-[140px]">{c.email}</td>
+                    <td className="px-4 py-4">
+                      <div className="flex flex-wrap gap-1">
+                        {(c.roles.length > 0 ? c.roles : ["CUSTOMER"]).map((role) => (
+                          <span key={role} className={`font-sans text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${ROLE_STYLES[role] ?? ROLE_STYLES.CUSTOMER}`}>
+                            {role.replace("_", " ")}
                           </span>
-                        </td>
-                        <td className="px-6 py-4 text-xs font-medium text-zinc-500">{formatDate(customer.createdAt)}</td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              onClick={() => void updateCustomerStatus(customer, !customer.isActive)}
-                              disabled={actionCustomerId === customer.id}
-                              className={`rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] transition disabled:opacity-40 ${
-                                customer.isActive
-                                  ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
-                                  : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                              }`}
-                            >
-                              {customer.isActive ? "Block" : "Reopen"}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => void deleteCustomer(customer)}
-                              disabled={actionCustomerId === customer.id}
-                              className="rounded-full bg-red-50 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-red-700 transition hover:bg-red-100 disabled:opacity-40"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 font-sans text-sm font-bold text-white/70">{c.totalOrders}</td>
+                    <td className="px-4 py-4 font-sans text-sm font-bold text-[#C8A96E]">{c.totalSpentFormatted}</td>
+                    <td className="px-4 py-4">
+                      <p className="font-sans text-xs text-white/40">{fmtDate(c.lastOrderDate)}</p>
+                      {c.lastOrderStatus && (
+                        <span className={`mt-1 inline-block font-sans text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${STATUS_STYLES[c.lastOrderStatus] ?? STATUS_STYLES.PENDING}`}>
+                          {c.lastOrderStatus}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className={`font-sans text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full ${c.isActive ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+                        {c.isActive ? "Active" : "Blocked"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 font-sans text-xs text-white/30">{fmtDate(c.createdAt)}</td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => void updateStatus(c, !c.isActive)}
+                          disabled={actionId === c.id}
+                          title={c.isActive ? "Block account" : "Reopen account"}
+                          className={`p-1.5 rounded-sm transition-all disabled:opacity-40 ${c.isActive ? "text-amber-400/60 hover:text-amber-400 hover:bg-amber-500/10" : "text-emerald-400/60 hover:text-emerald-400 hover:bg-emerald-500/10"}`}
+                        >
+                          {actionId === c.id ? <Loader2 className="w-4 h-4 animate-spin" /> : c.isActive ? <Ban className="w-4 h-4" strokeWidth={1.5} /> : <CheckCircle2 className="w-4 h-4" strokeWidth={1.5} />}
+                        </button>
+                        <button
+                          onClick={() => void deleteCustomer(c)}
+                          disabled={actionId === c.id}
+                          title="Delete customer"
+                          className="p-1.5 rounded-sm text-red-400/40 hover:text-red-400 hover:bg-red-500/10 transition-all disabled:opacity-40"
+                        >
+                          <Trash2 className="w-4 h-4" strokeWidth={1.5} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </main>
-
-      <nav className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-zinc-200 bg-[#ffffff] p-2 shadow-xl lg:hidden">
-        <ul className="grid grid-cols-5 gap-1">
-          {navItems.slice(0, 5).map((item) => (
-            <li key={`mobile-${item.label}`}>
-              <a
-                href={getAdminNavHref(item.label)}
-                className={`flex flex-col items-center justify-center rounded-xl px-1 py-2 text-[10px] font-semibold ${
-                  item.active ? "bg-zinc-900 text-white" : "text-zinc-500"
-                }`}
-              >
-                <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
-                <span className="mt-1 truncate">{item.label}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </div>
+      </div>
+    </AdminShell>
   );
 }

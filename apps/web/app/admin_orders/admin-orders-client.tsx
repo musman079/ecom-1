@@ -2,438 +2,235 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-
-import AdminLogoutButton from "../../src/components/admin-logout-button";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { ShoppingBag, DollarSign, Clock, Loader2, Check, X } from "lucide-react";
 
 type AdminOrder = {
-  id: string;
-  orderNumber: string;
-  userId: string;
-  customerName: string;
-  customerEmail: string;
+  id: string; orderNumber: string; userId: string;
+  customerName: string; customerEmail: string;
   status: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
   paymentMethod: "card" | "cod";
   paymentStatus: "pending" | "paid" | "failed";
   trackingNumber: string | null;
-  total: number;
-  totalItems: number;
-  createdAt: string;
-  updatedAt: string;
+  total: number; totalItems: number;
+  createdAt: string; updatedAt: string;
 };
+type DraftState = { status: AdminOrder["status"]; trackingNumber: string; paymentStatus: AdminOrder["paymentStatus"] };
 
-type DraftState = {
-  status: AdminOrder["status"];
-  trackingNumber: string;
-  paymentStatus: AdminOrder["paymentStatus"];
+const statusOptions: AdminOrder["status"][] = ["pending","confirmed","processing","shipped","delivered","cancelled"];
+const paymentStatusOptions: AdminOrder["paymentStatus"][] = ["pending","paid","failed"];
+
+const STATUS_STYLES: Record<string, string> = {
+  delivered:  "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  shipped:    "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  processing: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  confirmed:  "bg-sky-500/10 text-sky-400 border-sky-500/20",
+  pending:    "bg-white/5 text-white/40 border-white/10",
+  cancelled:  "bg-red-500/10 text-red-400 border-red-500/20",
 };
-
-const statusOptions: AdminOrder["status"][] = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"];
-const paymentStatusOptions: AdminOrder["paymentStatus"][] = ["pending", "paid", "failed"];
+const PAYMENT_STYLES: Record<string, string> = {
+  paid:    "bg-emerald-500/10 text-emerald-400",
+  failed:  "bg-red-500/10 text-red-400",
+  pending: "bg-white/5 text-white/30",
+};
 
 function formatDate(iso: string) {
-  const value = new Date(iso);
-  if (Number.isNaN(value.getTime())) {
-    return "-";
-  }
-
-  return value.toLocaleDateString("en-US", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-  });
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? "-" : d.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
 }
-
-function statusTone(status: AdminOrder["status"]) {
-  if (status === "delivered") {
-    return "bg-emerald-50 text-emerald-700";
-  }
-  if (status === "cancelled") {
-    return "bg-red-50 text-red-700";
-  }
-  if (status === "shipped") {
-    return "bg-blue-50 text-blue-700";
-  }
-  return "bg-zinc-100 text-zinc-700";
-}
-
-const navItems = [
-  { icon: "dashboard", label: "Overview" },
-  { icon: "inventory_2", label: "Products" },
-  { icon: "shopping_cart", label: "Orders", active: true },
-  { icon: "assignment_return", label: "Returns" },
-  { icon: "group", label: "Customers" },
-  { icon: "leaderboard", label: "Analytics" },
-  { icon: "settings", label: "Settings" },
-];
-
-const getAdminNavHref = (label: string) => {
-  if (label === "Overview") return "/admin_overview_dashboard";
-  if (label === "Products") return "/admin_products";
-  if (label === "Orders") return "/admin_orders";
-  if (label === "Returns") return "/admin_returns";
-  if (label === "Customers") return "/admin_customers";
-  if (label === "Analytics") return "/admin_analytics";
-  if (label === "Settings") return "/admin_settings";
-  return "/admin_overview_dashboard";
-};
 
 export default function AdminOrdersClient() {
   const router = useRouter();
   const [allowed, setAllowed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [drafts, setDrafts] = useState<Record<string, DraftState>>({});
 
   useEffect(() => {
-    const verifyAdmin = async () => {
-      try {
-        const response = await fetch("/api/auth/me", { cache: "no-store", credentials: "include" });
-        if (!response.ok) {
-          router.replace("/auth");
-          return;
-        }
-
-        const payload = (await response.json()) as {
-          user?: {
-            roles?: string[];
-          } | null;
-        };
-
-        const roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
-        if (!roles.includes("ADMIN")) {
-          router.replace("/");
-          return;
-        }
-
+    fetch("/api/auth/me", { cache: "no-store", credentials: "include" })
+      .then(async (r) => {
+        if (!r.ok) { router.replace("/auth"); return; }
+        const d = await r.json() as { user?: { roles?: string[] } | null };
+        if (!Array.isArray(d.user?.roles) || !d.user.roles.includes("ADMIN")) { router.replace("/"); return; }
         setAllowed(true);
-      } catch {
-        router.replace("/auth");
-      }
-    };
-
-    void verifyAdmin();
+      })
+      .catch(() => router.replace("/auth"));
   }, [router]);
 
   useEffect(() => {
-    if (!allowed) {
-      return;
-    }
-
-    const loadOrders = async () => {
-      setError(null);
-      try {
-        const response = await fetch("/api/admin/orders?limit=80", { cache: "no-store", credentials: "include" });
-        if (!response.ok) {
-          throw new Error("Unable to load orders.");
-        }
-
-        const payload = (await response.json()) as { orders?: AdminOrder[] };
-        const rows = Array.isArray(payload.orders) ? payload.orders : [];
+    if (!allowed) return;
+    fetch("/api/admin/orders?limit=80", { cache: "no-store", credentials: "include" })
+      .then(async (r) => {
+        if (!r.ok) throw new Error("Load failed");
+        const d = await r.json() as { orders?: AdminOrder[] };
+        const rows = Array.isArray(d.orders) ? d.orders : [];
         setOrders(rows);
-
         const nextDrafts: Record<string, DraftState> = {};
-        for (const order of rows) {
-          nextDrafts[order.id] = {
-            status: order.status,
-            trackingNumber: order.trackingNumber ?? "",
-            paymentStatus: order.paymentStatus,
-          };
-        }
+        rows.forEach((o) => { nextDrafts[o.id] = { status: o.status, trackingNumber: o.trackingNumber ?? "", paymentStatus: o.paymentStatus }; });
         setDrafts(nextDrafts);
-      } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "Unable to load orders.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void loadOrders();
+      })
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : "Load failed"))
+      .finally(() => setLoading(false));
   }, [allowed]);
 
-  const totalRevenue = useMemo(() => orders.reduce((sum, order) => sum + order.total, 0), [orders]);
+  const totalRevenue = useMemo(() => orders.reduce((s, o) => s + o.total, 0), [orders]);
 
   const onSave = async (orderId: string) => {
     const draft = drafts[orderId];
-    if (!draft) {
-      return;
-    }
-
-    setSavingId(orderId);
-    setError(null);
-    setMessage(null);
-
+    if (!draft) return;
+    setSavingId(orderId); setError(null);
     try {
-      const response = await fetch(`/api/admin/orders/${orderId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(draft),
+      const r = await fetch(`/api/admin/orders/${orderId}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(draft),
       });
-
-      const payload = (await response.json()) as {
-        error?: string;
-        order?: {
-          id: string;
-          status: AdminOrder["status"];
-          paymentStatus: AdminOrder["paymentStatus"];
-          trackingNumber: string | null;
-        };
-      };
-
-      if (!response.ok || !payload.order) {
-        setError(payload.error ?? "Failed to update order.");
-        return;
-      }
-
-      setOrders((current) =>
-        current.map((row) =>
-          row.id === orderId
-            ? {
-                ...row,
-                status: payload.order?.status ?? row.status,
-                paymentStatus: payload.order?.paymentStatus ?? row.paymentStatus,
-                trackingNumber: payload.order?.trackingNumber ?? row.trackingNumber,
-              }
-            : row,
-        ),
-      );
-
-      setMessage("Order updated successfully.");
-    } catch {
-      setError("Unable to update order right now.");
-    } finally {
-      setSavingId(null);
-    }
+      const d = await r.json() as { error?: string; order?: { id: string; status: AdminOrder["status"]; paymentStatus: AdminOrder["paymentStatus"]; trackingNumber: string | null } };
+      if (!r.ok || !d.order) { setError(d.error ?? "Update failed"); return; }
+      setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status: d.order?.status ?? o.status, paymentStatus: d.order?.paymentStatus ?? o.paymentStatus, trackingNumber: d.order?.trackingNumber ?? o.trackingNumber } : o));
+      setSavedId(orderId);
+      setTimeout(() => setSavedId(null), 2000);
+    } catch { setError("Update failed"); }
+    finally { setSavingId(null); }
   };
 
-  if (!allowed) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f4f4f5] text-sm font-medium text-zinc-500">
-        Verifying admin access...
-      </div>
-    );
-  }
+  const patchDraft = (orderId: string, patch: Partial<DraftState>) => {
+    setDrafts((prev) => ({ ...prev, [orderId]: { ...(prev[orderId] ?? { status: "pending", trackingNumber: "", paymentStatus: "pending" }), ...patch } }));
+  };
+
+  if (!allowed) return (
+    <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+      <Loader2 className="w-5 h-5 text-[#C8A96E] animate-spin" />
+    </div>
+  );
+
+  const selectCls = "bg-[#1A1A1A] border border-white/10 rounded-sm px-2 py-1.5 text-xs text-white outline-none focus:border-[#C8A96E]/40 transition-all";
 
   return (
-    <div className="min-h-screen bg-[#f4f4f5] text-zinc-900">
-      <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-zinc-200 bg-zinc-100/90 p-4 lg:flex">
-        <div className="mb-8 px-3 py-2">
-          <h1 className="text-2xl font-black uppercase tracking-[-0.05em]">Editorial</h1>
-          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-500">Super Admin</p>
-        </div>
+    <AdminShell title="Orders" subtitle="Manage and update customer orders">
+      <div className="max-w-7xl mx-auto space-y-6">
 
-        <nav className="space-y-1 flex-1">
-          {navItems.map((item) => (
-            <a
-              key={item.label}
-              href={getAdminNavHref(item.label)}
-              className={`mx-2 flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition ${
-                item.active ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-200/70"
-              }`}
-            >
-              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-              <span>{item.label}</span>
-            </a>
+        {/* KPIs */}
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { label: "Total Orders", value: orders.length, icon: ShoppingBag, color: "text-[#C8A96E]", bg: "bg-[#C8A96E]/10" },
+            { label: "Total Revenue", value: `$${totalRevenue.toFixed(2)}`, icon: DollarSign, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+            { label: "Processing", value: orders.filter((o) => o.status === "processing").length, icon: Clock, color: "text-amber-400", bg: "bg-amber-500/10" },
+          ].map(({ label, value, icon: Icon, color, bg }) => (
+            <div key={label} className="bg-[#111111] border border-white/8 rounded-sm p-5">
+              <div className={`${bg} w-9 h-9 rounded-sm flex items-center justify-center mb-3`}>
+                <Icon className={`w-4 h-4 ${color}`} strokeWidth={1.5} />
+              </div>
+              <p className="font-display text-2xl text-white">{value}</p>
+              <p className="font-sans text-[11px] text-white/30 uppercase tracking-widest mt-1">{label}</p>
+            </div>
           ))}
-        </nav>
-
-        <div className="mt-auto border-t border-zinc-200 pt-4">
-          <AdminLogoutButton
-            className="mx-2 flex w-full items-center gap-3 rounded-full px-4 py-3 text-sm font-medium text-zinc-500 transition hover:bg-zinc-200/70"
-            iconClassName="material-symbols-outlined text-[20px]"
-          />
         </div>
-      </aside>
 
-      <header className="sticky top-0 z-40 border-b border-zinc-200 bg-[#ffffff]/85 backdrop-blur-xl lg:ml-64">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">Admin</p>
-            <h1 className="text-3xl font-black uppercase tracking-[-0.05em]">Orders</h1>
+        {/* Messages */}
+        {error && (
+          <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-sm px-4 py-3">
+            <X className="w-4 h-4 text-red-400 flex-shrink-0" />
+            <span className="text-sm text-red-300">{error}</span>
+            <button onClick={() => setError(null)} className="ml-auto text-red-400/50"><X className="w-4 h-4" /></button>
           </div>
-          <div className="flex items-center gap-3">
-            <AdminLogoutButton
-              className="flex items-center gap-2 rounded-full border border-zinc-200 bg-[#ffffff] px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-zinc-600"
-              iconClassName="material-symbols-outlined text-sm"
-            />
+        )}
+
+        {/* Orders Table */}
+        <div className="bg-[#111111] border border-white/8 rounded-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-white/5">
+            <h2 className="font-heading text-xl text-white">All Orders</h2>
           </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:ml-64">
-        <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <article className="rounded-2xl bg-[#ffffff] p-5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Total Orders</p>
-            <h2 className="mt-2 text-3xl font-black">{orders.length}</h2>
-          </article>
-          <article className="rounded-2xl bg-[#ffffff] p-5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Revenue</p>
-            <h2 className="mt-2 text-3xl font-black">${totalRevenue.toFixed(2)}</h2>
-          </article>
-          <article className="rounded-2xl bg-[#ffffff] p-5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Processing</p>
-            <h2 className="mt-2 text-3xl font-black">{orders.filter((order) => order.status === "processing").length}</h2>
-          </article>
-        </section>
-
-        {error ? <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p> : null}
-        {message ? <p className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">{message}</p> : null}
-
-        <section className="overflow-hidden rounded-2xl bg-[#ffffff] shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1100px] text-left">
+            <table className="w-full min-w-[1000px]">
               <thead>
-                <tr className="bg-zinc-50">
-                  {["Order", "Customer", "Date", "Status", "Payment", "Tracking", "Total", "Action"].map((title) => (
-                    <th key={title} className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">
-                      {title}
-                    </th>
+                <tr className="border-b border-white/5">
+                  {["Order", "Customer", "Date", "Status", "Payment", "Tracking", "Total", "Action"].map((h) => (
+                    <th key={h} className="px-4 py-4 text-left font-sans text-[10px] font-bold uppercase tracking-[0.18em] text-white/25">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100">
+              <tbody className="divide-y divide-white/5">
                 {loading ? (
-                  <tr>
-                    <td className="px-4 py-6 text-sm text-zinc-500" colSpan={8}>
-                      Loading orders...
-                    </td>
-                  </tr>
+                  <tr><td colSpan={8} className="px-6 py-12 text-center"><Loader2 className="w-5 h-5 text-[#C8A96E] animate-spin mx-auto" /></td></tr>
                 ) : orders.length === 0 ? (
-                  <tr>
-                    <td className="px-4 py-6 text-sm text-zinc-500" colSpan={8}>
-                      No orders found.
-                    </td>
-                  </tr>
-                ) : (
-                  orders.map((order) => {
-                    const draft = drafts[order.id];
-                    return (
-                      <tr key={order.id} className="align-top transition hover:bg-zinc-50/70">
-                        <td className="px-4 py-4">
-                          <p className="text-xs font-black">#{order.orderNumber}</p>
-                          <p className="mt-1 text-[10px] text-zinc-500">{order.totalItems} items</p>
-                        </td>
-                        <td className="px-4 py-4">
-                          <p className="text-xs font-bold">{order.customerName}</p>
-                          <p className="mt-1 text-[10px] text-zinc-500">{order.customerEmail}</p>
-                        </td>
-                        <td className="px-4 py-4 text-xs font-medium text-zinc-500">{formatDate(order.createdAt)}</td>
-                        <td className="px-4 py-4">
-                          <select
-                            value={draft?.status ?? order.status}
-                            onChange={(event) =>
-                              setDrafts((current) => ({
-                                ...current,
-                                [order.id]: {
-                                  ...(current[order.id] ?? {
-                                    status: order.status,
-                                    trackingNumber: order.trackingNumber ?? "",
-                                    paymentStatus: order.paymentStatus,
-                                  }),
-                                  status: event.target.value as DraftState["status"],
-                                },
-                              }))
-                            }
-                            className="rounded-lg border border-zinc-200 bg-[#ffffff] px-2 py-1 text-xs font-bold capitalize"
-                          >
-                            {statusOptions.map((status) => (
-                              <option key={status} value={status}>
-                                {status}
-                              </option>
-                            ))}
-                          </select>
-                          <span className={`mt-2 inline-block rounded-full px-2 py-1 text-[10px] font-bold uppercase ${statusTone(draft?.status ?? order.status)}`}>
-                            {draft?.status ?? order.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4">
-                          <select
-                            value={draft?.paymentStatus ?? order.paymentStatus}
-                            onChange={(event) =>
-                              setDrafts((current) => ({
-                                ...current,
-                                [order.id]: {
-                                  ...(current[order.id] ?? {
-                                    status: order.status,
-                                    trackingNumber: order.trackingNumber ?? "",
-                                    paymentStatus: order.paymentStatus,
-                                  }),
-                                  paymentStatus: event.target.value as DraftState["paymentStatus"],
-                                },
-                              }))
-                            }
-                            className="rounded-lg border border-zinc-200 bg-[#ffffff] px-2 py-1 text-xs font-bold"
-                          >
-                            {paymentStatusOptions.map((status) => (
-                              <option key={status} value={status}>
-                                {status}
-                              </option>
-                            ))}
-                          </select>
-                          <p className="mt-1 text-[10px] text-zinc-500 uppercase">{order.paymentMethod}</p>
-                        </td>
-                        <td className="px-4 py-4">
-                          <input
-                            value={draft?.trackingNumber ?? order.trackingNumber ?? ""}
-                            onChange={(event) =>
-                              setDrafts((current) => ({
-                                ...current,
-                                [order.id]: {
-                                  ...(current[order.id] ?? {
-                                    status: order.status,
-                                    trackingNumber: order.trackingNumber ?? "",
-                                    paymentStatus: order.paymentStatus,
-                                  }),
-                                  trackingNumber: event.target.value,
-                                },
-                              }))
-                            }
-                            placeholder="Tracking #"
-                            className="w-full rounded-lg border border-zinc-200 bg-[#ffffff] px-2 py-1 text-xs outline-none focus:border-blue-500"
-                          />
-                        </td>
-                        <td className="px-4 py-4 text-xs font-black">${order.total.toFixed(2)}</td>
-                        <td className="px-4 py-4">
-                          <button
-                            type="button"
-                            onClick={() => void onSave(order.id)}
-                            disabled={savingId === order.id}
-                            className="rounded-full bg-[#000000] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white disabled:opacity-50"
-                          >
-                            {savingId === order.id ? "Saving..." : "Save"}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
+                  <tr><td colSpan={8} className="px-6 py-12 text-center text-sm text-white/25">No orders found.</td></tr>
+                ) : orders.map((order) => {
+                  const draft = drafts[order.id];
+                  return (
+                    <tr key={order.id} className="hover:bg-white/[0.02] transition-colors align-top">
+                      <td className="px-4 py-4">
+                        <p className="font-sans text-sm font-bold text-[#C8A96E]">#{order.orderNumber}</p>
+                        <p className="font-sans text-[11px] text-white/30 mt-0.5">{order.totalItems} items</p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="font-sans text-sm text-white/80">{order.customerName}</p>
+                        <p className="font-sans text-[11px] text-white/30 mt-0.5 truncate max-w-[140px]">{order.customerEmail}</p>
+                      </td>
+                      <td className="px-4 py-4 font-sans text-sm text-white/30">{formatDate(order.createdAt)}</td>
+                      <td className="px-4 py-4">
+                        <select
+                          value={draft?.status ?? order.status}
+                          onChange={(e) => patchDraft(order.id, { status: e.target.value as AdminOrder["status"] })}
+                          className={selectCls}
+                        >
+                          {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <span className={`mt-1.5 inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${STATUS_STYLES[draft?.status ?? order.status] ?? STATUS_STYLES.pending}`}>
+                          {draft?.status ?? order.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <select
+                          value={draft?.paymentStatus ?? order.paymentStatus}
+                          onChange={(e) => patchDraft(order.id, { paymentStatus: e.target.value as AdminOrder["paymentStatus"] })}
+                          className={selectCls}
+                        >
+                          {paymentStatusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <p className="font-sans text-[10px] text-white/25 uppercase mt-1">{order.paymentMethod}</p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <input
+                          value={draft?.trackingNumber ?? order.trackingNumber ?? ""}
+                          onChange={(e) => patchDraft(order.id, { trackingNumber: e.target.value })}
+                          placeholder="Tracking #"
+                          className="w-full bg-[#1A1A1A] border border-white/10 rounded-sm px-2 py-1.5 text-xs text-white placeholder:text-white/20 outline-none focus:border-[#C8A96E]/40 transition-all"
+                        />
+                      </td>
+                      <td className="px-4 py-4 font-sans text-sm font-bold text-white/80">${order.total.toFixed(2)}</td>
+                      <td className="px-4 py-4">
+                        <button
+                          onClick={() => void onSave(order.id)}
+                          disabled={savingId === order.id}
+                          className={`flex items-center gap-1.5 px-3 py-2 rounded-sm font-sans text-[11px] font-bold uppercase tracking-wider transition-all ${
+                            savedId === order.id
+                              ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
+                              : "bg-[#C8A96E]/10 text-[#C8A96E] border border-[#C8A96E]/20 hover:bg-[#C8A96E]/20 disabled:opacity-40"
+                          }`}
+                        >
+                          {savingId === order.id ? <Loader2 className="w-3 h-3 animate-spin" /> : savedId === order.id ? <Check className="w-3 h-3" /> : null}
+                          {savingId === order.id ? "Saving" : savedId === order.id ? "Saved" : "Save"}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
-        </section>
-      </main>
+        </div>
 
-      <nav className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-zinc-200 bg-[#ffffff] p-2 shadow-xl lg:hidden">
-        <ul className="grid grid-cols-5 gap-1">
-          {navItems.slice(0, 5).map((item) => (
-            <li key={`mobile-${item.label}`}>
-              <a
-                href={getAdminNavHref(item.label)}
-                className={`flex flex-col items-center justify-center rounded-xl px-1 py-2 text-[10px] font-semibold ${
-                  item.active ? "bg-zinc-900 text-white" : "text-zinc-500"
-                }`}
-              >
-                <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
-                <span className="mt-1 truncate">{item.label}</span>
-              </a>
-            </li>
+        {/* Payment Status Legend */}
+        <div className="flex flex-wrap gap-4 text-[11px] font-sans">
+          {Object.entries(PAYMENT_STYLES).map(([s, cls]) => (
+            <span key={s} className={`flex items-center gap-1.5 px-2 py-1 rounded-full ${cls}`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-current" />{s}
+            </span>
           ))}
-        </ul>
-      </nav>
-    </div>
+        </div>
+      </div>
+    </AdminShell>
   );
 }
