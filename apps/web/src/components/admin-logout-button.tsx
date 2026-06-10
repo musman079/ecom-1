@@ -5,6 +5,8 @@ import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { writeAuthStatusCache } from "../hooks/use-auth-status";
 
+import { LogOut } from "lucide-react";
+
 type AdminLogoutButtonProps = {
   className?: string;
   iconClassName?: string;
@@ -41,7 +43,7 @@ export default function AdminLogoutButton(props: AdminLogoutButtonProps) {
       aria-label="Logout"
       title="Logout"
     >
-      <span className={props.iconClassName ?? "material-symbols-outlined text-[20px]"}>logout</span>
+      <LogOut className={props.iconClassName ?? "w-4 h-4"} />
       <span>{loading ? "Logging out..." : props.label ?? "Logout"}</span>
     </button>
   );
