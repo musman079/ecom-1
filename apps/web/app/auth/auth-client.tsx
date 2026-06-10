@@ -182,7 +182,7 @@ export function AuthClient() {
               transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
               className="flex flex-col items-center"
             >
-              <h2 className="font-heading text-5xl md:text-7xl lg:text-8xl text-white tracking-widest uppercase relative">
+              <h2 className="font-heading text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-white tracking-widest uppercase relative text-center">
                 USOLSTICE
                 <motion.span 
                   initial={{ width: 0 }}
@@ -195,7 +195,7 @@ export function AuthClient() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 1.2 }}
-                className="mt-8 font-sans text-[10px] md:text-xs tracking-[0.4em] uppercase text-white/40"
+                className="mt-8 font-sans text-[9px] sm:text-[10px] md:text-xs tracking-[0.4em] uppercase text-white/40 text-center"
               >
                 The Editorial Collection
               </motion.p>
@@ -230,7 +230,7 @@ export function AuthClient() {
         </div>
 
         {/* Right Side: Auth Form Container */}
-        <div className="relative w-full lg:w-[45%] flex items-center justify-center p-8 sm:p-12 lg:p-16">
+        <div className="relative w-full lg:w-[45%] flex items-center justify-center p-6 sm:p-12 lg:p-16">
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[#C8A96E]/5 blur-[120px]" />
           </div>
