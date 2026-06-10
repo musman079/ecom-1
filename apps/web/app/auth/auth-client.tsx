@@ -363,14 +363,14 @@ export function AuthClient() {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   type="button"
-                  onClick={() => void signIn("google", { callbackUrl: "/" })}
+                  onClick={() => void signIn("google", { callbackUrl: nextPath || "/" })}
                   className="flex items-center justify-center gap-2 border border-white/10 hover:border-white/30 bg-transparent py-3 text-[10px] font-bold uppercase tracking-widest text-white transition-all duration-300 hover:bg-white/[0.02]"
                 >
                   Google
                 </button>
                 <button
                   type="button"
-                  onClick={() => void signIn("github", { callbackUrl: "/" })}
+                  onClick={() => void signIn("github", { callbackUrl: nextPath || "/" })}
                   className="flex items-center justify-center gap-2 border border-white/10 hover:border-white/30 bg-transparent py-3 text-[10px] font-bold uppercase tracking-widest text-white transition-all duration-300 hover:bg-white/[0.02]"
                 >
                   GitHub

@@ -1,6 +1,6 @@
 import { CUSTOMER_ROUTES } from "../constants/routes";
 
-const AUTH_BLOCKLIST = [CUSTOMER_ROUTES.AUTH, "/api"] as const;
+const AUTH_BLOCKLIST = [CUSTOMER_ROUTES.AUTH, CUSTOMER_ROUTES.PROFILE, "/api"] as const;
 
 export function getSafeNextPath(value: string | null): string | null {
   if (!value) {

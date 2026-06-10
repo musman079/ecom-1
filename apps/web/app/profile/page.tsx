@@ -356,7 +356,7 @@ function ProfileContent() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0c0a09] px-6 py-10 text-[#eaf2ff] sm:py-12">
+    <main className="min-h-screen bg-[#0c0a09] px-6 pt-24 pb-10 text-[#eaf2ff] sm:pt-28 sm:pb-12">
       <section className="mx-auto w-full max-w-6xl space-y-6">
         <FadeIn className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-xl sm:p-8">
           <div className="mb-8 flex flex-wrap items-start justify-between gap-4">

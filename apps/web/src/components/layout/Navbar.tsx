@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { AuthLink } from "@/components/auth/auth-link";
 import { usePathname, useRouter } from "next/navigation";
 import { Search, Heart, ShoppingBag, User, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -127,9 +128,9 @@ export function Navbar() {
           </Link>
 
           {/* Account — desktop only */}
-          <Link href="/profile" className="hidden lg:block text-text-primary hover:text-gold transition-colors p-1">
+          <AuthLink href="/profile" requiresAuth className="hidden lg:block text-text-primary hover:text-gold transition-colors p-1">
             <User className="w-[20px] h-[20px]" strokeWidth={1.5} />
-          </Link>
+          </AuthLink>
 
           {/* Cart — always visible, links to /cart */}
           <Link
@@ -275,14 +276,14 @@ export function Navbar() {
                 <span className="font-sans text-sm uppercase tracking-widest">Wishlist</span>
                 <Heart className="w-5 h-5" strokeWidth={1.5} />
               </Link>
-              <Link
+              <AuthLink
                 href="/profile"
-                onClick={() => setMobileMenuOpen(false)}
+                requiresAuth
                 className="flex items-center justify-between text-text-secondary hover:text-gold transition-colors py-2"
               >
                 <span className="font-sans text-sm uppercase tracking-widest">Account</span>
                 <User className="w-5 h-5" strokeWidth={1.5} />
-              </Link>
+              </AuthLink>
             </motion.div>
           </motion.div>
         )}
