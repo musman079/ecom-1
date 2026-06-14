@@ -7,28 +7,7 @@ import { getSessionFromRequest } from "../../src/lib/auth-session";
 import { getAdminAnalytics, getAdminDashboardMetrics } from "../../src/lib/ecommerce-db";
 import { AdminAnalyticsChart } from "../../src/components/admin/AdminAnalyticsChart";
 
-const navItems = [
-  { icon: "dashboard", label: "Overview" },
-  { icon: "inventory_2", label: "Products" },
-  { icon: "shopping_cart", label: "Orders" },
-  { icon: "assignment_return", label: "Returns" },
-  { icon: "group", label: "Customers" },
-  { icon: "leaderboard", label: "Analytics", active: true },
-  { icon: "settings", label: "Settings" },
-];
 
-const getAdminNavHref = (label: string) => {
-  if (label === "Overview") return "/admin_overview_dashboard";
-  if (label === "Products") return "/admin_products";
-  if (label === "Orders") return "/admin_orders";
-  if (label === "Returns") return "/admin_returns";
-  if (label === "Customers") return "/admin_customers";
-  if (label === "Analytics") return "/admin_analytics";
-  if (label === "Settings") return "/admin_settings";
-  return "/admin_overview_dashboard";
-};
-
-const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 function formatCurrency(value: number) {
   return `$${value.toFixed(2)}`;

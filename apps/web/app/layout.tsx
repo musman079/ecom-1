@@ -40,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-        {/* We can use the fonts defined in Next.js directly */}
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
       </head>
       <body className={`${cormorant.variable} ${playfair.variable} ${inter.variable} font-sans bg-primary text-text-primary antialiased`}>
         <ConditionalLayout

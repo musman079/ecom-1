@@ -85,46 +85,13 @@ function formatDate(iso: string) {
   });
 }
 
-function statusTone(status: AdminReturn["status"]) {
-  if (status === "requested") {
-    return "bg-amber-50 text-amber-700";
-  }
-  if (status === "approved") {
-    return "bg-blue-50 text-blue-700";
-  }
-  if (status === "in_transit") {
-    return "bg-indigo-50 text-indigo-700";
-  }
-  if (status === "refunded") {
-    return "bg-emerald-50 text-emerald-700";
-  }
-  return "bg-red-50 text-red-700";
-}
+
 
 function nextAllowedStatuses(status: AdminReturn["status"]) {
   return transitionMap[status];
 }
 
-const navItems = [
-  { icon: "dashboard", label: "Overview" },
-  { icon: "inventory_2", label: "Products" },
-  { icon: "shopping_cart", label: "Orders" },
-  { icon: "assignment_return", label: "Returns", active: true },
-  { icon: "group", label: "Customers" },
-  { icon: "leaderboard", label: "Analytics" },
-  { icon: "settings", label: "Settings" },
-];
 
-const getAdminNavHref = (label: string) => {
-  if (label === "Overview") return "/admin_overview_dashboard";
-  if (label === "Products") return "/admin_products";
-  if (label === "Orders") return "/admin_orders";
-  if (label === "Returns") return "/admin_returns";
-  if (label === "Customers") return "/admin_customers";
-  if (label === "Analytics") return "/admin_analytics";
-  if (label === "Settings") return "/admin_settings";
-  return "/admin_overview_dashboard";
-};
 
 export function AdminReturnsClient() {
   const router = useRouter();

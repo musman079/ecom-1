@@ -65,7 +65,7 @@ export function AdminAnalyticsChart({ data }: AdminAnalyticsChartProps) {
             contentStyle={{ backgroundColor: '#111111', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '12px' }}
             itemStyle={{ color: '#C8A96E', fontWeight: 'bold' }}
             labelStyle={{ color: 'rgba(255,255,255,0.7)', marginBottom: '8px' }}
-            formatter={(value: any) => [`$${Number(value).toFixed(2)}`, 'Revenue']}
+            formatter={(value: number) => [`$${Number(value).toFixed(2)}`, 'Revenue']}
           />
           <Area 
             type="monotone" 

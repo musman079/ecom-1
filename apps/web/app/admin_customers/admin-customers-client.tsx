@@ -70,6 +70,7 @@ export default function AdminCustomersPage() {
     finally { setLoading(false); }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- loadCustomers captures searchTerm; only re-run on allowed change
   useEffect(() => { if (allowed) void loadCustomers(); }, [allowed]);
 
   const updateStatus = async (customer: Customer, isActive: boolean) => {

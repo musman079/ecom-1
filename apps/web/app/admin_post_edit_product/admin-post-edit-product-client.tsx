@@ -4,31 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Loader2 } from "lucide-react";
-const navItems = [
-  { icon: "dashboard", label: "Overview" },
-  { icon: "inventory_2", label: "Products", active: true },
-  { icon: "shopping_cart", label: "Orders" },
-  { icon: "assignment_return", label: "Returns" },
-  { icon: "group", label: "Customers" },
-  { icon: "leaderboard", label: "Analytics" },
-  { icon: "settings", label: "Settings" },
-];
 
-const getAdminNavHref = (label: string) => {
-  if (label === "Overview") return "/admin_overview_dashboard";
-  if (label === "Products") return "/admin_products";
-  if (label === "Orders") return "/admin_orders";
-  if (label === "Returns") return "/admin_returns";
-  if (label === "Customers") return "/admin_customers";
-  if (label === "Analytics") return "/admin_analytics";
-  if (label === "Settings") return "/admin_settings";
-  return "/admin_overview_dashboard";
-};
-
-const variantRows = [
-  { name: "Midnight Black", shades: "Small, Medium, Large", count: "3 Variants", tone: "bg-zinc-900" },
-  { name: "Slate Grey", shades: "Medium, Extra Large", count: "2 Variants", tone: "bg-zinc-200" },
-];
 
 export default function AdminPostEditProductPage() {
   const router = useRouter();

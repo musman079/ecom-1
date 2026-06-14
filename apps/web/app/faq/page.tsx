@@ -152,7 +152,7 @@ export default function FAQPage() {
                     : "border-white/10 bg-white/[0.03] text-white/55 hover:border-white/20 hover:text-white"
                 }`}
               >
-                <span className="material-symbols-outlined text-base">{section.icon}</span>
+                <span className="material-symbols-outlined lowercase text-base">{section.icon}</span>
                 {section.title}
               </button>
             ))}
