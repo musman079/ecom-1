@@ -10,9 +10,31 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   let product: any = null;
 
   try {
-    product = await prisma.product.findUnique({
+    const dbProduct = await prisma.product.findUnique({
       where: { slug },
+      include: {
+        variants: true,
+        categories: { include: { category: true } }
+      }
     });
+
+    if (dbProduct) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mainVariant: any = dbProduct.variants?.[0] || {};
+      product = {
+        id: dbProduct.id,
+        slug: dbProduct.slug,
+        title: dbProduct.title,
+        description: dbProduct.description,
+        price: mainVariant.priceInCents ? mainVariant.priceInCents / 100 : 0,
+        compareAtPrice: mainVariant.compareAtPriceInCents ? mainVariant.compareAtPriceInCents / 100 : null,
+        image: dbProduct.images?.[0] || "",
+        images: dbProduct.images || [],
+        categories: dbProduct.categories?.map(c => c.category.name) || [],
+        brand: dbProduct.collection || "USOLSTICE Exclusive",
+        stock: mainVariant.stockQuantity || 0
+      };
+    }
   } catch (error) {
     console.error("Failed to fetch product", error);
   }

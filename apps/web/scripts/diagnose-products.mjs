@@ -1,59 +1,78 @@
-﻿#!/usr/bin/env node
-
-/**
- * Quick diagnostic to check product fetching issues
- */
-
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { PrismaClient } from "@prisma/client";
 
-async function loadEnv() {
-  const path = "../.env";
+const currentDir = dirname(fileURLToPath(import.meta.url));
+const envFilePath = resolve(currentDir, "../.env");
+
+function loadEnvFile(path) {
+  let content;
   try {
-    const fs = await import("fs");
-    const content = fs.readFileSync(path, "utf-8");
-    for (const line of content.split("\n")) {
-      if (!line.trim() || line.startsWith("#")) continue;
-      const [key, ...valueParts] = line.split("=");
-      const value = valueParts.join("=").trim();
-      if (!process.env[key?.trim()]) {
-        process.env[key?.trim()] = value.replace(/^["']|["']$/g, "");
+    content = readFileSync(path, "utf-8");
+  } catch {
+    return;
+  }
+  for (const rawLine of content.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+    const separatorIndex = line.indexOf("=");
+    if (separatorIndex < 1) continue;
+    const key = line.slice(0, separatorIndex).trim();
+    const value = line.slice(separatorIndex + 1).trim().replace(/^"|"$/g, "").replace(/^'|'$/g, "");
+    if (!process.env[key]) {
+      process.env[key] = value;
+    }
+  }
+}
+
+async function main() {
+  loadEnvFile(envFilePath);
+  const prisma = new PrismaClient();
+
+  try {
+    console.log("--- DIAGNOSTICS ---");
+    
+    const totalProducts = await prisma.product.count();
+    const totalVariants = await prisma.productVariant.count();
+    console.log(`Total Products: ${totalProducts}`);
+    console.log(`Total Variants: ${totalVariants}`);
+    
+    console.log("\nProducts by Brand/Collection:");
+    const byCollection = await prisma.product.groupBy({
+      by: ['collection'],
+      _count: {
+        id: true,
+      },
+    });
+    console.table(byCollection.map(c => ({ Brand: c.collection || 'None', Count: c._count.id })));
+
+    console.log("\nSample Khaadi Products:");
+    const sample = await prisma.product.findMany({
+      where: { collection: "Khaadi" },
+      take: 3,
+      include: {
+        variants: true,
+        categories: { include: { category: true } }
+      }
+    });
+
+    for (const p of sample) {
+      console.log(`- [${p.id}] ${p.title} (${p.variants.length} variants, ${p.categories.length} categories)`);
+      console.log(`  Images: ${p.images.length}`);
+      for (const v of p.variants) {
+        console.log(`    Variant SKU: ${v.sku} | Price: ${v.priceInCents} | Compare At: ${v.compareAtPriceInCents} | Stock: ${v.stockQuantity}`);
+      }
+      if (p.categories.length > 0) {
+        console.log(`    Categories: ${p.categories.map(c => c.category.name).join(", ")}`);
       }
     }
-  } catch {
-    console.warn("No .env file found");
+
+  } catch (error) {
+    console.error("Diagnostics failed:", error);
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
-await loadEnv();
-
-console.log("🔍 Diagnostic Check Started\n");
-console.log("1. DATABASE_URL:", process.env.DATABASE_URL ? "✅ SET" : "⚠️ WARNING: Not set!");
-
-const prisma = new PrismaClient();
-
-try {
-  console.log("\n2. Checking database connection...");
-  await prisma.$queryRaw`SELECT 1`;
-  console.log("✅ Database connected!");
-
-  console.log("\n3. Checking if products exist...");
-  const count = await prisma.product.count();
-  console.log(`✅ Found ${count} products`);
-
-  if (count === 0) {
-    console.log("\n❌ WARNING: Database is empty!");
-    console.log("To import products, run:");
-    console.log("  pnpm run import:admin-products");
-  } else {
-    console.log("\n4. Fetching first product...");
-    const product = await prisma.product.findFirst({
-      include: { variants: true },
-    });
-    console.log("✅ Sample product:", product?.title);
-  }
-} catch (error) {
-  console.error("\n❌ Error:", error.message);
-  process.exit(1);
-} finally {
-  await prisma.$disconnect();
-}
+main();

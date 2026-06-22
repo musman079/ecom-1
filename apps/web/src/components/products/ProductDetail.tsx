@@ -164,24 +164,25 @@ export function ProductDetail({ product }: { product: any }) {
             {/* Price */}
             <div className="flex items-end gap-3 mb-5">
               <span className="font-display text-[36px] text-gold leading-none">
-                ${product.price?.toFixed(2)}
+                Rs. {product.price?.toLocaleString()}
               </span>
               {product.compareAtPrice && (
                 <span className="font-sans text-lg text-text-secondary line-through mb-1">
-                  ${product.compareAtPrice?.toFixed(2)}
+                  Rs. {product.compareAtPrice?.toLocaleString()}
                 </span>
               )}
               {product.compareAtPrice && (
                 <span className="font-sans text-[12px] bg-status-success/10 text-status-success px-2 py-0.5 rounded-full mb-1">
-                  Save ${(product.compareAtPrice - product.price).toFixed(2)}
+                  Save Rs. {(product.compareAtPrice - product.price).toLocaleString()}
                 </span>
               )}
             </div>
 
             {/* Description */}
-            <p className="font-sans text-[14px] font-light text-text-secondary leading-relaxed mb-6">
-              {product.description}
-            </p>
+            <div 
+              className="font-sans text-[14px] font-light text-text-secondary leading-relaxed mb-6 [&>li]:ml-4 [&>li]:list-disc"
+              dangerouslySetInnerHTML={{ __html: product.description || "" }}
+            />
 
             <hr className="border-surface mb-6" />
 

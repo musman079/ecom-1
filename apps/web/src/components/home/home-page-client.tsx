@@ -175,7 +175,7 @@ export function HomePageClient({ newArrivals }: { newArrivals: ProductCardData[]
               <Link href="/products" className="hero-cta btn-sweep bg-gold text-primary font-sans text-[13px] font-bold uppercase tracking-[0.15em] px-8 py-4 rounded-full text-center transition-transform hover:scale-[0.97]">
                 <span className="relative z-10">Shop Now</span>
               </Link>
-              <Link href="/collections" className="hero-cta border border-gold text-gold hover:bg-gold hover:text-primary font-sans text-[13px] font-bold uppercase tracking-[0.15em] px-8 py-4 rounded-full text-center transition-all duration-300 hover:scale-[0.97]">
+              <Link href="/products" className="hero-cta border border-gold text-gold hover:bg-gold hover:text-primary font-sans text-[13px] font-bold uppercase tracking-[0.15em] px-8 py-4 rounded-full text-center transition-all duration-300 hover:scale-[0.97]">
                 Browse Collection
               </Link>
             </div>

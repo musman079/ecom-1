@@ -10,9 +10,35 @@ interface ProductListingProps {
 }
 
 export function ProductListing({ initialProducts }: ProductListingProps) {
-  const [products] = useState<ProductCardData[]>(initialProducts);
   const [gridCols, setGridCols] = useState<2 | 4>(4);
-  const [activeFilters, setActiveFilters] = useState<string[]>(["Clothing", "Black"]);
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  
+  const availableCategories = React.useMemo(() => {
+    const cats = new Set<string>();
+    initialProducts.forEach(p => {
+      if (p.category) cats.add(p.category);
+    });
+    return Array.from(cats);
+  }, [initialProducts]);
+
+  const filteredProducts = React.useMemo(() => {
+    if (activeFilters.length === 0) return initialProducts;
+    
+    return initialProducts.filter(product => {
+      // If any category is selected, the product must match one of them
+      const categoryFilters = activeFilters.filter(f => availableCategories.includes(f));
+      if (categoryFilters.length > 0) {
+        if (!categoryFilters.includes(product.category || "")) return false;
+      }
+      return true;
+    });
+  }, [initialProducts, activeFilters, availableCategories]);
+
+  const toggleFilter = (filter: string) => {
+    setActiveFilters(prev => 
+      prev.includes(filter) ? prev.filter(f => f !== filter) : [...prev, filter]
+    );
+  };
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const removeFilter = (filter: string) => {
@@ -26,7 +52,7 @@ export function ProductListing({ initialProducts }: ProductListingProps) {
       <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-surface pb-6 gap-6">
         <div>
           <h1 className="font-heading text-4xl md:text-5xl text-text-primary mb-4">All Collection</h1>
-          <p className="font-sans text-sm text-text-secondary">Showing {products.length} products</p>
+          <p className="font-sans text-sm text-text-secondary">Showing {filteredProducts.length} products</p>
         </div>
         
         <div className="flex items-center gap-6">
@@ -83,14 +109,16 @@ export function ProductListing({ initialProducts }: ProductListingProps) {
             <div>
               <h3 className="font-sans text-[11px] font-bold uppercase tracking-[0.15em] text-text-primary mb-4 pb-2 border-b border-surface">Category</h3>
               <div className="flex flex-col gap-3">
-                {["Clothing", "Shoes", "Accessories", "Bags"].map(cat => (
-                  <label key={cat} className="flex items-center gap-3 cursor-pointer group">
+                {availableCategories.length > 0 ? availableCategories.map(cat => (
+                  <label key={cat} className="flex items-center gap-3 cursor-pointer group" onClick={(e) => { e.preventDefault(); toggleFilter(cat); }}>
                     <div className="w-4 h-4 border border-text-tertiary rounded-[1px] group-hover:border-gold flex items-center justify-center transition-colors">
                       {activeFilters.includes(cat) && <div className="w-2 h-2 bg-gold" />}
                     </div>
                     <span className="font-sans text-[13px] text-text-secondary group-hover:text-text-primary transition-colors">{cat}</span>
                   </label>
-                ))}
+                )) : (
+                  <span className="font-sans text-[13px] text-text-secondary">No categories found</span>
+                )}
               </div>
             </div>
 
@@ -154,7 +182,7 @@ export function ProductListing({ initialProducts }: ProductListingProps) {
           )}
 
           {/* Product Grid */}
-          {products.length === 0 ? (
+          {filteredProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
               <div className="w-24 h-24 bg-surface rounded-full flex items-center justify-center mb-6">
                 <Search className="w-8 h-8 text-text-tertiary" />
@@ -174,7 +202,7 @@ export function ProductListing({ initialProducts }: ProductListingProps) {
                 "grid gap-6 md:gap-8",
                 gridCols === 4 ? "grid-cols-1 sm:grid-cols-2 xl:grid-cols-4" : "grid-cols-1 sm:grid-cols-2"
               )}>
-                {products.map(product => (
+                {filteredProducts.map(product => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>

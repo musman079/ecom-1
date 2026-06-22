@@ -29,11 +29,30 @@ build
 dist
 
 
-# Debug
+# Debug & Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # Misc
 .DS_Store
 *.pem
+
+# IDEs and Editors
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# Scraper / Data Outputs
+output/
+data/
+downloads/
+
+# E2E Testing
+playwright-report/
+test-results/

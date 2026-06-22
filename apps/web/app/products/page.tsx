@@ -5,9 +5,8 @@ import type { ProductCardData } from "../../src/components/products/ProductCard"
 export const dynamic = "force-dynamic";
 
 function formatDashboardPrice(price: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
+  return "Rs. " + new Intl.NumberFormat("en-PK", {
+    style: "decimal",
     maximumFractionDigits: 0,
   }).format(price);
 }
@@ -18,7 +17,7 @@ export default async function ProductsPage() {
   try {
     const result = await listPublicProducts({
       page: 1,
-      limit: 12,
+      limit: 50,
       sort: "newest",
     });
 
