@@ -335,13 +335,12 @@ export function AuthClient() {
                 </button>
 
                 <div className="flex items-center justify-between pt-4">
-                  <button
-                    type="button"
-                    onClick={() => toast.message("Password reset unavailable.")}
+                  <Link
+                    href="/auth/forgot-password"
                     className="text-[10px] font-sans font-medium uppercase tracking-widest text-white/40 hover:text-white transition-colors"
                   >
                     Forgot Password?
-                  </button>
+                  </Link>
                   <button
                     type="button"
                     onClick={toggleMode}

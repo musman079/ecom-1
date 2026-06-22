@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { listAdminProducts, type AdminProduct } from "@/lib/admin-products";
 import { getSessionFromRequest } from "@/lib/auth-session";
 import { isAdminSessionUser } from "@/lib/admin-auth";
-import { listRecentOrdersForAdmin } from "@/lib/ecommerce-db";
+import { listRecentOrdersForAdmin, getAdminAnalytics } from "@/lib/ecommerce-db";
 import { AdminShell } from "@/components/admin/AdminShell";
 import {
   Package, TrendingUp, Layers, DollarSign,
@@ -22,8 +22,7 @@ const STATUS_STYLES: Record<string, string> = {
 const getInitials = (name: string) =>
   name.split(" ").map((w) => w[0]?.toUpperCase() ?? "").join("").slice(0, 2);
 
-const BAR_HEIGHTS = [35, 55, 70, 48, 82, 40, 28, 62, 90, 45, 38, 68];
-const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export default async function AdminOverviewDashboardPage() {
   const cookieStore = await cookies();
@@ -35,6 +34,7 @@ export default async function AdminOverviewDashboardPage() {
 
   const products: AdminProduct[] = await listAdminProducts();
   const recentOrdersData = await listRecentOrdersForAdmin({ limit: 6 });
+  const analyticsData = await getAdminAnalytics({ months: 12 });
 
   const publishedCount = products.filter((p) => p.status === "published").length;
   const draftCount     = products.filter((p) => p.status === "draft").length;
@@ -59,6 +59,21 @@ export default async function AdminOverviewDashboardPage() {
   }));
 
   const topProducts = products.slice(0, 5);
+
+  // Build real chart data from analytics — last 12 months filled with 0 for missing months
+  const now = new Date();
+  const chartMonths = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
+    return { year: d.getFullYear(), month: d.getMonth() + 1, label: MONTH_NAMES[d.getMonth()] ?? "" };
+  });
+
+  const revenueByKey = new Map(
+    analyticsData.salesByMonth.map((row) => [`${row.year}-${row.month}`, row.revenue])
+  );
+  const chartValues = chartMonths.map((m) => revenueByKey.get(`${m.year}-${m.month}`) ?? 0);
+  const maxRevenue = Math.max(...chartValues, 1);
+  const chartBars = chartValues.map((v) => Math.round((v / maxRevenue) * 100));
+  const maxBarIndex = chartBars.indexOf(Math.max(...chartBars));
 
   return (
     <AdminShell
@@ -112,7 +127,7 @@ export default async function AdminOverviewDashboardPage() {
               </div>
             </div>
 
-            {/* Bar Chart */}
+            {/* Bar Chart — Real Revenue Data */}
             <div className="relative h-48 flex items-end gap-1.5 px-1">
               {/* Grid lines */}
               <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-6">
@@ -125,24 +140,21 @@ export default async function AdminOverviewDashboardPage() {
               </div>
 
               <div className="relative z-10 flex items-end gap-1.5 w-full h-full pb-6 pl-8">
-                {BAR_HEIGHTS.map((h, i) => {
-                  const isHighlight = i === BAR_HEIGHTS.indexOf(Math.max(...BAR_HEIGHTS));
-                  return (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                      <div
-                        className={`w-full rounded-t-sm transition-all duration-500 ${isHighlight ? "bg-[#C8A96E]" : "bg-white/10 hover:bg-white/20"}`}
-                        style={{ height: `${h}%` }}
-                      />
-                    </div>
-                  );
-                })}
+                {chartBars.map((h, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1" title={`$${(chartValues[i] ?? 0).toFixed(0)}`}>
+                    <div
+                      className={`w-full rounded-t-sm transition-all duration-500 ${i === maxBarIndex ? "bg-[#C8A96E]" : "bg-white/10 hover:bg-white/20"}`}
+                      style={{ height: h > 0 ? `${h}%` : "2px" }}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
 
             {/* Month labels */}
             <div className="grid grid-cols-12 pl-8 mt-2 text-center">
-              {MONTH_LABELS.map((m) => (
-                <span key={m} className="text-[9px] font-sans font-bold text-white/20 uppercase">{m}</span>
+              {chartMonths.map((m) => (
+                <span key={`${m.year}-${m.month}`} className="text-[9px] font-sans font-bold text-white/20 uppercase">{m.label}</span>
               ))}
             </div>
           </div>

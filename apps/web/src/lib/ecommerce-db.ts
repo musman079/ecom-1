@@ -23,6 +23,8 @@ export type UserDocument = {
   };
   roles: string[];
   isActive: boolean;
+  resetToken?: string;
+  resetTokenExpiry?: Date;
   createdAt: Date;
   updatedAt: Date;
 };
