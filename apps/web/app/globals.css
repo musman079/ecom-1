@@ -90,3 +90,26 @@ html {
 .animate-marquee:hover {
   animation-play-state: paused;
 }
+
+/* Checkout form inputs */
+.checkout-input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  padding: 10px 0;
+  font-family: var(--font-inter), Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #F0EDE8;
+  outline: none;
+  transition: border-color 0.25s ease;
+}
+
+.checkout-input::placeholder {
+  color: rgba(240,237,232,0.3);
+}
+
+.checkout-input:focus {
+  border-color: #C8A96E;
+}

@@ -51,7 +51,12 @@ export const useCartStore = create<CartState>()(
       items: [],
       subtotal: 0,
       totalItems: 0,
-      setCart: (cart) => set(recalculate(cart.items)),
+      setCart: (cart) =>
+        set({
+          items: Array.isArray(cart.items) ? cart.items : [],
+          subtotal: Number(cart.subtotal ?? 0),
+          totalItems: Number(cart.totalItems ?? 0),
+        }),
       addToCart: (item, quantity = 1) => {
         set((state) => {
           const requested = Math.max(1, Math.floor(quantity));
