@@ -23,7 +23,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const router = useRouter();
-  const imageUrl = product.thumbnail || product.image || "/placeholder.jpg"; // Placeholder image logic
+  const imageUrl = product.thumbnail || product.image || "https://placehold.co/400x500/111111/C8A96E?text=USOLSTICE";
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();

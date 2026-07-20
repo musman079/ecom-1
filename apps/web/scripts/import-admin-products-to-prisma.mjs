@@ -133,6 +133,7 @@ function normalizeProduct(input) {
     collection: String(input.collection ?? input.category ?? "General").trim(),
     lowStockAlert: Boolean(input.lowStockAlert ?? stockQuantity <= 5),
     status: toStatus(input.status),
+    images: Array.isArray(input.images) ? input.images.filter(img => typeof img === "string") : [],
   };
 }
 
@@ -160,6 +161,7 @@ async function upsertBySku(prisma, normalized) {
         collection: normalized.collection,
         lowStockAlert: normalized.lowStockAlert,
         status: normalized.status,
+        images: normalized.images,
         variants: {
           create: {
             sku: normalized.sku,
@@ -185,6 +187,7 @@ async function upsertBySku(prisma, normalized) {
         collection: normalized.collection,
         lowStockAlert: normalized.lowStockAlert,
         status: normalized.status,
+        images: normalized.images,
       },
     });
 
@@ -197,7 +200,7 @@ async function upsertBySku(prisma, normalized) {
         isActive: true,
       },
     });
-  });
+  }, { timeout: 20000 });
 
   return "updated";
 }
