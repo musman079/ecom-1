@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "node:fs/promises";
-import { join } from "node:path";
-import { existsSync } from "node:fs";
+import { v2 as cloudinary } from "cloudinary";
 
 import { requireAdminSession } from "../../../../src/lib/admin-auth";
 import { AuthError } from "../../../../src/lib/auth-session";
-import { resizeProductImage, getStandardImageExtension } from "../../../../src/lib/image-processor";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export const dynamic = "force-dynamic";
 
@@ -51,59 +54,27 @@ export async function POST(request: Request) {
     }
 
     // ==========================================
-    // LOCAL STORAGE UPLOAD (CURRENTLY ACTIVE)
+    // CLOUDINARY UPLOAD
     // ==========================================
-    
-    const uploadDir = join(process.cwd(), "public", "uploads");
-
-    // Ensure the upload directory exists
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
-
     const uploadedUrls: string[] = [];
 
     for (const file of files) {
       const bytes = await file.arrayBuffer();
-      const rawBuffer = Buffer.from(bytes);
+      const buffer = Buffer.from(bytes);
 
-      // Resize and convert to standard format
-      const processedBuffer = await resizeProductImage(rawBuffer);
+      const result = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: "usolstice-products" },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        uploadStream.end(buffer);
+      });
 
-      // Create a unique filename with standard extension
-      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-      const standardExt = getStandardImageExtension();
-      const filename = `product-${uniqueSuffix}.${standardExt}`;
-      const filePath = join(uploadDir, filename);
-
-      // Save the resized file
-      await writeFile(filePath, processedBuffer);
-
-      // The URL where the file can be accessed
-      uploadedUrls.push(`/uploads/${filename}`);
+      uploadedUrls.push((result as any).secure_url);
     }
-
-    // ==========================================
-    // CLOUDINARY UPLOAD (FOR FUTURE USE)
-    // ==========================================
-    /*
-    To use Cloudinary:
-    1. Run: pnpm add cloudinary
-    2. Import cloudinary at the top: import { v2 as cloudinary } from "cloudinary";
-    3. Configure cloudinary:
-       cloudinary.config({
-         cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-         api_key: process.env.CLOUDINARY_API_KEY,
-         api_secret: process.env.CLOUDINARY_API_SECRET
-       });
-    4. Replace the Local Storage code above with:
-       
-       const base64Image = `data:${file.type};base64,${buffer.toString('base64')}`;
-       const uploadResponse = await cloudinary.uploader.upload(base64Image, {
-         folder: "ecommerce_products"
-       });
-       const fileUrl = uploadResponse.secure_url;
-    */
 
     return NextResponse.json({
       url: uploadedUrls[0],

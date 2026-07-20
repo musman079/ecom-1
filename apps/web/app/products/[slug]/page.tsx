@@ -1,9 +1,51 @@
+import type { Metadata, ResolvingMetadata } from "next";
 import { ProductDetail } from "@/components/products/ProductDetail";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+type Props = {
+  params: Promise<{ slug: string }>
+};
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const { slug } = await params;
+  
+  const dbProduct = await prisma.product.findUnique({
+    where: { slug },
+  });
+
+  if (!dbProduct) {
+    return {
+      title: "Product Not Found",
+    };
+  }
+
+  const previousImages = (await parent).openGraph?.images || [];
+  const imageUrl = dbProduct.images?.[0] || previousImages[0];
+
+  return {
+    title: dbProduct.title,
+    description: dbProduct.description.substring(0, 160),
+    openGraph: {
+      title: dbProduct.title,
+      description: dbProduct.description.substring(0, 160),
+      url: `https://usolstice.store/products/${slug}`,
+      images: imageUrl ? [imageUrl] : previousImages,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: dbProduct.title,
+      description: dbProduct.description.substring(0, 160),
+      images: imageUrl ? [imageUrl] : previousImages,
+    },
+  };
+}
+
+export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params;
   // Fetch product or use dummy data if db not seeded
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

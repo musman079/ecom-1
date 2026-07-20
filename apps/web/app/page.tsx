@@ -1,6 +1,12 @@
 import { HomePageClient } from "../src/components/home/home-page-client";
 import { listPublicProducts } from "../src/lib/products";
 import type { ProductCardData } from "../src/components/products/ProductCard";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Home",
+  description: "Shop the latest premium editorial and lifestyle collections at USOLSTICE.",
+};
 
 export const dynamic = "force-dynamic";
 

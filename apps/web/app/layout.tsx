@@ -28,8 +28,33 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "USOLSTICE Store — Premium Fashion & Lifestyle",
+  title: {
+    default: "USOLSTICE Store — Premium Fashion & Lifestyle",
+    template: "%s | USOLSTICE"
+  },
   description: "Premium e-commerce store for the modern shopper. Discover curated collections, fast shipping, and exclusive deals on fashion and lifestyle products.",
+  openGraph: {
+    title: "USOLSTICE Store",
+    description: "Premium e-commerce store for the modern shopper.",
+    url: "https://usolstice.store",
+    siteName: "USOLSTICE",
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=1200&auto=format&fit=crop",
+        width: 1200,
+        height: 630,
+        alt: "USOLSTICE Premium Fashion",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "USOLSTICE Store",
+    description: "Premium e-commerce store for the modern shopper.",
+    images: ["https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=1200&auto=format&fit=crop"],
+  },
 };
 
 export default function RootLayout({

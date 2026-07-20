@@ -54,6 +54,7 @@ export default function AdminProductsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [form, setForm] = useState(initialFormState);
   const [imageUrlInput, setImageUrlInput] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     const verifyAdmin = async () => {
@@ -222,6 +223,39 @@ export default function AdminProductsPage() {
     setImageUrlInput("");
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to upload image.");
+      }
+
+      const data = (await response.json()) as { url: string };
+      setForm((current) => ({
+        ...current,
+        images: [...current.images, data.url],
+      }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploadingImage(false);
+      event.target.value = "";
+    }
+  };
+
   const removeImageUrl = (indexToRemove: number) => {
     setForm((current) => ({
       ...current,
@@ -351,27 +385,36 @@ export default function AdminProductsPage() {
 
               <div className="bg-white/[0.02] border border-white/5 rounded-sm p-4">
                 <p className="mb-3 text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-white/30">Product Images</p>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <input
-                    value={imageUrlInput}
-                    onChange={(event) => setImageUrlInput(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        event.preventDefault();
-                        addImageUrl();
-                      }
-                    }}
-                    placeholder="Paste image URL e.g. /uploads/product.webp"
-                    className="w-full bg-[#1A1A1A] border border-white/10 rounded-sm px-4 py-3 text-sm font-sans text-white outline-none focus:border-[#C8A96E]/40 transition-all placeholder:text-white/20"
-                  />
-                  <button
-                    type="button"
-                    onClick={addImageUrl}
-                    className="bg-[#C8A96E]/10 border border-[#C8A96E]/20 text-[#C8A96E] rounded-sm px-4 py-3 text-[10px] font-sans font-bold uppercase tracking-[0.16em] transition-all hover:bg-[#C8A96E]/20"
-                  >
-                    Add
-                  </button>
+                
+                <div className="flex flex-col gap-3 sm:flex-row mb-4">
+                  <label className="relative flex items-center justify-center bg-[#1A1A1A] border border-dashed border-white/20 rounded-sm px-4 py-3 text-sm font-sans text-white/60 hover:border-[#C8A96E]/40 hover:text-white transition-all cursor-pointer w-full sm:w-[200px] text-center">
+                    {uploadingImage ? "Uploading..." : "Upload from PC"}
+                    <input type="file" accept="image/*" onChange={handleFileUpload} disabled={uploadingImage} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed" />
+                  </label>
+
+                  <div className="flex flex-1 gap-2">
+                    <input
+                      value={imageUrlInput}
+                      onChange={(event) => setImageUrlInput(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          addImageUrl();
+                        }
+                      }}
+                      placeholder="Or paste image URL e.g. https://..."
+                      className="w-full bg-[#1A1A1A] border border-white/10 rounded-sm px-4 py-3 text-sm font-sans text-white outline-none focus:border-[#C8A96E]/40 transition-all placeholder:text-white/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={addImageUrl}
+                      className="bg-[#C8A96E]/10 border border-[#C8A96E]/20 text-[#C8A96E] rounded-sm px-4 py-3 text-[10px] font-sans font-bold uppercase tracking-[0.16em] transition-all hover:bg-[#C8A96E]/20"
+                    >
+                      Add
+                    </button>
+                  </div>
                 </div>
+
                 {form.images.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {form.images.map((image, index) => (
